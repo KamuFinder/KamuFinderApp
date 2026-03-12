@@ -1,5 +1,5 @@
 {
-  "name": "demo",
+  "name": "KamuFinder",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -9,8 +9,9 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo": "~55.0.6",
+    "expo": "54",
     "expo-status-bar": "~55.0.4",
+    "firebase": "^12.10.0",
     "react": "19.2.0",
     "react-native": "0.83.2"
   },

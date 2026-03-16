@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import styles from "../styles/Welcome.js";
 
 export default function HomeScreen({ navigation }) {
   return (
@@ -27,43 +28,3 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 40,
-    color: "#555",
-  },
-  loginButton: {
-    width: "80%",
-    padding: 15,
-    backgroundColor: "#4CAF50",
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  signupButton: {
-    width: "80%",
-    padding: 15,
-    backgroundColor: "#2196F3",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-});

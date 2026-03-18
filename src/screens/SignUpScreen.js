@@ -186,11 +186,7 @@ export default function SignUpScreen() {
         <Text style={styles.buttonText}>Rekisteröidy</Text>
       </TouchableOpacity>
 
-      
-
-      <TouchableOpacity onPress={() => navigation.navigate("Welcome")}>
-        <Text style={styles.link}>Takaisin etusivulle</Text>
-      </TouchableOpacity>
+    
     </View>
   );
 }

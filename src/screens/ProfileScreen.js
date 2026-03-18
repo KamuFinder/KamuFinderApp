@@ -1,7 +1,7 @@
 import React, { useEffect, useState} from "react";
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
-import styles from "../styles/Welcome.js";
+import styles from "../styles/SignIn_And_Up.js";
 
 
 export default function ProfileScreen() {

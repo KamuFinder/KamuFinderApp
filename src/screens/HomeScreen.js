@@ -4,7 +4,7 @@ import { useUser } from "../context/UserContext.js";
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { firestore, USERS, doc, getDoc } from "../firebase/config";
 import { auth, signOut } from "../firebase/config";
-import styles from "../styles/Welcome.js";
+import styles from "../styles/SignIn_And_Up.js";
 
 
 export default function HomeScreen() {
@@ -64,4 +64,3 @@ export default function HomeScreen() {
     </View>
   );
 }
-

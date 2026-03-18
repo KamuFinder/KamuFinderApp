@@ -1,34 +1,35 @@
-import React, { useState } from "react";
+import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
-import { firestore } from "../firebase/config";
-
 import WelcomeScreen from "../screens/WelcomeScreen";
 import SignInScreen from "../screens/SignInScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import HomeScreen from "../screens/HomeScreen.js";
+import ProfileScreen from "../screens/ProfileScreen.js";
+import { useUser } from "../context/UserContext";
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
 
-  const [logged, setLogged] = useState(false);
+  const user = useUser();
 
   return (
     <NavigationContainer>
-        <Stack.Navigator initialRouteName="Welcome">
-            <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ title: "Tervetuloa" }}/>
-
-            <Stack.Screen name="SignIn" options={{ title: "Kirjaudu sisään" }}>
-              {props => <SignInScreen {...props} setLogged={setLogged} />}
-            </Stack.Screen>
-            
-            <Stack.Screen name="SignUp" component={SignUpScreen} options={{ title: "Luo käyttäjä" }}/>
-
-            <Stack.Screen name="Home" component={HomeScreen} options={{ title: "Koti" }}/>
-
-            
-        </Stack.Navigator>
+      <Stack.Navigator>
+        {user ? (
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="SignIn" component={SignInScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+          </>
+        )}
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }

@@ -4,7 +4,6 @@ import { useUser } from "../context/UserContext.js";
 import {  useNavigation } from '@react-navigation/native';
 import { firestore, USERS, doc, getDoc } from "../firebase/config";
 import { auth, signOut } from "../firebase/config";
-
 import styles from "../styles/Home.js";
 
 export default function HomeScreen() {

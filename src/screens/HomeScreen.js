@@ -40,12 +40,6 @@ export default function HomeScreen() {
   const userSignOut = () => {
     signOut(auth)
       .then(() =>{
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{name: 'Welcome' }]
-          })
-        )
       })
       .catch((error) => {
          Alert.alert(t("error"), error.message)
@@ -59,6 +53,10 @@ export default function HomeScreen() {
 
       <TouchableOpacity onPress={() => confirmSignOut()}>
         <Text style={[{color: "red"}]}>{("sign-out")}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+        <Text style={[{color: "red"}]}>{("Profiilisivu")}</Text>
       </TouchableOpacity>
 
 

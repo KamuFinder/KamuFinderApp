@@ -3,8 +3,9 @@ import { View, Text, TouchableOpacity, } from "react-native";
 import { useUser } from "../context/UserContext.js";
 import {  useNavigation } from '@react-navigation/native';
 import { firestore, USERS, doc, getDoc } from "../firebase/config";
-import styles from "../styles/Welcome.js";
+import { auth, signOut } from "../firebase/config";
 
+import styles from "../styles/Home.js";
 
 export default function HomeScreen() {
   const user = useUser()
@@ -29,7 +30,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Kotisivu</Text>
-      <Text>Tervetuloa {firstName}</Text>
+      <Text style={styles.helloUser}>Tervetuloa {firstName}</Text>
 
 
       <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
@@ -41,4 +42,3 @@ export default function HomeScreen() {
     </View>
   );
 }
-

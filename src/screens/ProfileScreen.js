@@ -7,7 +7,6 @@ import styles from "../styles/Profile.js";
 import { useUser } from "../context/UserContext.js";
 
 
-
 export default function ProfileScreen() {
     const navigation = useNavigation()
     const user = useUser()

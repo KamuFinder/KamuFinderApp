@@ -16,12 +16,6 @@ export default function SignInScreen({setLogged}) {
 
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
-        navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: "Home" }]
-        })
-      )
       }).catch((error) => {
         Alert.alert("Virhe", "Sähköposti tai salasana on väärin");
         console.log(error)

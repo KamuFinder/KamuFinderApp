@@ -99,13 +99,8 @@ export default function SignUpScreen() {
           password: '',
           confirmedPassword: ''
         })
-        // Navigation stack cleared, redirect to home
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{name: 'Home'}]
-          })
-        );
+        
+        
       } catch(error) {
             if (error.code === 'auth/email-already-in-use') {
               Alert.alert("Virhe", "Sähköposti on jo käytössä")

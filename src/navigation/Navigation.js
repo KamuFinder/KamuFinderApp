@@ -22,7 +22,7 @@ export default function AppNavigator() {
           </>
         ) : (
           <>
-            {/* 🔥 SignIn nyt aloitusruutu */}
+          
             <Stack.Screen name="SignIn" component={SignInScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
           </>

@@ -15,8 +15,7 @@ export default function SignInScreen({ setLogged }) {
 
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
-        // Halutessasi voit päivittää login staten
-        // setLogged(true);
+     
       })
       .catch((error) => {
         Alert.alert("Virhe", "Sähköposti tai salasana on väärin");
@@ -27,14 +26,14 @@ export default function SignInScreen({ setLogged }) {
   return (
     <View style={styles.container}>
       
-      {/* 🔹 Welcome-osa */}
+     
       <Text style={styles.title}>Tervetuloa 😊</Text>
 
       <Text style={styles.subtitle}>
         Kirjaudu sisään tai luo uusi käyttäjä
       </Text>
 
-      {/* 🔹 Sign in form */}
+     
       <Text style={styles.label}>Sähköposti:</Text>
       <TextInput
         style={styles.input}
@@ -61,7 +60,7 @@ export default function SignInScreen({ setLogged }) {
         <Text style={styles.buttonText}>Kirjaudu sisään</Text>
       </TouchableOpacity>
 
-      {/* 🔹 Sign up nappi */}
+    
       <TouchableOpacity
         style={styles.signupButton}
         onPress={() => navigation.navigate("SignUp")}
@@ -70,5 +69,6 @@ export default function SignInScreen({ setLogged }) {
       </TouchableOpacity>
 
     </View>
+    
   );
 }

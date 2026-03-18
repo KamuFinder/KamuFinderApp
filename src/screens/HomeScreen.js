@@ -4,8 +4,8 @@ import { useUser } from "../context/UserContext.js";
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { firestore, USERS, doc, getDoc } from "../firebase/config";
 import { auth, signOut } from "../firebase/config";
-import styles from "../styles/SignIn_And_Up.js";
 
+import styles from "../styles/Home.js";
 
 export default function HomeScreen() {
   const user = useUser()
@@ -49,7 +49,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Kotisivu</Text>
-      <Text>Tervetuloa {firstName}</Text>
+      <Text style={styles.helloUser}>Tervetuloa {firstName}</Text>
 
       <TouchableOpacity onPress={() => confirmSignOut()}>
         <Text style={[{color: "red"}]}>{("sign-out")}</Text>

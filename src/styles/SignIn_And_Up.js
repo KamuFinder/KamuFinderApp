@@ -8,7 +8,7 @@ export default StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
   },
-  // 🔹 Titles
+  
   title: {
     fontSize: 32, // Welcome tyylin fontti
     fontWeight: "bold",
@@ -22,7 +22,7 @@ export default StyleSheet.create({
     color: "#555",
   },
 
-  // 🔹 Inputit
+  
   input: {
     backgroundColor: "#b1b1b1",
     padding: 10,
@@ -31,7 +31,7 @@ export default StyleSheet.create({
     width: "80%",
   },
 
-  // 🔹 Nappityylit
+  
   button: {
     backgroundColor: "#2196F3", // Kirjaudu sisään
     padding: 15,
@@ -41,7 +41,7 @@ export default StyleSheet.create({
     alignItems: "center",
   },
   signupButton: {
-    backgroundColor: "#4CAF50", // Luo käyttäjä nappi, sama kuin WelcomeScreenin väri
+    backgroundColor: "#4CAF50", 
     padding: 15,
     borderRadius: 10,
     marginTop: 10,
@@ -49,7 +49,7 @@ export default StyleSheet.create({
     alignItems: "center",
   },
 
-  // 🔹 Tekstit
+  
   buttonText: {
     color: "#fff",
     fontSize: 16,

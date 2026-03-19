@@ -36,6 +36,11 @@ export default function HomeScreen() {
         <Text style={[{color: "red"}]}>{("Profiilisivu")}</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity onPress={() => navigation.navigate("PrivaChats")}>
+        <Text style={[{color: "green"}]}>{("Keskustelut")}</Text>
+      </TouchableOpacity>
+
+
 
       
     </View>

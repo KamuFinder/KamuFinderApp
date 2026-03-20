@@ -3,18 +3,18 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "",
     alignItems: "center",
     padding: 20,
     backgroundColor: "#fff",
   },
-  
+  /*
   title: {
     fontSize: 32, // Welcome tyylin fontti
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
-  },
+  },*/
   subtitle: {
     fontSize: 16,
     textAlign: "center",

@@ -4,6 +4,8 @@ import {  useNavigation } from '@react-navigation/native';
 import { firestore, collection, query, onSnapshot, orderBy, USERS, USERSPRIVATECHATS } from "../firebase/config.js";
 import { useUser } from "../context/UserContext.js";
 import styles from "../styles/PrivaChats.js";
+import { Ionicons } from "@expo/vector-icons";
+
 
 export default function PrivaChats() {
     const navigation = useNavigation()
@@ -31,13 +33,19 @@ export default function PrivaChats() {
 
 
     return (
-    <View style={styles.container}>
+        <View style={styles.container}>
+
+        {/* ⬅️ BACK NUOLI vasemmalle ylös Tämä toimii mutta ei oo oikea oppinen.  */}
+        <View style={{ position: "absolute", top: 10, left: 10, zIndex: 10 }}>
+          <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+            <Ionicons name="arrow-back" size={24} />
+          </TouchableOpacity>
+        </View>
+      
         <Text style={styles.title}>Keskustelut</Text>
 
 
-        <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-        <Text style={[{color: "red"}]}>{("Koti")}</Text>
-        </TouchableOpacity>
+        
 
         <FlatList
         data={allChats}
@@ -77,7 +85,13 @@ export default function PrivaChats() {
             )
         }}
       />
-
+{/*  <TouchableOpacity
+        style={styles.bottomHomeButton}
+        onPress={() => navigation.navigate("Home")}
+      >
+        <Ionicons name="home" size={28} color="red" />
+        <Text style={styles.homeText}>Koti</Text>
+      </TouchableOpacity> */}
         
     </View>
     );

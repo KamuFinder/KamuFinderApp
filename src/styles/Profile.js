@@ -31,5 +31,17 @@ export default StyleSheet.create({
     color: 'red', 
     marginTop: 20, 
     textAlign: 'center' 
-  }
+  },
+  bottomHomeButton: {
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
+    alignItems: "center",
+  },
+  
+  homeText: {
+    color: "red",
+    marginTop: 5,
+    fontSize: 14,
+  },
   });

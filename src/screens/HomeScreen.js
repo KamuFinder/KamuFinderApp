@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { firestore, USERS, doc, getDoc } from "../firebase/config";
 import styles from "../styles/Home.js";
 import { Ionicons } from "@expo/vector-icons";
+import NavbarBottom from "../components/NavbarBottom";
 
 export default function HomeScreen() {
   const user = useUser();
@@ -29,26 +30,11 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
 
-      {/* 👤 Profiili 
-      <TouchableOpacity
-        style={styles.profileButton}
-        onPress={() => navigation.navigate("Profile")}
-      >
-        <Ionicons name="person-circle-outline" size={32} color="black" />
-      </TouchableOpacity> */}
-
-      {/* 💬 Keskustelut 
-      <TouchableOpacity
-        style={styles.chatButton}
-        onPress={() => navigation.navigate("PrivaChats")}
-      >
-        <Ionicons name="chatbubble-outline" size={24} color="white" />
-      </TouchableOpacity> */}
-
-      {/* 📄 Sisältö */}
       <Text style={styles.title}>Kotisivu</Text>
       <Text style={styles.helloUser}>Tervetuloa {firstName}</Text>
 
+
     </View>
+    
   );
 }

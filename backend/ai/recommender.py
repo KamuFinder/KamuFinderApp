@@ -2,7 +2,7 @@
 #skill_score	kuinka taidot matchaa
 #total_score	yhdistetty tulos
 
-from similarity import jaccard_similarity
+from ai.similarity import jaccard_similarity
 
 def recommend_groups(user, groups):
     results = []

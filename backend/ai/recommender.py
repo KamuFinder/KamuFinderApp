@@ -4,26 +4,45 @@
 
 from ai.similarity import jaccard_similarity
 
-def recommend_groups(user, groups):
+
+def recommend_study_groups(user, groups):
     results = []
 
     for group in groups:
-        #Interest -pisteet
+        if group.get("type") != "study":
+            continue
+
         interest_score = jaccard_similarity(
-            user["interests"],
-            group["interests"]
+            user.get("interests", []),
+            group.get("interests", [])
         )
-        # skill -pisteet
+
         skill_score = jaccard_similarity(
             user.get("skills", []),
             group.get("skills", [])
         )
 
-        # 3. Yhdistetyt pisteet 
         total_score = 0.7 * interest_score + 0.3 * skill_score
-        
+
         results.append((group["id"], total_score))
-        
+
+    results.sort(key=lambda x: x[1], reverse=True)
+    return results
+
+
+def recommend_hobby_groups(user, groups):
+    results = []
+
+    for group in groups:
+        if group.get("type") != "hobby":
+            continue
+
+        hobby_score = jaccard_similarity(
+            user.get("hobby_interests", []),
+            group.get("hobby_interests", [])
+        )
+
+        results.append((group["id"], hobby_score))
 
     results.sort(key=lambda x: x[1], reverse=True)
     return results

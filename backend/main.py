@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from ai.recommender import recommend_groups
+from ai.recommender import recommend_study_groups, recommend_hobby_groups
 
 app = FastAPI()
 
@@ -7,11 +7,13 @@ app = FastAPI()
 users = {
     1: {
         "interests": ["ai", "python"],
-        "skills": ["python", "ml"]
+        "skills": ["python", "ml"],
+        "hobby_interests": ["pelaaminen", "sali"]
     },
     2: {
         "interests": ["web", "design"],
-        "skills": ["html", "css"]
+        "skills": ["html", "css"],
+        "hobby_interests": ["sali", "matkustelu"]
     }
 }
 
@@ -19,26 +21,44 @@ groups = [
     {
         "id": 1,
         "name": "AI Study Group",
-        "description": "Opiskellaan machine learningia and AI:ä yhdessä",
+        "type": "study",
+        "description": "Opiskellaan machine learningia ja AI:ta yhdessä",
         "member_count": 5,
         "interests": ["ai", "machine learning"],
-        "skills": ["python"]
+        "skills": ["python"],
+        "hobby_interests": []
     },
     {
         "id": 2,
         "name": "Web Dev Group",
+        "type": "study",
         "description": "Frontend ja backend web development",
         "member_count": 8,
         "interests": ["web development"],
-        "skills": ["javascript"]
+        "skills": ["javascript"],
+        "hobby_interests": []
     },
+
+    # 🔥 UUSI: hobby group
     {
         "id": 3,
-        "name": "Data Science Group",
-        "description": "Data analyysi and Python projekteja",
+        "name": "Gaming Friends",
+        "type": "hobby",
+        "description": "Pelataan yhdessä vapaa-ajalla",
+        "member_count": 10,
+        "interests": [],
+        "skills": [],
+        "hobby_interests": ["pelaaminen"]
+    },
+    {
+        "id": 4,
+        "name": "Gym Buddies",
+        "type": "hobby",
+        "description": "Käydään salilla yhdessä",
         "member_count": 6,
-        "interests": ["python", "data science"],
-        "skills": ["python"]
+        "interests": [],
+        "skills": [],
+        "hobby_interests": ["sali"]
     }
 ]
 
@@ -49,31 +69,35 @@ def root():
 
 @app.get("/recommend-groups/{user_id}")
 def get_recommendations(user_id: int):
-    
-    # hae user "tietokannasta"
+
     user = users.get(user_id)
 
     if not user:
         return {"error": "Käyttäjää ei löydy"}
 
-    # kutsu AI
-    recommendations = recommend_groups(user, groups)
-    formatted = []
+    study_recs = recommend_study_groups(user, groups)
+    hobby_recs = recommend_hobby_groups(user, groups)
 
-    for group_id, score in recommendations:
-        group = next(g for g in groups if g["id"] == group_id)
+    def format_results(recommendations):
+        formatted = []
 
-        formatted.append({
-            "group_id": group_id,
-            "group_name": group["name"],
-            "description": group["description"],
-            "member_count": group["member_count"],
-            "score": score
-})
+        for group_id, score in recommendations:
+            group = next(g for g in groups if g["id"] == group_id)
+
+            formatted.append({
+                "group_id": group_id,
+                "group_name": group["name"],
+                "description": group["description"],
+                "member_count": group["member_count"],
+                "score": score
+            })
+
+        return formatted
 
     return {
         "user_id": user_id,
-        "recommendations": formatted
+        "study_recommendations": format_results(study_recs),
+        "hobby_recommendations": format_results(hobby_recs)
     }
 
 # Testidataan:

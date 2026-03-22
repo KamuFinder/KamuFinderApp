@@ -12,7 +12,7 @@ import GroupsScreens from "../screens/GroupsScreen"
 import Swiping from "../screens/Swiping"
 import HomeScreen from "../screens/HomeScreen";
 
-import BackArrow from "../components/backArrow";
+import NavbarTop from "../components/NavbarTop";
 import NavbarBottom from "../components/NavbarBottom";
 
 import { useUser } from "../context/UserContext";
@@ -22,23 +22,15 @@ const Stack = createNativeStackNavigator();
 export default function AppNavigator() {
   const user = useUser();
 
-  const withNavbar = (Component) => (props) => (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Component {...props} />
-      </View>
-      <NavbarBottom />
-    </View>
-  );
-
-  const withBackArrow = (Component) => (props) => (
+  const withNavBars = (Component, options = {}) => (props) => (
   <View style={styles.container}>
-    <Component {...props} />
-    <BackArrow />
+    <NavbarTop showBack={options.showBack} showProfile={options.showProfile} />
+    <View style={styles.content}>
+      <Component {...props} />
+    </View>
+    <NavbarBottom />
   </View>
 );
-
-
 
   return (
     <NavigationContainer>
@@ -46,16 +38,16 @@ export default function AppNavigator() {
         {user ? (
           <>
           {/*Screens with bottom navbar */}
-            <Stack.Screen name="Home" component={withNavbar(HomeScreen)} />
-            <Stack.Screen name="Swiping" component={withNavbar(Swiping)} />
+            <Stack.Screen name="Home" component={withNavBars(HomeScreen, { showProfile: true })} />
+            <Stack.Screen name="Swiping" component={withNavBars(Swiping)} />
 
           {/*Screens with bottom navbar and back arrow */}
-            <Stack.Screen name="PrivaChats" component={withNavbar(withBackArrow(PrivaChats))} />
-            <Stack.Screen name="GroupsScreen" component={withNavbar(withBackArrow(GroupsScreens))} />
+            <Stack.Screen name="PrivaChats" component={withNavBars(PrivaChats, { showBack: true })} />
+            <Stack.Screen name="GroupsScreen" component={withNavBars(GroupsScreens, { showBack: true })} />
 
           {/*Screens with only back arrow */}
-            <Stack.Screen name="SpecificChat" component={withBackArrow(SpecificChat)} />
-            <Stack.Screen name="Profile" component={withBackArrow(ProfileScreen)} />
+            <Stack.Screen name="SpecificChat" component={withNavBars(SpecificChat, { showBack: true })} />
+            <Stack.Screen name="Profile" component={withNavBars(ProfileScreen, { showBack: true })} />
 
           </>
         ) : (

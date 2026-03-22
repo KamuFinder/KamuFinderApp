@@ -1,15 +1,19 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
-import { TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, StyleSheet  } from "react-native";
 
 import SignInScreen from "../screens/SignInScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import SpecificChat from "../screens/SpecificChat";
 import ProfileScreen from "../screens/ProfileScreen";
 import PrivaChats from "../screens/PrivaChats";
-import BottomTabs from "./BottomTabs";
+import GroupsScreens from "../screens/GroupsScreen"
+import Swiping from "../screens/Swiping"
+import HomeScreen from "../screens/HomeScreen";
+
+import NavbarTop from "../components/NavbarTop";
+import NavbarBottom from "../components/NavbarBottom";
 
 import { useUser } from "../context/UserContext";
 
@@ -18,78 +22,33 @@ const Stack = createNativeStackNavigator();
 export default function AppNavigator() {
   const user = useUser();
 
+  const withNavBars = (Component, options = {}) => (props) => (
+  <View style={styles.container}>
+    <NavbarTop showBack={options.showBack} showProfile={options.showProfile} />
+    <View style={styles.content}>
+      <Component {...props} />
+    </View>
+    <NavbarBottom />
+  </View>
+);
+
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>
-            {/* 🔽 MAIN (Tabs) */}
-            <Stack.Screen
-              name="Main"
-              component={BottomTabs}
-              options={({ navigation }) => ({
-                headerTitle: "",
+          {/*Screens with bottom navbar */}
+            <Stack.Screen name="Home" component={withNavBars(HomeScreen, { showProfile: true })} />
+            <Stack.Screen name="Swiping" component={withNavBars(Swiping)} />
 
-                // 👤 Profiili oikeaan yläkulmaan
-                headerRight: () => (
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate("Profile")}
-                  >
-                    <Ionicons
-                      name="person-circle-outline"
-                      size={28}
-                      style={{ marginRight: 15 }}
-                    />
-                  </TouchableOpacity>
-                ),
-              })}
-            />
+          {/*Screens with bottom navbar and back arrow */}
+            <Stack.Screen name="PrivaChats" component={withNavBars(PrivaChats, { showBack: true })} />
+            <Stack.Screen name="GroupsScreen" component={withNavBars(GroupsScreens, { showBack: true })} />
 
-            {/* 💬 PRIVA CHATS (TOP HEADER + BACK) */}
-            <Stack.Screen
-              name="Chats"
-              component={PrivaChats}
-              options={({ navigation }) => ({
-                headerTitle: "",
+          {/*Screens with only back arrow */}
+            <Stack.Screen name="SpecificChat" component={withNavBars(SpecificChat, { showBack: true })} />
+            <Stack.Screen name="Profile" component={withNavBars(ProfileScreen, { showBack: true })} />
 
-                // ⬅️ BACK vasemmalle top navbarissa
-                headerLeft: () => (
-                  <TouchableOpacity onPress={() => navigation.navigate("Main")}>
-                    <Ionicons
-                      name="arrow-back"
-                      size={24}
-                      style={{ marginLeft: 10 }}
-                    />
-                  </TouchableOpacity>
-                ),
-              })}
-            />
-
-            {/* 👤 PROFILE */}
-            <Stack.Screen
-              name="Profile"
-              component={ProfileScreen}
-              options={{ headerTitle: "" }}
-            />
-
-            {/* 💬 SINGLE CHAT */}
-            <Stack.Screen
-              name="SpecificChat"
-              component={SpecificChat}
-              options={({ navigation }) => ({
-                headerTitle: "",
-
-                headerLeft: () => (
-                  <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons
-                      name="arrow-back"
-                      size={24}
-                      style={{ marginLeft: 10 }}
-                    />
-                  </TouchableOpacity>
-                ),
-              })}
-            />
           </>
         ) : (
           <>
@@ -101,3 +60,12 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

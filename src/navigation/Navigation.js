@@ -24,7 +24,7 @@ export default function AppNavigator() {
 
   const withNavBars = (Component, options = {}) => (props) => (
   <View style={styles.container}>
-    <NavbarTop showBack={options.showBack} showProfile={options.showProfile} />
+    <NavbarTop showBack={options.showBack} showProfile={options.showProfile} showNotifications={options.showNotifications} />
     <View style={styles.content}>
       <Component {...props} />
     </View>
@@ -38,7 +38,7 @@ export default function AppNavigator() {
         {user ? (
           <>
           {/*Screens with bottom navbar */}
-            <Stack.Screen name="Home" component={withNavBars(HomeScreen, { showProfile: true })} />
+            <Stack.Screen name="Home" component={withNavBars(HomeScreen, { showProfile: true, showNotifications: true })} />
             <Stack.Screen name="Swiping" component={withNavBars(Swiping)} />
 
           {/*Screens with bottom navbar and back arrow */}

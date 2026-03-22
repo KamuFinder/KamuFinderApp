@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity,Image, TextInput } from "react-native";
 import { useUser } from "../context/UserContext.js";
 import { useNavigation } from "@react-navigation/native";
 import { firestore, USERS, doc, getDoc } from "../firebase/config";
 import styles from "../styles/Home.js";
 import { Ionicons } from "@expo/vector-icons";
 import NavbarBottom from "../components/NavbarBottom";
+import Logo from "../../assets/Logo.png";
 
 export default function HomeScreen() {
   const user = useUser();
@@ -30,9 +31,25 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
 
-      <Text style={styles.title}>Kotisivu</Text>
-      <Text style={styles.helloUser}>Tervetuloa {firstName}</Text>
+      <View style={styles.logoContainer}>
+        <Image source={Logo} style={styles.logo} />
+      </View>
 
+      <Text style={styles.helloUser}>Tervetuloa takaisin {firstName}!</Text>
+
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Etsi kaveria nimellä"
+            
+          />
+          <Ionicons name="search" size={20} color="#000000" style={{ marginRight: 8 }} />
+
+        </View>
+
+      </View>
 
     </View>
     

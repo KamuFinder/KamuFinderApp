@@ -1,11 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, Alert,
+  Image,TouchableWithoutFeedback,Keyboard
+ } from "react-native";
+
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { auth, createUserWithEmailAndPassword, firestore, USERS, setDoc, doc, where, query, collection} from '../firebase/config.js'
 import isEmail from 'validator/lib/isEmail';
 import isEmpty from 'validator/lib/isEmpty';
 import isStrongPassword from 'validator/lib/isStrongPassword';
 import { getDocs } from "firebase/firestore";
+import { Ionicons } from "@expo/vector-icons";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 
 import styles from "../styles/SignIn_And_Up.js";
@@ -99,13 +104,8 @@ export default function SignUpScreen() {
           password: '',
           confirmedPassword: ''
         })
-        // Navigation stack cleared, redirect to home
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{name: 'Home'}]
-          })
-        );
+        
+        
       } catch(error) {
             if (error.code === 'auth/email-already-in-use') {
               Alert.alert("Virhe", "Sähköposti on jo käytössä")
@@ -118,12 +118,46 @@ export default function SignUpScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tämä on Rekisteröitymissivu</Text>
+    //<SafeAreaView style={{flex:1,alignItems:'center',justifyContent:'flex-start', backgroundColor:'#fff'}}>
+      <KeyboardAwareScrollView
+        enableOnAndroid={true}
+        extraScrollHeight={120}
+        extraHeight={120}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{flexGrow:1, alignItems:'center',padding:10, paddingBottom:120}}
+        keyboardShouldPersistTaps="handled"
+      >
+      
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ width: "100%", alignItems: "center"}}>
+        <View style={{justifyContent: "flex-start", alignItems: "center"}}>
+                <Image source={require("../../assets/Logo.png")} style={{ width: 120, height: 120, }} />
+              </View>
 
-      <Text style={styles.label}>Sähköposti:</Text>
+         <Text style={{fontWeight: "700", fontFamily:'Roboto',color: '#FB7318',textAlign:'center', fontSize: 48}}>
+                KamuFinder
+              </Text>
+
+      <Text style={{fontFamily:'monospace', marginBottom:16,marginTop:16}}>Tämä on Rekisteröitymissivu</Text>
+
+      <View style={{width:"80%", marginBottom:8}}>
+
+        <Text style={{alignSelf: 'flex-start',fontSize: 16,fontWeight:'400', marginBottom:8}}>Sähköposti:</Text>
+      
+        <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "#b1b1b1",
+                paddingHorizontal: 10,
+                borderRadius: 10,
+              }}>
+
+             <Ionicons name="mail-outline" size={20} color="gray" 
+              style={{ marginRight: 10 }} />
+
       <TextInput
-        style={styles.input}
+        style={{flex:1, paddingVertical:10}}
         placeholder='Syötä sähköposti'
         value={userInfo.email}
         onChangeText={text => setUserInfo({...userInfo, email: text})}
@@ -132,30 +166,82 @@ export default function SignUpScreen() {
         autoCapitalize='none'
         autoCorrect={false}
       />
+      </View>
+        </View>
 
-      <Text style={styles.label}>Etunimi:</Text>
+      <View style={{width:"80%", marginBottom:8}}>
+
+      <Text style={{alignSelf: 'flex-start',fontSize: 16,fontWeight:'400', marginBottom:8}}>Etunimi:</Text>
+      
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#b1b1b1",
+        paddingHorizontal: 10,
+        borderRadius: 10,
+      }}>
+
+      <Ionicons name="person-outline" size={20} color="gray" 
+        style={{ marginRight: 10 }} />
+
       <TextInput
-        style={styles.input}
+        style={{flex:1, paddingVertical:10}}
         placeholder='Anna etunimi'
         value={userInfo.firstName}
         onChangeText={text => setUserInfo({...userInfo, firstName: text})}
         numberOfLines={1}
         autoCorrect={false}
       />
+      </View>
+      </View>
 
-      <Text style={styles.label}>Sukunimi:</Text>
+      <View style={{width:"80%", marginBottom:8}}>
+
+        <Text style={{alignSelf: 'flex-start',fontSize: 16,fontWeight:'400', marginBottom:8}}>Sukunimi:</Text>
+
+        <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#b1b1b1",
+        paddingHorizontal: 10,
+        borderRadius: 10,
+      }}>
+
+        <Ionicons name="person-outline" size={20} color="gray"
+          style={{ marginRight: 10 }} />
+
+
+      
       <TextInput
-        style={styles.input}
+        style={{flex:1, paddingVertical:10}}
         placeholder='Anna sukunimi'
         value={userInfo.lastName}
         onChangeText={text => setUserInfo({...userInfo, lastName: text})}
         numberOfLines={1}
         autoCorrect={false}
       />
+      </View>
+      </View>
 
-      <Text style={styles.label}>Nimimerkki:</Text>
+      <View style={{width:"80%", marginBottom:8}}>
+
+        <Text style={{alignSelf: 'flex-start',fontSize: 16,fontWeight:'400', marginBottom:8}}>Nimimerkki:</Text>
+
+        <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#b1b1b1",
+        paddingHorizontal: 10,
+        borderRadius: 10,
+      }}>
+
+     
+
+        <Ionicons name="person-circle-outline" size={20} color="gray"
+          style={{ marginRight: 10 }} />
+
       <TextInput
-        style={styles.input}
+        style={{flex:1, paddingVertical:10}}
         placeholder="Syötä nimimerkki:"
         value={userInfo.nickName}
         onChangeText={text => setUserInfo({...userInfo, nickName: text})}
@@ -163,10 +249,26 @@ export default function SignUpScreen() {
         autoCapitalize='none'
         autoCorrect={false}
       />
+      </View>
+      </View>
 
-      <Text style={styles.label}>Salasana:</Text>
+      <View style={{width:"80%", marginBottom:8}}>
+
+        <Text style={{alignSelf: 'flex-start',fontSize: 16,fontWeight:'400', marginBottom:8}}>Salasana:</Text>
+
+        <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#b1b1b1",
+        paddingHorizontal: 10,
+        borderRadius: 10,
+      }}>
+
+      <Ionicons name="lock-closed-outline" size={20} color="gray"
+        style={{ marginRight: 10 }} />
+      
       <TextInput
-        style={styles.input}
+        style={{flex:1, paddingVertical:10}}
         placeholder='Kirjoita salasana'
         value={userInfo.password}
         onChangeText={text => setUserInfo({...userInfo, password: text})}
@@ -175,9 +277,26 @@ export default function SignUpScreen() {
         autoCapitalize='none'
         autoCorrect={false}
       />
-      <Text style={styles.label}>Kirjoita salasana uudelleen:</Text>
+
+      </View>
+      </View>
+
+      <View style={{width:"80%", marginBottom:8}}>
+
+      <Text style={{alignSelf: 'flex-start',fontSize: 16,fontWeight:'400', marginBottom:8}}>Kirjoita salasana uudelleen:</Text>
+      
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#b1b1b1",
+        paddingHorizontal: 10,
+        borderRadius: 10,
+      }}>
+      <Ionicons name="lock-closed-outline" size={20} color="gray"
+        style={{ marginRight: 10 }} />
+      
       <TextInput
-        style={styles.input}
+        style={{flex:1, paddingVertical:10}}
         placeholder='Anna salasana uudelleen'
         value={userInfo.confirmedPassword}
         onChangeText={text => setUserInfo({...userInfo, confirmedPassword: text})}
@@ -187,16 +306,19 @@ export default function SignUpScreen() {
         autoCorrect={false}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Rekisteröidy</Text>
-      </TouchableOpacity>
+      </View>
+      </View>
 
-      
-
-      <TouchableOpacity onPress={() => navigation.navigate("Welcome")}>
-        <Text style={styles.link}>Takaisin etusivulle</Text>
+      <View style={{width:"80%", marginBottom:32, marginTop:30, alignItems:'center'}}>
+      <TouchableOpacity style={{width:"100%", backgroundColor: "#F99D11", 
+        paddingVertical: 15, borderRadius: 20, alignItems:'center'}} onPress={handleSignUp}>
+        <Text style={{color:'white',textAlign:'center', fontSize: 16, fontWeight: 'bold'}}>Rekisteröidy</Text>
       </TouchableOpacity>
+        </View>
     </View>
+    </TouchableWithoutFeedback>
+    </KeyboardAwareScrollView>
+    //</SafeAreaView>
   );
 }
 

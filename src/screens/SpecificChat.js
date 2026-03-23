@@ -147,7 +147,7 @@ export default function HomeScreen() {
         })
       )}
       </View>
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { marginBottom: 50 }]}>
         <TextInput
           style={styles.input}
           placeholder="Kirjoita viesti..."

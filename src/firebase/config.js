@@ -16,8 +16,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 
 const firestore = getFirestore(app);
-const MESSAGES = 'message';
 const USERS = 'user'
+const FRIENDS = 'friends'
+const USERSPRIVATECHATS = 'usersPrivateChats'
+const PRIVATECHATS = 'privateChats'
+const MESSAGES = 'messages'
 
 const auth = initializeAuth(app, {
     persistence: getReactNativePersistence(ReactNativeAsyncStorage)
@@ -36,11 +39,14 @@ export {
     orderBy,
     where,
     serverTimestamp,
-    MESSAGES,
     getAuth,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     USERS,
     auth,
     signOut,
+    FRIENDS,
+    USERSPRIVATECHATS,
+    PRIVATECHATS,
+    MESSAGES,
 };

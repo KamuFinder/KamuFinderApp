@@ -13,6 +13,8 @@ import { collection, onSnapshot } from "firebase/firestore";
 import styles from "../styles/Profile.js";
 import { useUser } from "../context/UserContext.js";
 import { Ionicons } from "@expo/vector-icons";
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5'
+import Divider from "../components/Divider.js";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -30,6 +32,8 @@ export default function ProfileScreen() {
   const [friendsCount, setFriendsCount] = useState(0);
   const [friendsList, setFriendsList] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const isOwnProfile = true; // Placeholder, can be used for future features like viewing other users' profiles
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -94,27 +98,53 @@ export default function ProfileScreen() {
     });
   };
 
+
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
       <Text style={styles.title}>Profiilisivu</Text>
 
-      <Text>Sähköposti: {user?.email}</Text>
-      <Text>Etunimi: {userInfo.firstName}</Text>
-      <Text>Sukunimi: {userInfo.lastName}</Text>
-      <Text>Nickname: {userInfo.nickName}</Text>
-      <Text>Kaupunki: {userInfo.city}</Text>
-      <Text>Profiiliteksti: {userInfo.profile_text}</Text>
-      <Text>Kiinnostuksen kohteet: {userInfo.intrests}</Text>
+      {isOwnProfile && (
+        <TouchableOpacity
+      onPress ={() => setMenuVisible(true)}
+      style={styles.menuIcon}
+    >
+      <Ionicons name="ellipsis-vertical" size={24} />
+    </TouchableOpacity>
+      )}
+      </View>
 
-      <TouchableOpacity onPress={() => setModalVisible(true)}>
-        <Text style={{ color: "blue" }}>
-          Ystävien määrä: {friendsCount}
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.infoContainer}>
+        <View style={{ alignItems: "center" }}>
+          <Ionicons name="person-circle" size={100} color="#e6500a" />
+        </View>
+        <View style={{ marginLeft: 24, flex: 1 }}>
+          <Text style={{fontSize: 18, fontWeight: "bold"}}>{userInfo.nickName}</Text>
+          <Text>{userInfo.firstName} {userInfo.lastName}</Text>
+          <Text>{user?.email}</Text>
+          <Text>Kaupunki: {userInfo.city}</Text>
+        </View>
+      </View>
+      
+      <View style={styles.infoContainer2}>
+      
 
-      <TouchableOpacity onPress={() => confirmSignOut()}>
-        <Text style={{ color: "red" }}>sign-out</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <View style={{ flexDirection: "row", alignItems: "center",marginBottom: 16 }}>
+            <FontAwesome5 name="user-friends" size={24} color="#de58c8"/>
+             <Text style={{paddingHorizontal: 10}}>{friendsCount}</Text>
+          </View>
+          
+
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Kiinnostuksen kohteet: {userInfo.intrests}</Text>
+            <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Profiiliteksti: {userInfo.profile_text}</Text>
+        </TouchableOpacity>
+        
+      </View>
+
+      <Divider />
+
+      
 
       <Modal
         visible={modalVisible}
@@ -147,6 +177,48 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      > 
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => setMenuVisible(false)}
+        >
+          <View style={styles.dropdown}>
+            <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => {
+              setMenuVisible(false);
+              Alert.alert("Muokkaa profiilia", "Tämä ominaisuus on vielä kehitteillä!");
+            }}
+          >
+            
+            <Text style={styles.dropdownItemText}>Muokkaa profiilia</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+          style={styles.dropdownItem}
+          onPress={() => {
+            setMenuVisible(false);
+            Alert.alert("Vaihda salasana", "Tämä ominaisuus on vielä kehitteillä!");
+          }}
+        >
+          <Text style={styles.dropdownItemText}>Vaihda salasana</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => confirmSignOut()}>
+        <Text style={styles.signOut}>sign-out</Text>
+      </TouchableOpacity>
+
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
     </View>
+
   );
 }

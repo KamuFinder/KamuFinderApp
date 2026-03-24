@@ -3,9 +3,7 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    padding: 20,
     backgroundColor: "#fff",
   },
 
@@ -19,8 +17,21 @@ export default StyleSheet.create({
   helloUser: {
     fontSize: 30,
     fontWeight: "bold",
-    marginBottom: 20,
+    paddingHorizontal: 10,
+    marginBottom: 40,
     textAlign: "center",
+    fontFamily:"monospace",
+  },
+
+  logoContainer: {
+    marginBottom: 20,
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+
+  logo:{
+    width: 120,
+    height: 120,
   },
 
   text: {
@@ -42,6 +53,28 @@ export default StyleSheet.create({
     right: 20,
   },
 
+  searchContainer:{
+    width: "80%",
+    alignItems: "center",
+  },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 25,
+    borderColor: "#F99D11",
+    borderWidth: 2,
+    paddingHorizontal: 10,
+    height: 50,
+    elevation: 3, // Android shadow
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 16,
+  },
+
+
   /* 💬 Keskustelut (floating button) */
   chatButton: {
     position: "absolute",
@@ -56,4 +89,11 @@ export default StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
+
+
+  friendReguestbutton: {
+    flexDirection: "row",         
+    justifyContent: "space-between", 
+    alignItems: "center",
+  }
 });

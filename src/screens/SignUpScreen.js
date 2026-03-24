@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TextInput, Alert,
-  Image, Pressable,ScrollView, KeyboardAvoidingView,Platform,TouchableWithoutFeedback,Keyboard
+  Image,TouchableWithoutFeedback,Keyboard
  } from "react-native";
-  import { SafeAreaView } from "react-native-safe-area-context";
+
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { auth, createUserWithEmailAndPassword, firestore, USERS, setDoc, doc, where, query, collection} from '../firebase/config.js'
 import isEmail from 'validator/lib/isEmail';
@@ -10,6 +10,7 @@ import isEmpty from 'validator/lib/isEmpty';
 import isStrongPassword from 'validator/lib/isStrongPassword';
 import { getDocs } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 
 import styles from "../styles/SignIn_And_Up.js";
@@ -118,14 +119,17 @@ export default function SignUpScreen() {
 
   return (
     //<SafeAreaView style={{flex:1,alignItems:'center',justifyContent:'flex-start', backgroundColor:'#fff'}}>
-      <KeyboardAvoidingView
-      style={{flex:1}}
-      behavior={Platform.OS === "ios" ? "padding" : 'height'}
-      >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView contentContainerStyle={{flexGrow:1, alignItems:'center',padding:10}}
+      <KeyboardAwareScrollView
+        enableOnAndroid={true}
+        extraScrollHeight={120}
+        extraHeight={120}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{flexGrow:1, alignItems:'center',padding:10, paddingBottom:120}}
         keyboardShouldPersistTaps="handled"
-        >
+      >
+      
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ width: "100%", alignItems: "center"}}>
         <View style={{justifyContent: "flex-start", alignItems: "center"}}>
                 <Image source={require("../../assets/Logo.png")} style={{ width: 120, height: 120, }} />
               </View>
@@ -311,10 +315,9 @@ export default function SignUpScreen() {
         <Text style={{color:'white',textAlign:'center', fontSize: 16, fontWeight: 'bold'}}>Rekisteröidy</Text>
       </TouchableOpacity>
         </View>
-    
-    </ScrollView>
+    </View>
     </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
     //</SafeAreaView>
   );
 }

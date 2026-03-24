@@ -8,15 +8,7 @@ import {
   Modal,
   FlatList,
 } from "react-native";
-import {
-  firestore,
-  USERS,
-  doc,
-  getDoc,
-  FRIENDS,
-  auth,
-  signOut,
-} from "../firebase/config.js";
+import {firestore,USERS,doc,getDoc,FRIENDS,auth,signOut,} from "../firebase/config.js";
 import { collection, onSnapshot } from "firebase/firestore";
 import styles from "../styles/Profile.js";
 import { useUser } from "../context/UserContext.js";
@@ -155,14 +147,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* 🏠 Koti nappi 
-      <TouchableOpacity
-        style={styles.bottomHomeButton}
-        onPress={() => navigation.navigate("Home")}
-      >
-        <Ionicons name="home" size={28} color="red" />
-        <Text style={styles.homeText}>Koti</Text>
-      </TouchableOpacity>  */}
     </View>
   );
 }

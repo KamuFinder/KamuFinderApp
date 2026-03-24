@@ -44,7 +44,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Swiping" component={withNavBars(Swiping)} />
 
           {/*Screens with bottom navbar and back arrow */}
-            <Stack.Screen name="PrivaChats" component={withNavBars(PrivaChats, { showBack: true })} />
+            <Stack.Screen name="PrivaChats" component={withNavBars(PrivaChats, { showBack: true, showProfile: true })} />
             <Stack.Screen name="GroupsScreen" component={withNavBars(GroupsScreens, { showBack: true, showProfile: true })} />
             <Stack.Screen name="Profile" component={withNavBars(ProfileScreen, { showBack: true, })} />
             <Stack.Screen name="SpecificGroupChat" component={withNavBars(SpecificGroupChat, { showBack: true, showBottom: false})} />

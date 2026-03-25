@@ -39,7 +39,7 @@ groups = [
         "hobby_interests": []
     },
 
-    # 🔥 UUSI: hobby group
+    #hobby group
     {
         "id": 3,
         "name": "Gaming Friends",
@@ -65,6 +65,36 @@ groups = [
 @app.get("/")
 def root():
     return {"message": "API on käynnissä"}
+
+
+@app.get("/recommend/hobby/{user_id}")
+def get_hobby_recommendations(user_id: int):
+
+    user = users.get(user_id)
+
+    if not user:
+        return {"error": "Käyttäjää ei löydy"}
+
+    hobby_recs = recommend_hobby_groups(user, groups)
+
+    formatted = []
+
+    for group_id, score in hobby_recs:
+        group = next(g for g in groups if g["id"] == group_id)
+
+        formatted.append({
+            "group_id": group_id,
+            "group_name": group["name"],
+            "description": group["description"],
+            "member_count": group["member_count"],
+            "score": score
+        })
+
+    return {
+        "user_id": user_id,
+        "recommendations": formatted
+    }
+
 
 
 @app.get("/recommend-groups/{user_id}")

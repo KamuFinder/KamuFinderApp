@@ -24,7 +24,8 @@ export default function ProfileScreen() {
     nickName: "",
     city: "",
     profile_text: "",
-    intrests: "",
+    interests: [],
+    hobby_interests: [],
   });
 
   const [friendsCount, setFriendsCount] = useState(0);
@@ -45,7 +46,8 @@ export default function ProfileScreen() {
           nickName: snap.data().nickName || "",
           city: snap.data().city || "",
           profile_text: snap.data().profile_text || "",
-          intrests: snap.data().intrests || "",
+          interests: [],
+          hobby_interests: [],
         });
       }
     };
@@ -104,7 +106,9 @@ export default function ProfileScreen() {
       <Text>Nickname: {userInfo.nickName}</Text>
       <Text>Kaupunki: {userInfo.city}</Text>
       <Text>Profiiliteksti: {userInfo.profile_text}</Text>
-      <Text>Kiinnostuksen kohteet: {userInfo.intrests}</Text>
+      <Text>Opiskelukiinnostukset: {userInfo.interests.length > 0 ? userInfo.interests.join(", ") : "Ei asetettu"}</Text>
+      <Text>Harrastuskiinnostukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
+      
 
       <TouchableOpacity onPress={() => setModalVisible(true)}>
         <Text style={{ color: "blue" }}>

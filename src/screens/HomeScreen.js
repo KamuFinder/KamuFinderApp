@@ -16,6 +16,7 @@ export default function HomeScreen() {
   const [ searchQuery , setSearchQuery ] = useState('');
   const [listOfUsers, setUsersList] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
+  const [hobbyRecommendations, setHobbyRecommendations] = useState([]);
 
 
   useEffect(() => {
@@ -94,7 +95,24 @@ export default function HomeScreen() {
     Alert.alert("Ystävä pyyntö", `Nappia painettu käyttäjälle ${u.firstName} ${u.lastName}`)
   }
 
+  //Kiinnostustenkohteiden haku
 
+const fetchHobbyRecommendations = async () => {
+  try {
+    const response = await fetch("http://192.168.0.14:8000/recommend/hobby/1");
+    const data = await response.json();
+
+    if (data.error) {
+      Alert.alert("Virhe", data.error);
+      return;
+    }
+
+    setHobbyRecommendations(data.recommendations || []);
+  } catch (error) {
+    console.log("Virhe hobby-suositusten haussa:", error);
+    Alert.alert("Virhe", "Kaverisuosituksia ei voitu hakea");
+  }
+};
   
   return (
     <View style={styles.container}>
@@ -104,6 +122,35 @@ export default function HomeScreen() {
       </View>
 
       <Text style={styles.helloUser}>Tervetuloa takaisin {firstName}!</Text>
+
+  
+      <TouchableOpacity
+        style={styles.actionButton}
+        onPress={fetchHobbyRecommendations}
+>
+       <Text style={styles.actionButtonText}>Etsi kavereita</Text>
+      </TouchableOpacity>
+
+      <NavbarBottom />
+
+
+
+{hobbyRecommendations.length > 0 && (
+  <View style={styles.recommendationsContainer}>
+    <Text style={styles.recommendationsTitle}>Suositellut kaveriryhmät</Text>
+
+    {hobbyRecommendations.map((item) => (
+      <View key={item.group_id} style={styles.recommendationCard}>
+        <Text style={styles.recommendationName}>{item.group_name}</Text>
+        <Text>{item.description}</Text>
+        <Text>Jäseniä: {item.member_count}</Text>
+        <Text>Match score: {item.score}</Text>
+      </View>
+    ))}
+  </View>
+)}
+
+
 
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>

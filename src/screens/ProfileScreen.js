@@ -148,9 +148,11 @@ export default function ProfileScreen() {
 
       <Modal
         visible={modalVisible}
+        transparent={true}
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
+        <View style={styles.modalOverlay} />
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Ystävät</Text>
 
@@ -164,9 +166,27 @@ export default function ProfileScreen() {
                 : "Ei tiedossa";
 
               return (
-                <Text style={styles.modalItem}>
-                  {item.name} ystävä alkaen: {date}
+                <View style={styles.friendRow}>
+                  <View style={styles.friendInfo}>
+                <Text style={styles.friendName}>{item.name}</Text>
+                  <Text style={styles.friendDate}>
+                    ystävä alkaen: {date}
                 </Text>
+                  </View>
+
+                  <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => Alert.alert("Poista ystävä", "Haluatko varmasti poistaa tämän ystävän?", [
+                  {
+                    text: "Kyllä",
+                    onPress: () => {} // Poista ystävä logiikka tähän
+                  },
+                  { text: "Ei" }
+                ])}
+              >
+                <Ionicons name="trash" size={24} color="#0b0a0a" />
+              </TouchableOpacity>
+                </View>
               );
             }}
           />
@@ -193,7 +213,7 @@ export default function ProfileScreen() {
             style={styles.dropdownItem}
             onPress={() => {
               setMenuVisible(false);
-              Alert.alert("Muokkaa profiilia", "Tämä ominaisuus on vielä kehitteillä!");
+              navigation.navigate("EditProfile");
             }}
           >
             
@@ -204,7 +224,7 @@ export default function ProfileScreen() {
           style={styles.dropdownItem}
           onPress={() => {
             setMenuVisible(false);
-            Alert.alert("Vaihda salasana", "Tämä ominaisuus on vielä kehitteillä!");
+            navigation.navigate("ChangePassword");
           }}
         >
           <Text style={styles.dropdownItemText}>Vaihda salasana</Text>

@@ -32,50 +32,37 @@ const getGroupColor = (groupName) => {
 };
 
 export default function GroupScreen() {
-
-const navigation = useNavigation();
-
-  const user = useUser(); //Hakee kirjautuneen käyttäjän
+  const navigation = useNavigation();
+  const user = useUser();  // Haetaan tällä hetkellä kirjautuneen käyttäjän tiedot
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.uid) return;  // Jos käyttäjää ei ole (uid undefined), älä tee mitään
+    if (!user?.uid) return; // Jos käyttäjää ei ole (uid undefined), älä tee mitään
 
-    const groupsRef = collection(firestore, "groups"); //"groups"-kokoelma Firestoressa
+    const userGroupsRef = collection(
+      firestore,
+      "user",
+      user.uid,
+      "user-groups" //haetaan käyttäjän "user-groups" :)
+    );
 
-    const unsubscribe = onSnapshot(groupsRef, async (snapshot) => {
-      const allGroups = snapshot.docs;
-      const userGroups = []; // Lista käyttäjän ryhmistä
+    const unsubscribe = onSnapshot(userGroupsRef, (snapshot) => {
+       // Reaaliaikainen kuuntelija, joka päivittyy, kun käyttäjän ryhmät muuttuvat
+      const groupsData = snapshot.docs.map((doc) => {
+        const data = doc.data();
 
+        return {
+          id: doc.id,
+          name: data.groupName || "Nimetön ryhmä",
+          description: data.description || "",
+          joined: data.joined?.toDate() || null // Tämän laitoin nyt tähän, kun firestoressa luki mutta menee vain console logiin.
+        };
+      });
 
-      // Käydään jokainen ryhmä läpi
-      for (const groupDoc of allGroups) {
-        // Haetaan subcollection "members" kyseisestä ryhmästä
-        const membersRef = collection(firestore, "groups", groupDoc.id, "members");
-        const membersSnapshot = await getDocs(membersRef);
+      console.log("User groups:", groupsData); //tämä heittää nyt logii kaikki tiedot mitä saa 
 
-        const isMember = membersSnapshot.docs.some(
-          memberDoc => memberDoc.id === user.uid
-        );
-
-
-
-        // Jos käyttäjä kuuluu ryhmään, lisätään se listalle
-        if (isMember) {
-          const data = groupDoc.data();
-          
-          userGroups.push({
-            id: groupDoc.id,
-            name: data.groupName || "Nimetön ryhmä",
-            description: data.desc || "",
-            createdAt: data.createdAt
-          });
-        }
-      }
-
-      console.log("User groups:", userGroups); //Tää heittää consolii ryhmän nimen, kuvauksen ja id, demo hommia nii jätin tän viel
-      setGroups(userGroups);
+      setGroups(groupsData);
       setLoading(false);
     });
 
@@ -89,10 +76,10 @@ const navigation = useNavigation();
       <Text style={styles.title}>Omat ryhmäsi:</Text>
 
       {loading ? (
-         // Tää on se latauspyörä efekti ku dataa haetaan
         <ActivityIndicator size="large" />
+        // Näytetään latauspyörä kun dataa haetaan
       ) : groups.length === 0 ? (
-        <Text>Et kuulu vielä ryhmiin</Text>     // Jos käyttäjä ei kuulu vielä mihinkää ryhmää nii lukee tää
+        <Text>Et kuulu vielä ryhmiin</Text> // Jos käyttäjä ei kuulu vielä mihinkää ryhmää nii lukee tää
       ) : (
         <FlatList
           data={groups}
@@ -104,6 +91,7 @@ const navigation = useNavigation();
               <Text style={{ fontSize: 32, fontWeight: "bold",marginBottom:8 }}>
                 {item.name}
               </Text>
+
               {item.description ? (
                 <Text style={{ color: "#555",fontSize:16,fontFamily: "monospace" }}>{item.description}</Text>
               ) : null}

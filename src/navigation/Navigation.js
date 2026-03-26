@@ -12,6 +12,7 @@ import GroupsScreens from "../screens/GroupsScreen"
 import Swiping from "../screens/Swiping"
 import HomeScreen from "../screens/HomeScreen";
 import Notifications from "../screens/Notifications"
+import SpecificGroupChat from "../screens/SpecificGroupChat";
 
 import NavbarTop from "../components/NavbarTop";
 import NavbarBottom from "../components/NavbarBottom";
@@ -43,13 +44,15 @@ export default function AppNavigator() {
             <Stack.Screen name="Swiping" component={withNavBars(Swiping)} />
 
           {/*Screens with bottom navbar and back arrow */}
-            <Stack.Screen name="PrivaChats" component={withNavBars(PrivaChats, { showBack: true })} />
-            <Stack.Screen name="GroupsScreen" component={withNavBars(GroupsScreens, { showBack: true })} />
+            <Stack.Screen name="PrivaChats" component={withNavBars(PrivaChats, { showBack: true, showProfile: true })} />
+            <Stack.Screen name="GroupsScreen" component={withNavBars(GroupsScreens, { showBack: true, showProfile: true })} />
             <Stack.Screen name="Profile" component={withNavBars(ProfileScreen, { showBack: true, })} />
+            <Stack.Screen name="SpecificGroupChat" component={withNavBars(SpecificGroupChat, { showBack: true, showBottom: false})} />
 
           {/*Screens with only back arrow */}
             <Stack.Screen name="SpecificChat" component={withNavBars(SpecificChat, { showBack: true, showBottom: false})} />
             <Stack.Screen name="Notifications" component={withNavBars(Notifications, { showBack: true, showBottom: false})} />
+            
 
 
 

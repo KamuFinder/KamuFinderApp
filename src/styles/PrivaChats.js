@@ -2,11 +2,24 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: "center",
+        flex: 1,   
         alignItems: "center",
         padding: 20,
         backgroundColor: "#fff",
+    },
+
+        title: {
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 20,
+        alignSelf: "flex-start",
+    },
+
+    logo:{
+        width: 120,
+        height: 120,
+        marginBottom: 20,
+        alignSelf: "center",
     },
     chatItem: {
         padding: 15,
@@ -16,6 +29,23 @@ export default StyleSheet.create({
     },
     unread: {
         backgroundColor: "#cce5ff",
+    },
+
+    messageContainer: {
+        width: "100%",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        gap: 24,
+    },
+
+    messageHeader: {
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+
+    messageTime: {
+        color: "#555",
+        fontSize: 16,
     },
     name: {
         fontSize: 16,

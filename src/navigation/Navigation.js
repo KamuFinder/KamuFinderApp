@@ -14,6 +14,8 @@ import SwipePeopleScreen from "../screens/SwipePeopleScreen";
 import HomeScreen from "../screens/HomeScreen";
 import Notifications from "../screens/Notifications";
 import SpecificGroupChat from "../screens/SpecificGroupChat";
+import EditProfileScreen from "../screens/EditProfileScreen";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
 
 import NavbarTop from "../components/NavbarTop";
 import NavbarBottom from "../components/NavbarBottom";
@@ -53,6 +55,8 @@ export default function AppNavigator() {
           {/*Screens with only back arrow */}
             <Stack.Screen name="SpecificChat" component={withNavBars(SpecificChat, { showBack: true, showBottom: false})} />
             <Stack.Screen name="Notifications" component={withNavBars(Notifications, { showBack: true, showBottom: false})} />
+            <Stack.Screen name="EditProfile" component={withNavBars(EditProfileScreen, { showBack: true, showBottom: false})} />
+            <Stack.Screen name="ChangePassword" component={withNavBars(ChangePasswordScreen, { showBack: true, showBottom: false})} />
             
 
 

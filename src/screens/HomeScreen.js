@@ -152,7 +152,7 @@ export default function HomeScreen() {
 
       <Text style={{ marginTop: 12, marginBottom: 12 }}>Löydä uusia kavereita sydän-välilehdeltä!</Text>
 
-      <NavbarBottom />
+      
 
 
 

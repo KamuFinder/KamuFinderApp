@@ -26,7 +26,7 @@ import {
 } from "../firebase/config";
 import { fetchUserRecommendations } from "../../services/recommendationService";
 
-export default function SwipingScreen() {
+export default function SwipingScreen({ navigation }) {
   const user = useUser();
 
   const [groupRecommendations, setGroupRecommendations] = useState([]);
@@ -217,13 +217,20 @@ export default function SwipingScreen() {
         showsVerticalScrollIndicator={true}
         bounces={true}
       >
-        <Text style={styles.title}>Swaippailu sivu</Text>
+        <Text style={styles.title}>Etsi uusia kavereita!</Text>
 
         <TouchableOpacity
           style={styles.actionButton}
           onPress={fetchAllRecommendations}
         >
           <Text style={styles.actionButtonText}>Hae suositukset</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => navigation.navigate("SwipePeople")}
+>
+          <Text style={styles.actionButtonText}>Selaa käyttäjiä swaippaamalla</Text>
         </TouchableOpacity>
 
         {loading && (

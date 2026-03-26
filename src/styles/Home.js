@@ -46,6 +46,50 @@ export default StyleSheet.create({
     marginVertical: 10,
   },
 
+  // AI-suositukset
+  actionButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 15,
+    width: "80%",
+    alignItems: "center",
+  },
+
+  actionButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+recommendationsContainer: {
+  width: "100%",
+  marginTop: 20,
+},
+
+recommendationsTitle: {
+  fontSize: 22,
+  fontWeight: "bold",
+  marginBottom: 10,
+  textAlign: "center",
+},
+
+recommendationCard: {
+  backgroundColor: "#f5f5f5",
+  padding: 15,
+  borderRadius: 10,
+  marginBottom: 10,
+  width: "100%",
+},
+
+recommendationName: {
+  fontSize: 18,
+  fontWeight: "bold",
+  marginBottom: 5,
+},
+
+
+
   /* 👤 Profiili (yläkulma) */
   profileButton: {
     position: "absolute",

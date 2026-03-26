@@ -50,8 +50,10 @@ export default function ProfileScreen() {
           nickName: snap.data().nickName || "",
           city: snap.data().city || "",
           profile_text: snap.data().profile_text || "",
+
          // varmistus kun en ole varma miten Firestoressa on interests
           interests: snap.data().interests || snap.data().intrests || [],
+
           hobby_interests: snap.data().hobby_interests || [],
         });
       }
@@ -107,8 +109,9 @@ export default function ProfileScreen() {
       <View style={styles.header}>
       <Text style={styles.title}>Profiilisivu</Text>
 
-      <Text>Opiskelukiinnostukset: {userInfo.interests.length > 0 ? userInfo.interests.join(", ") : "Ei asetettu"}</Text>
+      {/*<Text>Opiskelukiinnostukset: {userInfo.interests.length > 0 ? userInfo.interests.join(", ") : "Ei asetettu"}</Text>
       <Text>Harrastuskiinnostukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
+      */}
       {isOwnProfile && (
         <TouchableOpacity
       onPress ={() => setMenuVisible(true)}
@@ -141,7 +144,8 @@ export default function ProfileScreen() {
           </View>
           
 
-           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Kiinnostuksen kohteet: {userInfo.intrests}</Text>
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Kiinnostuksen kohteet: {userInfo.interests}</Text>
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Harrastuskiinnostukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
             <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Profiiliteksti: {userInfo.profile_text}</Text>
         </TouchableOpacity>
         
@@ -153,9 +157,11 @@ export default function ProfileScreen() {
 
       <Modal
         visible={modalVisible}
+        transparent={true}
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
+        <View style={styles.modalOverlay} />
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Ystävät</Text>
 
@@ -169,9 +175,27 @@ export default function ProfileScreen() {
                 : "Ei tiedossa";
 
               return (
-                <Text style={styles.modalItem}>
-                  {item.name} ystävä alkaen: {date}
+                <View style={styles.friendRow}>
+                  <View style={styles.friendInfo}>
+                <Text style={styles.friendName}>{item.name}</Text>
+                  <Text style={styles.friendDate}>
+                    ystävä alkaen: {date}
                 </Text>
+                  </View>
+
+                  <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => Alert.alert("Poista ystävä", "Haluatko varmasti poistaa tämän ystävän?", [
+                  {
+                    text: "Kyllä",
+                    onPress: () => {} // Poista ystävä logiikka tähän
+                  },
+                  { text: "Ei" }
+                ])}
+              >
+                <Ionicons name="trash" size={24} color="#0b0a0a" />
+              </TouchableOpacity>
+                </View>
               );
             }}
           />
@@ -198,7 +222,7 @@ export default function ProfileScreen() {
             style={styles.dropdownItem}
             onPress={() => {
               setMenuVisible(false);
-              Alert.alert("Muokkaa profiilia", "Tämä ominaisuus on vielä kehitteillä!");
+              navigation.navigate("EditProfile");
             }}
           >
             
@@ -209,7 +233,7 @@ export default function ProfileScreen() {
           style={styles.dropdownItem}
           onPress={() => {
             setMenuVisible(false);
-            Alert.alert("Vaihda salasana", "Tämä ominaisuus on vielä kehitteillä!");
+            navigation.navigate("ChangePassword");
           }}
         >
           <Text style={styles.dropdownItemText}>Vaihda salasana</Text>

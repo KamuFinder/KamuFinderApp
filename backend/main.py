@@ -83,7 +83,7 @@ groups = [
 
 @app.get("/")
 def root():
-    return {"message": "API on käynnissä", "version": "v2"}
+    return {"message": "API on käynnissä", "version": "v3"}
 
 
 @app.post("/recommend/hobby")

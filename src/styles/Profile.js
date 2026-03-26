@@ -87,19 +87,59 @@ export default StyleSheet.create({
     alignItems: "left",
   },
 
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.45)",
+  justifyContent: "center",
+  alignItems: "center",
+},
   modalContainer: { 
-    flex: 1, 
-    padding: 20, 
-    backgroundColor: 'white' 
+    width: "100%",
+    maxHeight: "70%",
+    backgroundColor: "#fff",
+    paddingTop: 20,
+    paddingHorizontal: 30,
+    paddingBottom: 30,
+    
   },
   modalTitle: { 
-    fontSize: 24, 
-    marginBottom: 20 
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
   },
-  modalItem: { 
-    fontSize: 18, 
-    marginVertical: 5 
+
+  friendRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    borderBottomEndRadius: 10,
+    backgroundColor: "#f9f9f9",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    elevation: 1,
   },
+
+  friendInfo: {
+    flex: 1,
+    marginRight: 10,
+  },
+
+  friendName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#222",
+  },
+
+  friendDate: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 4,
+  },
+ 
   modalClose: { 
     fontSize: 18, 
     color: 'red', 

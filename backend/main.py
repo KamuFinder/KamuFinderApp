@@ -1,12 +1,27 @@
 from fastapi import FastAPI
+from pydantic import BaseModel, Field
 from ai.recommender import recommend_study_groups, recommend_hobby_groups
-from pydantic import BaseModel
-
+from ai.similarity import jaccard_similarity
 
 app = FastAPI()
 
+
 class HobbyRequest(BaseModel):
     hobby_interests: list[str]
+
+
+class CandidateUser(BaseModel):
+    user_id: str
+    firstName: str = ""
+    city: str = ""
+    hobby_interests: list[str] = Field(default_factory=list)
+
+
+class HobbyUserRecommendationRequest(BaseModel):
+    current_user_id: str
+    hobby_interests: list[str]
+    candidates: list[CandidateUser] = Field(default_factory=list)
+
 
 # Testi "tietokanta"
 users = {
@@ -43,8 +58,6 @@ groups = [
         "skills": ["javascript"],
         "hobby_interests": []
     },
-
-    #hobby group
     {
         "id": 3,
         "name": "Gaming Friends",
@@ -67,9 +80,11 @@ groups = [
     }
 ]
 
+
 @app.get("/")
 def root():
     return {"message": "API on käynnissä", "version": "v2"}
+
 
 @app.post("/recommend/hobby")
 def post_hobby_recommendations(request: HobbyRequest):
@@ -97,9 +112,37 @@ def post_hobby_recommendations(request: HobbyRequest):
     }
 
 
-@app.get("/recommend/hobby/{user_id}")
-def get_hobby_recommendations(user_id: int):
+@app.post("/recommend/users/hobby")
+def recommend_users_by_hobby(request: HobbyUserRecommendationRequest):
+    results = []
 
+    for candidate in request.candidates:
+        if candidate.user_id == request.current_user_id:
+            continue
+
+        score = jaccard_similarity(
+            request.hobby_interests,
+            candidate.hobby_interests
+        )
+
+        if score > 0:
+            results.append({
+                "user_id": candidate.user_id,
+                "firstName": candidate.firstName,
+                "city": candidate.city,
+                "hobby_interests": candidate.hobby_interests,
+                "score": score
+            })
+
+    results.sort(key=lambda x: x["score"], reverse=True)
+
+    return {
+        "recommendations": results
+    }
+
+
+@app.get("/recommend/hobby/{user_id}")
+def get_hobby_recommendations_by_user(user_id: int):
     user = users.get(user_id)
 
     if not user:
@@ -126,10 +169,8 @@ def get_hobby_recommendations(user_id: int):
     }
 
 
-
 @app.get("/recommend-groups/{user_id}")
 def get_recommendations(user_id: int):
-
     user = users.get(user_id)
 
     if not user:
@@ -159,19 +200,3 @@ def get_recommendations(user_id: int):
         "study_recommendations": format_results(study_recs),
         "hobby_recommendations": format_results(hobby_recs)
     }
-
-# Testidataan:
-# from fastapi import FastAPI
-#from ai.recommender import recommend_groups
-#from ai.test_data import user, groups
-
-#app = FastAPI()
-
-#@app.get("/")
-#def root():
-#    return {"message": "API is running"}
-
-#@app.get("/recommend-groups")
-#def get_recommendations():
-#    recommendations = recommend_groups(user, groups)
-#    return {"recommendations": recommendations}

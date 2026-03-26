@@ -5,6 +5,18 @@ from ai.similarity import jaccard_similarity
 
 app = FastAPI()
 
+def normalize_hobbies(hobbies: list[str]) -> list[str]:
+    return [
+        hobby.strip().lower()
+        for hobby in hobbies
+        if isinstance(hobby, str) and hobby.strip()
+    ]
+
+
+def get_shared_hobbies(user_hobbies: list[str], candidate_hobbies: list[str]) -> list[str]:
+    user_set = set(normalize_hobbies(user_hobbies))
+    candidate_set = set(normalize_hobbies(candidate_hobbies))
+    return list(user_set.intersection(candidate_set))
 
 class HobbyRequest(BaseModel):
     hobby_interests: list[str]
@@ -116,13 +128,23 @@ def post_hobby_recommendations(request: HobbyRequest):
 def recommend_users_by_hobby(request: HobbyUserRecommendationRequest):
     results = []
 
+#poistetaan kirjoitusvirheiden mahdollisuudet
+    current_user_hobbies = normalize_hobbies(request.hobby_interests)
+
     for candidate in request.candidates:
         if candidate.user_id == request.current_user_id:
             continue
 
+        candidate_hobbies = normalize_hobbies(candidate.hobby_interests)
+
         score = jaccard_similarity(
-            request.hobby_interests,
-            candidate.hobby_interests
+            current_user_hobbies,
+            candidate_hobbies
+        )
+
+        shared_hobbies = get_shared_hobbies(
+            current_user_hobbies,
+            candidate_hobbies
         )
 
         if score > 0:
@@ -131,10 +153,14 @@ def recommend_users_by_hobby(request: HobbyUserRecommendationRequest):
                 "firstName": candidate.firstName,
                 "city": candidate.city,
                 "hobby_interests": candidate.hobby_interests,
-                "score": score
+                "shared_hobbies": shared_hobbies,
+                "shared_count": len(shared_hobbies),
+                "score": round(score, 3)
             })
 
     results.sort(key=lambda x: x["score"], reverse=True)
+    #palautetaan parhaat 10
+    results = results[:10]
 
     return {
         "recommendations": results

@@ -81,6 +81,7 @@ export default function HomeScreen() {
         if (lastMessage.userId === user.uid) return;
 
         const chatRef = doc(firestore,USERS, user.uid, USERSPRIVATECHATS,chatId)
+        console.log(chatRef, chatId)
         await updateDoc (chatRef, {
           unReadMessages: false,
         })

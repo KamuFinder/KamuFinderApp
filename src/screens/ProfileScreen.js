@@ -106,8 +106,12 @@ export default function ProfileScreen() {
       <View style={styles.header}>
       <Text style={styles.title}>Profiilisivu</Text>
 
+      {/*
       <Text>Opiskelukiinnostukset: {userInfo.interests.length > 0 ? userInfo.interests.join(", ") : "Ei asetettu"}</Text>
       <Text>Harrastuskiinnostukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
+      */}
+      
+      
       {isOwnProfile && (
         <TouchableOpacity
       onPress ={() => setMenuVisible(true)}

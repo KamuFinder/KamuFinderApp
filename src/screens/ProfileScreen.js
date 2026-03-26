@@ -50,7 +50,10 @@ export default function ProfileScreen() {
           nickName: snap.data().nickName || "",
           city: snap.data().city || "",
           profile_text: snap.data().profile_text || "",
-          interests: [],
+
+         // varmistus kun en ole varma miten Firestoressa on interests
+          interests: snap.data().interests || snap.data().intrests || [],
+
           hobby_interests: snap.data().hobby_interests || [],
         });
       }

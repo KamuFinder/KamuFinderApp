@@ -23,6 +23,7 @@ const FRIENDS = 'friends'
 const USERSPRIVATECHATS = 'usersPrivateChats'
 const PRIVATECHATS = 'privateChats'
 const MESSAGES = 'messages'
+const FRIENDREQUESTS = 'friendRequests'
 
 const auth = initializeAuth(app, {
     persistence: getReactNativePersistence(ReactNativeAsyncStorage)
@@ -51,4 +52,5 @@ export {
     USERSPRIVATECHATS,
     PRIVATECHATS,
     MESSAGES,
+    FRIENDREQUESTS,
 };

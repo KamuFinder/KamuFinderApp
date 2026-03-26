@@ -51,7 +51,7 @@ export default function ProfileScreen() {
           city: snap.data().city || "",
           profile_text: snap.data().profile_text || "",
           interests: [],
-          hobby_interests: [],
+          hobby_interests: snap.data().hobby_interests || [],
         });
       }
     };
@@ -106,8 +106,9 @@ export default function ProfileScreen() {
       <View style={styles.header}>
       <Text style={styles.title}>Profiilisivu</Text>
 
-      <Text>Opiskelukiinnostukset: {userInfo.interests.length > 0 ? userInfo.interests.join(", ") : "Ei asetettu"}</Text>
+      {/*<Text>Opiskelukiinnostukset: {userInfo.interests.length > 0 ? userInfo.interests.join(", ") : "Ei asetettu"}</Text>
       <Text>Harrastuskiinnostukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
+      */}
       {isOwnProfile && (
         <TouchableOpacity
       onPress ={() => setMenuVisible(true)}
@@ -140,7 +141,8 @@ export default function ProfileScreen() {
           </View>
           
 
-           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Kiinnostuksen kohteet: {userInfo.intrests}</Text>
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Kiinnostuksen kohteet: {userInfo.interests}</Text>
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Harrastuskiinnostukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
             <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Profiiliteksti: {userInfo.profile_text}</Text>
         </TouchableOpacity>
         

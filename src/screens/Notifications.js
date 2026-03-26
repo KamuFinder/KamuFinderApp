@@ -4,7 +4,7 @@ import { useUser } from "../context/UserContext.js";
 import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, onSnapshot, setDoc} from "../firebase/config";
 import { collection, deleteDoc, serverTimestamp, writeBatch, updateDoc} from "firebase/firestore";
 import { useNavigation } from '@react-navigation/native';
-import styles from "../styles/Home.js";
+import styles from "../styles/Notifications.js";
 
 export default function Notifications() {
   const user = useUser();
@@ -232,20 +232,34 @@ export default function Notifications() {
       <Text style={styles.title}>Ilmoitukset</Text>
 
       {/* Uudet saapuneet pyynnöt */}
-      {newFriendRequests.length > 0 && <Text style={{ fontWeight: "bold" }}>Uudet saapuneet pyynnöt:</Text>}
+      {newFriendRequests.length > 0 && 
+      <Text 
+      style={{ 
+        fontWeight: "bold", 
+        fontSize: 16,
+        marginTop:12,
+        alignSelf: "center",
+        }}
+        >
+          Uudet saapuneet pyynnöt:
+          </Text>}
       {newFriendRequests.map((req) => (
         <View
           key={req.id}
-          style={{
-            marginBottom: 10,
-            padding: 10,
-            borderRadius: 8,
-            backgroundColor: req.read ? "#f0f0f0" : "#d1e7dd",
-            borderWidth: 1,
-            borderColor: "#ccc",
-          }}
+          style={{width: "90%",
+          alignItems: "center",
+          alignSelf: "center",
+          marginBottom: 10,
+          marginTop: 24,
+          paddingVertical: 12,
+          borderBottomRightRadius: 16,
+          backgroundColor: req.read ? "#f0f0f0" : "#d1e7dd",
+          borderWidth: 1,
+          borderColor: "#ccc",
+          elevation: req.read ? 1 : 3,
+        }}
         >
-          <Text style={{ fontWeight: "bold", color: req.status === "declined" ? "red" : "black" }}>
+          <Text style={{ fontWeight: "bold", fontSize:24,color: req.status === "declined" ? "red" : "black" }}>
             {req.name} - {req.Date ? req.Date.toLocaleDateString() : ""} 
             {req.status === "declined" ? " (Hylätty)" : ""}
           </Text>
@@ -261,18 +275,34 @@ export default function Notifications() {
       ))}
 
       {/* Luetut saapuneet pyynnöt */}
-      {readFriendRequests.length > 0 && <Text style={{ fontWeight: "bold" }}>Luetut saapuneet pyynnöt:</Text>}
+      {readFriendRequests.length > 0 && 
+      <Text 
+        style={{ 
+        fontWeight: "bold",
+        fontSize: 16,
+        marginTop:12,
+        alignSelf: "center"
+         }}
+         >
+          Luetut saapuneet pyynnöt:
+          </Text>}
       {readFriendRequests.map((req) => (
         <View
           key={req.id}
           style={{
-            marginBottom: 10,
-            padding: 10,
-            borderRadius: 8,
-            backgroundColor: "#f0f0f0",
-            borderWidth: 1,
-            borderColor: "#ccc",
-          }}
+          width: "90%",
+          alignItems: "center",
+          alignSelf: "center",
+          marginBottom: 10,
+          marginTop: 24,
+          padding: 10,
+          paddingVertical: 12,
+          borderBottomRightRadius: 16,
+          backgroundColor: "#f0f0f0",
+          borderWidth: 1,
+          borderColor: "#ccc",
+          elevation: 1,
+        }}
         >
           <Text style={{ fontWeight: "bold" }}>{req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}</Text>
           <View style={{ flexDirection: "row", gap: 10, marginTop: 5 }}>
@@ -287,23 +317,54 @@ export default function Notifications() {
       ))}
 
       {/* Lähetetyt pyynnöt */}
-      {sentFriendRequests.filter(r => r.status !== "declined").length > 0 && <Text style={{ fontWeight: "bold" }}>Lähetetyt odottavat pyynnöt:</Text>}
+      <View style={styles.pendingContainer}>
+      {sentFriendRequests.filter(r => r.status !== "declined").length > 0 && 
+      <Text 
+      style={{ 
+        fontWeight: "bold",
+        fontSize: 16,
+        alignSelf: "center"
+         }}>Lähetetyt odottavat pyynnöt:</Text>}
       {sentFriendRequests.filter(r => r.status !== "declined").map((req) => (
-        <Text key={req.id}>{req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}</Text>
+        <Text 
+        key={req.id}
+        style={{
+          fontWeight: "bold",
+          color: "gray",
+          alignSelf: "center",
+          marginTop: 10,
+         
+        }}>{req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}</Text>
       ))}
+      </View>
 
       {/* Notifications */}
-      {newNotifications.length > 0 && <Text style={{ fontWeight: "bold" }}>Uudet ilmoitukset:</Text>}
+      {newNotifications.length > 0 && 
+      <Text 
+      style={{ 
+        fontWeight: "bold",
+        fontSize: 16,
+        marginTop:12,
+        alignSelf: "center"
+         }}
+         >
+         Uudet ilmoitukset:</Text>}
       {newNotifications.map((notif) => (
         <View
           key={notif.id}
           style={{
+            width: "90%",
+            alignItems: "center",
+            alignSelf: "center",
+            marginBottom: 10,
+            marginTop: 24,
             padding: 10,
-            marginBottom: 5,
-            borderRadius: 8,
+            paddingVertical: 12,
+            borderBottomRightRadius: 16,
             backgroundColor: notif.read ? "#f0f0f0" : "#ffeeba", 
             borderWidth: 1,
             borderColor: "#ccc",
+            elevation: notif.read ? 1 : 3,
           }}
         >
           <Text style={{ fontWeight: "bold" }}>{notif.message}</Text>
@@ -313,17 +374,33 @@ export default function Notifications() {
         </View>
       ))}
 
-      {readNotifications.length > 0 && <Text style={{ fontWeight: "bold" }}>Luetut ilmoitukset:</Text>}
+      {readNotifications.length > 0 && 
+      <Text 
+      style={{ 
+        fontWeight: "bold",
+        fontSize: 16,
+        marginTop:12,
+        alignSelf: "center"
+         }}
+         >
+          Luetut ilmoitukset:
+          </Text>}
       {readNotifications.map((notif) => (
         <View
           key={notif.id}
           style={{
+            width: "90%",
+            alignItems: "center",
+            alignSelf: "center",
+            marginBottom: 10,
+            marginTop: 24,
             padding: 10,
-            marginBottom: 5,
-            borderRadius: 8,
+            paddingVertical: 12,
+            borderBottomRightRadius: 16,
             backgroundColor: "#f0f0f0",
             borderWidth: 1,
             borderColor: "#ccc",
+            elevation: 1,
           }}
         >
           <Text>{notif.message}</Text>

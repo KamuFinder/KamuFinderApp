@@ -174,7 +174,7 @@ const fetchHobbyRecommendations = async () => {
        <Text style={styles.actionButtonText}>Etsi kavereita</Text>
       </TouchableOpacity>
 
-      <NavbarBottom />
+      
 
 
 

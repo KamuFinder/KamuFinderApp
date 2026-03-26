@@ -37,5 +37,20 @@ export default StyleSheet.create({
     padding: 8,
   },
 
+  modalOverlay: { 
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)", // tumma blur-tyylinen tausta
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  
+  modalContainer: {
+    width: "85%",
+    maxHeight: "75%", 
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 20,
+  },
+
 
 });

@@ -1,15 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, FlatList, Image, 
-  TouchableOpacity
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  Modal,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useUser } from "../context/UserContext.js";
-import { firestore, collection, onSnapshot, getDocs } from "../firebase/config";
+import {
+  firestore,
+  collection,
+  onSnapshot,
+} from "../firebase/config";
+import { USERS, FRIENDS } from "../firebase/config";
 import Logo from "../../assets/Logo.png";
 import styles from "../styles/Groups.js";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome6 } from "@expo/vector-icons";
-
 
 const groupColors = [
   "#E3F2FD",
@@ -36,6 +47,11 @@ export default function GroupScreen() {
   const user = useUser();  // Haetaan tällä hetkellä kirjautuneen käyttäjän tiedot
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // MODAL + KAVERIT
+  const [modalVisible, setModalVisible] = useState(false);
+  const [friendsList, setFriendsList] = useState([]);
+  const [selectedFriends, setSelectedFriends] = useState([]);
 
   useEffect(() => {
     if (!user?.uid) return; // Jos käyttäjää ei ole (uid undefined), älä tee mitään
@@ -69,11 +85,64 @@ export default function GroupScreen() {
     return unsubscribe;
   }, [user]);
 
+  // 🔹 HAETAAN KAVERIT (malli profiilisivulta)
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const friendsRef = collection(
+      firestore,
+      USERS,
+      user.uid,
+      FRIENDS
+    );
+
+    const unsubscribe = onSnapshot(friendsRef, (snapshot) => {
+      const friendsData = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+
+        return {
+          id: docSnap.id,
+          name: `${data.firstName || "Tuntematon"} ${data.lastName || ""}`,
+          createdAt: data.timestamp || null,
+        };
+      });
+
+      setFriendsList(friendsData);
+    });
+
+    return unsubscribe;
+  }, [user]);
+
+  // 🔹 Kaverin valinta
+  const toggleFriend = (friendId) => {
+    setSelectedFriends((prev) =>
+      prev.includes(friendId)
+        ? prev.filter((id) => id !== friendId)
+        : [...prev, friendId]
+    );
+  };
+
   return (
     <View style={styles.container}>
 
       <Image source={Logo} style={styles.logo} />
       <Text style={styles.title}>Omat ryhmäsi:</Text>
+
+      {/* 🔹 LUO RYHMÄ NAPPI */}
+      <TouchableOpacity
+        style={{
+          backgroundColor: "#f17a0a",
+          padding: 12,
+          borderRadius: 8,
+          alignSelf: "flex-start",
+          marginBottom: 16,
+        }}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={{ color: "white", fontWeight: "bold" }}>
+          Luo ryhmä
+        </Text>
+      </TouchableOpacity>
 
       {loading ? (
         <ActivityIndicator size="large" />
@@ -85,31 +154,142 @@ export default function GroupScreen() {
           data={groups}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={[styles.groupItem, 
-            { backgroundColor: getGroupColor(item.name) }]}>
+            <View style={[
+              styles.groupItem,
+              { backgroundColor: getGroupColor(item.name) }
+            ]}>
               <View>
-              <Text style={{ fontSize: 32, fontWeight: "bold",marginBottom:8 }}>
-                {item.name}
-              </Text>
+                <Text style={{
+                  fontSize: 32,
+                  fontWeight: "bold",
+                  marginBottom: 8
+                }}>
+                  {item.name}
+                </Text>
 
-              {item.description ? (
-                <Text style={{ color: "#555",fontSize:16,fontFamily: "monospace" }}>{item.description}</Text>
-              ) : null}
+                {item.description ? (
+                  <Text style={{
+                    color: "#555",
+                    fontSize: 16,
+                    fontFamily: "monospace"
+                  }}>
+                    {item.description}
+                  </Text>
+                ) : null}
               </View>
 
               <TouchableOpacity
-                onPress={() => navigation.navigate("SpecificGroupChat", { groupId: item.id})
-              }
+                onPress={() =>
+                  navigation.navigate("SpecificGroupChat", {
+                    groupId: item.id
+                  })
+                }
               >
                 <View style={styles.iconMessage}>
-                <FontAwesome6 name="message" size={24} color={"#f17a0a"} />
+                  <FontAwesome6
+                    name="message"
+                    size={24}
+                    color={"#f17a0a"}
+                  />
                 </View>
-                </TouchableOpacity>
-              
+              </TouchableOpacity>
             </View>
           )}
         />
       )}
+
+     {/* MODAL — KAVERILISTA Tässä*/}
+<Modal
+  visible={modalVisible}
+  transparent={true}
+  animationType="slide"
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      <Text style={{
+        fontSize: 20,
+        fontWeight: "bold",
+        marginBottom: 16
+      }}>
+        Valitse kaverit ryhmään
+      </Text>
+
+      {friendsList.length === 0 ? (
+        <Text>Sinulla ei ole vielä kavereita</Text>
+      ) : (
+        <FlatList
+          data={friendsList}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => {
+            const selected = selectedFriends.includes(item.id);
+
+            return (
+              <TouchableOpacity
+                onPress={() => toggleFriend(item.id)}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  paddingVertical: 12,
+                }}
+              >
+                <Text style={{ fontSize: 16 }}>
+                  {item.name}
+                </Text>
+
+                <Ionicons
+                  name={
+                    selected
+                      ? "checkbox"
+                      : "square-outline"
+                  }
+                  size={24}
+                  color="#f17a0a"
+                />
+              </TouchableOpacity>
+            );
+          }}
+        />
+      )}
+
+      <TouchableOpacity
+        style={{
+          marginTop: 20,
+          backgroundColor: "#f17a0a",
+          padding: 12,
+          borderRadius: 8,
+        }}
+        onPress={() =>
+          Alert.alert(
+            "Ryhmä luodaan",
+            `Valittuja kavereita: ${selectedFriends.length}`
+          )
+        }
+      >
+        <Text style={{
+          textAlign: "center",
+          color: "white",
+          fontWeight: "bold"
+        }}>
+          Luo ryhmä
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => setModalVisible(false)}
+        style={{ marginTop: 10 }}
+      >
+        <Text style={{
+          textAlign: "center",
+          color: "#f17a0a"
+        }}>
+          Sulje
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 }

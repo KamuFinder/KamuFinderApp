@@ -159,7 +159,7 @@ export default function HomeScreen() {
               {isNewDay && <DateDivider date={time} />}
 
             <View
-              //key={item.id}
+              key={item.id}
               style={[
                 styles.messageContainer,
                 isMe ? styles.myMessage : styles.otherMessage

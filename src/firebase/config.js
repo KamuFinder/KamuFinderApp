@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, query, addDoc, setDoc, getDoc, getDocs, onSnapshot, orderBy, serverTimestamp, doc, where,  } from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, initializeAuth, signOut, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'
-export const API_BASE_URL = "http://192.168.0.14:8000";
+export const API_BASE_URL = "https://kamufinder-backend.onrender.com";
 
 
 // Your web app's Firebase configuration

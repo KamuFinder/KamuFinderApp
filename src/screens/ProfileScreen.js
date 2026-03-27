@@ -50,8 +50,11 @@ export default function ProfileScreen() {
           nickName: snap.data().nickName || "",
           city: snap.data().city || "",
           profile_text: snap.data().profile_text || "",
-          interests: [],
-          hobby_interests: [],
+
+         // varmistus kun en ole varma miten Firestoressa on interests
+          interests: snap.data().interests || snap.data().intrests || [],
+
+          hobby_interests: snap.data().hobby_interests || [],
         });
       }
     };
@@ -144,7 +147,8 @@ export default function ProfileScreen() {
           </View>
           
 
-           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Kiinnostuksen kohteet: {userInfo.intrests}</Text>
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Kiinnostuksen kohteet: {userInfo.interests}</Text>
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Harrastuskiinnostukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
             <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Profiiliteksti: {userInfo.profile_text}</Text>
         </TouchableOpacity>
         

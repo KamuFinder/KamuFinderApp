@@ -8,10 +8,11 @@ import SignUpScreen from "../screens/SignUpScreen";
 import SpecificChat from "../screens/SpecificChat";
 import ProfileScreen from "../screens/ProfileScreen";
 import PrivaChats from "../screens/PrivaChats";
-import GroupsScreens from "../screens/GroupsScreen"
-import Swiping from "../screens/Swiping"
+import GroupsScreens from "../screens/GroupsScreen";
+import Swiping from "../screens/Swiping";
+import SwipePeopleScreen from "../screens/SwipePeopleScreen";
 import HomeScreen from "../screens/HomeScreen";
-import Notifications from "../screens/Notifications"
+import Notifications from "../screens/Notifications";
 import SpecificGroupChat from "../screens/SpecificGroupChat";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import ChangePasswordScreen from "../screens/ChangePasswordScreen";
@@ -44,7 +45,7 @@ export default function AppNavigator() {
           {/*Screens with bottom navbar */}
             <Stack.Screen name="Home" component={withNavBars(HomeScreen, { showProfile: true, showNotifications: true })} />
             <Stack.Screen name="Swiping" component={withNavBars(Swiping)} />
-
+            <Stack.Screen name="SwipePeople" component={SwipePeopleScreen} />
           {/*Screens with bottom navbar and back arrow */}
             <Stack.Screen name="PrivaChats" component={withNavBars(PrivaChats, { showBack: true, showProfile: true })} />
             <Stack.Screen name="GroupsScreen" component={withNavBars(GroupsScreens, { showBack: true, showProfile: true })} />

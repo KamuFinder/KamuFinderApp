@@ -21,6 +21,13 @@ import Logo from "../../assets/Logo.png";
 import styles from "../styles/Groups.js";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome6 } from "@expo/vector-icons";
+import {
+  addDoc,
+  doc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { TextInput } from "react-native";
 
 const groupColors = [
   "#E3F2FD",
@@ -52,6 +59,9 @@ export default function GroupScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [selectedFriends, setSelectedFriends] = useState([]);
+
+  const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
 
   useEffect(() => {
     if (!user?.uid) return; // Jos käyttäjää ei ole (uid undefined), älä tee mitään
@@ -85,7 +95,7 @@ export default function GroupScreen() {
     return unsubscribe;
   }, [user]);
 
-  // 🔹 HAETAAN KAVERIT (malli profiilisivulta)
+  //  HAETAAN KAVERIT (otin mallia profiilisivulta)
   useEffect(() => {
     if (!user?.uid) return;
 
@@ -113,7 +123,7 @@ export default function GroupScreen() {
     return unsubscribe;
   }, [user]);
 
-  // 🔹 Kaverin valinta
+  // Kaverin valinta
   const toggleFriend = (friendId) => {
     setSelectedFriends((prev) =>
       prev.includes(friendId)
@@ -122,13 +132,74 @@ export default function GroupScreen() {
     );
   };
 
+  // RYHMÄN LUONTI FIRESTOREEN
+const createGroup = async () => {
+  try {
+    if (!groupName.trim()) {
+      Alert.alert("Virhe", "Anna ryhmälle nimi");
+      return;
+    }
+
+    // Luo ryhmä groups collectioniin
+    const groupRef = await addDoc(collection(firestore, "groups"), {
+      groupName: groupName,
+      desc: groupDescription,
+      createdAt: serverTimestamp(),
+      createdBy: user.uid,
+    });
+
+    const groupId = groupRef.id;
+
+    // Lisätään creator automaattisesti jäseneksi
+    const allMembers = [...selectedFriends, user.uid];
+
+    // Lisätään members subcollection
+    for (const memberId of allMembers) {
+      await setDoc(
+        doc(firestore, "groups", groupId, "members", memberId),
+        {
+          joinedAt: serverTimestamp(),
+        }
+      );
+
+      // Lisätään user -> user-groups 
+      await setDoc(
+        doc(
+          firestore,
+          "user",
+          memberId,
+          "user-groups",
+          groupId
+        ),
+        {
+          groupName: groupName,
+          description: groupDescription,
+          joined: serverTimestamp(),
+        }
+      );
+    }
+
+    Alert.alert("Valmis", "Ryhmä luotu!");
+
+    // reset UI
+    setModalVisible(false);
+    setSelectedFriends([]);
+    setGroupName("");
+    setGroupDescription("");
+
+  } catch (error) { //Jos luontivaiheessa tulee joku virhe nii error handling
+    console.log("Group creation error:", error);
+    Alert.alert("Virhe", "Ryhmän luonti epäonnistui");
+  }
+};
+
   return (
     <View style={styles.container}>
 
       <Image source={Logo} style={styles.logo} />
       <Text style={styles.title}>Omat ryhmäsi:</Text>
 
-      {/* 🔹 LUO RYHMÄ NAPPI */}
+      {/* LUO RYHMÄ NAPPI */}
       <TouchableOpacity
         style={{
           backgroundColor: "#f17a0a",
@@ -205,8 +276,34 @@ export default function GroupScreen() {
   animationType="slide"
   onRequestClose={() => setModalVisible(false)}
 >
+
   <View style={styles.modalOverlay}>
     <View style={styles.modalContainer}>
+    <TextInput
+  placeholder="Ryhmän nimi"
+  value={groupName}
+  onChangeText={setGroupName}
+  style={{
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 6,
+    marginBottom: 10,
+  }}
+/>
+
+<TextInput
+  placeholder="Ryhmän kuvaus"
+  value={groupDescription}
+  onChangeText={setGroupDescription}
+  style={{
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 6,
+    marginBottom: 16,
+  }}
+/>
       <Text style={{
         fontSize: 20,
         fontWeight: "bold",
@@ -259,12 +356,7 @@ export default function GroupScreen() {
           padding: 12,
           borderRadius: 8,
         }}
-        onPress={() =>
-          Alert.alert(
-            "Ryhmä luodaan",
-            `Valittuja kavereita: ${selectedFriends.length}`
-          )
-        }
+        onPress={createGroup}
       >
         <Text style={{
           textAlign: "center",

@@ -2,24 +2,21 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity,Image, TextInput, Alert } from "react-native";
 import { useUser } from "../context/UserContext.js";
 import { useNavigation } from "@react-navigation/native";
-import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, collection, onSnapshot, addDoc, serverTimestamp,} from "../firebase/config";
+import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, collection, onSnapshot, addDoc, serverTimestamp, setDoc} from "../firebase/config";
 import styles from "../styles/Home.js";
 import { Ionicons } from "@expo/vector-icons";
 import Logo from "../../assets/Logo.png";
-import { API_BASE_URL } from "../firebase/config";
-import NavbarBottom from "../components/NavbarBottom";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 
 export default function HomeScreen() {
   const user = useUser();
   const [firstName, setFirstName] = useState("");
-  const navigation = useNavigation();
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [ searchQuery , setSearchQuery ] = useState('');
   const [listOfUsers, setUsersList] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
-  const [sentFriendRequests, setSentFriendRequests] = useState([]);
-  const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
 
 
@@ -72,19 +69,23 @@ export default function HomeScreen() {
     const unsubscribe = onSnapshot(friendRequestsRef, (snapshot) => {
       const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // Filtteröi vain pending pyynnöt
-      const sent = requests.filter(r => r.fromUserId === user.uid && r.status === "pending");
-      const received = requests.filter(r => r.toUserId === user.uid && r.status === "pending");
-      
-      setSentFriendRequests(sent);
-      setReceivedFriendRequests(received);
-      
-      // Kaikki pyynnöt (pending ja declined) - estää uudestaan lähettämisen
       setAllFriendRequests(requests);
     });
     
     return () => unsubscribe();
   }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Kun screen tulee fokukseen → ei tehdä mitään
+
+      return () => {
+        // Kun poistutaan screeniltä → tyhjennetään
+        setSearchQuery("");
+        setFilteredUsers([]);
+      };
+    }, [])
+  );
 
 
   // Handles the search query input, filters the list of users, and updates the filtered results
@@ -129,8 +130,9 @@ export default function HomeScreen() {
         status: "pending",
         timestamp: serverTimestamp(),
       }
-      await addDoc(currentUserRequestsRef, requestData)
-      await addDoc(targetUserRequestsRef, requestData)
+      const requestDocRef = doc(currentUserRequestsRef)
+      await setDoc(requestDocRef, requestData)
+      await setDoc(doc(targetUserRequestsRef, requestDocRef.id), requestData)
 
       Alert.alert("Pyyntö lähetetty", `Kaveripyyntö lähetetty käyttäjälle ${u.firstName} ${u.lastName}`)
     } catch (error) {

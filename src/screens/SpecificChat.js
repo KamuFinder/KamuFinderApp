@@ -171,6 +171,13 @@ export default function HomeScreen() {
           );
   
         }}
+        ListEmptyComponent={
+          <View style={{ alignItems: "center", marginTop: 20 }}>
+            <Text style={{ fontSize: 16, color: "#888" }}>
+              Ei vielä yhtään viestejä
+            </Text>
+          </View>
+        }
 
       
       />

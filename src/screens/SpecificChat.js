@@ -81,7 +81,6 @@ export default function HomeScreen() {
         if (lastMessage.userId === user.uid) return;
 
         const chatRef = doc(firestore,USERS, user.uid, USERSPRIVATECHATS,chatId)
-        console.log(chatRef, chatId)
         await updateDoc (chatRef, {
           unReadMessages: false,
         })
@@ -172,6 +171,13 @@ export default function HomeScreen() {
           );
   
         }}
+        ListEmptyComponent={
+          <View style={{ alignItems: "center", marginTop: 20 }}>
+            <Text style={{ fontSize: 16, color: "#888" }}>
+              Ei vielä yhtään viestejä
+            </Text>
+          </View>
+        }
 
       
       />

@@ -1,23 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Dimensions,
 } from "react-native";
-import styles from "../styles/SwipePeople";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
-
-import RecommendationCard from "../components/RecommendationCard";
+import styles from "../styles/SwipePeople";
+import SwipeDeck from "../components/SwipeDeck";
 import { useUser } from "../context/UserContext.js";
 import {
   firestore,
@@ -33,9 +24,6 @@ import {
 } from "../firebase/config";
 import { fetchUserRecommendations } from "../../services/recommendationService";
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-
 export default function SwipePeopleScreen() {
   const user = useUser();
 
@@ -45,11 +33,8 @@ export default function SwipePeopleScreen() {
   const [friendsList, setFriendsList] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
 
-  const translateX = useSharedValue(0);
-  const rotate = useSharedValue(0);
-
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
 
     const friendsRef = collection(firestore, USERS, user.uid, "friends");
 
@@ -65,7 +50,7 @@ export default function SwipePeopleScreen() {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
 
     const friendRequestsRef = collection(
       firestore,
@@ -86,14 +71,14 @@ export default function SwipePeopleScreen() {
   }, [user]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.uid) {
       fetchPeopleRecommendations();
     }
   }, [user]);
 
   const fetchPeopleRecommendations = async () => {
     try {
-      if (!user) return;
+      if (!user?.uid) return;
 
       setLoading(true);
 
@@ -116,6 +101,9 @@ export default function SwipePeopleScreen() {
             user_id: userDoc.id,
             firstName: data.firstName || "",
             city: data.city || "",
+            age: data.age || null,
+            bio: data.bio || "",
+            profileImage: data.profileImage || "",
             hobby_interests: Array.isArray(data.hobby_interests)
               ? data.hobby_interests
               : [],
@@ -133,8 +121,6 @@ export default function SwipePeopleScreen() {
 
       setUserRecommendations(recommendations || []);
       setCurrentIndex(0);
-      translateX.value = 0;
-      rotate.value = 0;
     } catch (error) {
       console.log("Virhe käyttäjäsuositusten haussa:", error);
       Alert.alert("Virhe", "Käyttäjäsuosituksia ei voitu hakea");
@@ -145,6 +131,8 @@ export default function SwipePeopleScreen() {
 
   const handleFriendRequest = async (targetUser) => {
     try {
+      if (!user?.uid || !targetUser?.user_id) return;
+
       const currentUserRequestsRef = collection(
         firestore,
         USERS,
@@ -168,105 +156,89 @@ export default function SwipePeopleScreen() {
 
       await addDoc(currentUserRequestsRef, requestData);
       await addDoc(targetUserRequestsRef, requestData);
-
-      Alert.alert("Pyyntö lähetetty");
     } catch (error) {
       console.error("Error sending friend request:", error);
       Alert.alert("Virhe", "Kaveripyynnön lähetys epäonnistui.");
+      throw error;
     }
   };
 
-  const resetCardPosition = () => {
-    translateX.value = 0;
-    rotate.value = 0;
-  };
-
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentIndex((prev) => prev + 1);
-    resetCardPosition();
-  };
+  }, []);
 
-  const currentUserItem = userRecommendations[currentIndex];
+  const getRelationshipState = useCallback(
+    (targetUser) => {
+      if (!targetUser) {
+        return {
+          isFriend: false,
+          requestStatus: null,
+          isPending: false,
+          isAccepted: false,
+          canSendRequest: false,
+        };
+      }
 
-  const isFriend = currentUserItem
-    ? friendsList.some((f) => f.id === currentUserItem.user_id)
-    : false;
+      const isFriend = friendsList.some((f) => f.id === targetUser.user_id);
 
-  const userRequest = currentUserItem
-    ? allFriendRequests.find(
+      const userRequest = allFriendRequests.find(
         (r) =>
-          (r.fromUserId === user.uid && r.toUserId === currentUserItem.user_id) ||
-          (r.toUserId === user.uid && r.fromUserId === currentUserItem.user_id)
-      )
-    : null;
+          (r.fromUserId === user.uid && r.toUserId === targetUser.user_id) ||
+          (r.toUserId === user.uid && r.fromUserId === targetUser.user_id)
+      );
 
-  const requestStatus = userRequest?.status;
-  const isPending = requestStatus === "pending";
-  const isAccepted = requestStatus === "accepted";
-  const canSendRequest =
-    !!currentUserItem && !isFriend && !isPending && !isAccepted;
+      const requestStatus = userRequest?.status || null;
+      const isPending = requestStatus === "pending";
+      const isAccepted = requestStatus === "accepted";
+      const canSendRequest = !isFriend && !isPending && !isAccepted;
 
-  const handleLikeAndNext = async (targetUser, shouldSendRequest) => {
-    try {
-      if (shouldSendRequest) {
-        await handleFriendRequest(targetUser);
-      }
-      handleNext();
-    } catch (error) {
-      console.log("Virhe tykkäyksessä:", error);
-    }
-  };
+      return {
+        isFriend,
+        requestStatus,
+        isPending,
+        isAccepted,
+        canSendRequest,
+      };
+    },
+    [allFriendRequests, friendsList, user]
+  );
 
-  const animatedCardStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: translateX.value },
-        { rotate: `${rotate.value}deg` },
-      ],
-    };
-  });
+  const enrichedRecommendations = useMemo(() => {
+    return userRecommendations.map((recommendedUser) => {
+      const relationship = getRelationshipState(recommendedUser);
 
-  const likeStyle = useAnimatedStyle(() => {
-    return {
-      opacity: translateX.value > 0 ? Math.min(translateX.value / 100, 1) : 0,
-    };
-  });
-
-  const skipStyle = useAnimatedStyle(() => {
-    return {
-      opacity: translateX.value < 0 ? Math.min(-translateX.value / 100, 1) : 0,
-    };
-  });
-
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      translateX.value = event.translationX;
-      rotate.value = event.translationX / 20;
-    })
-    .onEnd(() => {
-      if (!currentUserItem) {
-        translateX.value = withSpring(0);
-        rotate.value = withSpring(0);
-        return;
-      }
-
-      if (translateX.value > SWIPE_THRESHOLD) {
-        translateX.value = withSpring(SCREEN_WIDTH + 120, {}, () => {
-          translateX.value = 0;
-          rotate.value = 0;
-          runOnJS(handleLikeAndNext)(currentUserItem, canSendRequest);
-        });
-      } else if (translateX.value < -SWIPE_THRESHOLD) {
-        translateX.value = withSpring(-SCREEN_WIDTH - 120, {}, () => {
-          translateX.value = 0;
-          rotate.value = 0;
-          runOnJS(handleNext)();
-        });
-      } else {
-        translateX.value = withSpring(0);
-        rotate.value = withSpring(0);
-      }
+      return {
+        ...recommendedUser,
+        ...relationship,
+      };
     });
+  }, [userRecommendations, getRelationshipState]);
+
+  const currentUserItem = enrichedRecommendations[currentIndex];
+
+  const handleLikeAndNext = useCallback(
+    async (targetUser) => {
+      try {
+        if (!targetUser) return;
+
+        if (targetUser.canSendRequest) {
+          await handleFriendRequest(targetUser);
+        }
+
+        handleNext();
+      } catch (error) {
+        console.log("Virhe tykkäyksessä:", error);
+      }
+    },
+    [handleNext]
+  );
+
+  const handleSkip = useCallback(() => {
+    handleNext();
+  }, [handleNext]);
+
+  const remainingCount = enrichedRecommendations.length - currentIndex;
+  const hasNoMoreCards = currentIndex >= enrichedRecommendations.length;
 
   if (loading) {
     return (
@@ -277,7 +249,7 @@ export default function SwipePeopleScreen() {
     );
   }
 
-  if (!currentUserItem) {
+  if (hasNoMoreCards) {
     return (
       <SafeAreaView style={styles.centered}>
         <Text style={styles.emptyText}>Ei enempää käyttäjäsuosituksia.</Text>
@@ -295,40 +267,33 @@ export default function SwipePeopleScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Swaippaa käyttäjiä</Text>
+      <Text style={styles.subtitle}>Jäljellä {remainingCount} käyttäjää</Text>
 
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={[styles.cardWrapper, animatedCardStyle]}>
-          <Animated.Text style={[styles.likeText, likeStyle]}>
-            LIKE
-          </Animated.Text>
-
-          <Animated.Text style={[styles.skipText, skipStyle]}>
-            SKIP
-          </Animated.Text>
-
-          <RecommendationCard
-            user={currentUserItem}
-            requestStatus={requestStatus}
-            isFriend={isFriend}
-            onAddFriend={() =>
-              handleLikeAndNext(currentUserItem, canSendRequest)
-            }
-          />
-        </Animated.View>
-      </GestureDetector>
-
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.skipButton} onPress={handleNext}>
-          <Text style={styles.actionText}>Ohita</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.likeButton}
-          onPress={() => handleLikeAndNext(currentUserItem, canSendRequest)}
-        >
-          <Text style={styles.actionText}>Tykkää</Text>
-        </TouchableOpacity>
+      <View style={styles.deckWrapper}>
+        <SwipeDeck
+          users={enrichedRecommendations}
+          currentIndex={currentIndex}
+          onSwipeRight={handleLikeAndNext}
+          onSwipeLeft={handleSkip}
+        />
       </View>
+
+      {currentUserItem && (
+        <View style={styles.actionsRow}>
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+            <Text style={styles.actionText}>Ohita</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.likeButton}
+            onPress={() => handleLikeAndNext(currentUserItem)}
+          >
+            <Text style={styles.actionText}>
+              {currentUserItem.canSendRequest ? "Tykkää" : "Seuraava"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

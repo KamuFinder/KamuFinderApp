@@ -6,11 +6,11 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "../context/UserContext.js";
 import styles from "../styles/Home.js";
+import localStyles from "../styles/Swiping";
 import {
   firestore,
   USERS,
@@ -25,6 +25,8 @@ import {
   API_BASE_URL,
 } from "../firebase/config";
 import { fetchUserRecommendations } from "../../services/recommendationService";
+import UserRecommendationsList from "../components/UserRecommendationsList";
+import GroupRecommendationsList from "../components/GroupRecommendationsList";
 
 export default function SwipingScreen({ navigation }) {
   const user = useUser();
@@ -41,9 +43,9 @@ export default function SwipingScreen({ navigation }) {
     const friendsRef = collection(firestore, USERS, user.uid, "friends");
 
     const unsubscribe = onSnapshot(friendsRef, (snapshot) => {
-      const friends = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const friends = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
       }));
       setFriendsList(friends);
     });
@@ -62,11 +64,10 @@ export default function SwipingScreen({ navigation }) {
     );
 
     const unsubscribe = onSnapshot(friendRequestsRef, (snapshot) => {
-      const requests = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const requests = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
       }));
-
       setAllFriendRequests(requests);
     });
 
@@ -166,7 +167,6 @@ export default function SwipingScreen({ navigation }) {
       }
 
       const currentUserData = currentUserSnap.data();
-
       const usersSnapshot = await getDocs(collection(firestore, USERS));
 
       const candidates = usersSnapshot.docs
@@ -229,141 +229,31 @@ export default function SwipingScreen({ navigation }) {
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => navigation.navigate("SwipePeople")}
->
-          <Text style={styles.actionButtonText}>Selaa käyttäjiä swaippaamalla</Text>
+        >
+          <Text style={styles.actionButtonText}>
+            Selaa käyttäjiä swaippaamalla
+          </Text>
         </TouchableOpacity>
 
         {loading && (
-          <View style={{ marginTop: 20 }}>
+          <View style={localStyles.loadingContainer}>
             <ActivityIndicator size="large" />
-            <Text style={{ marginTop: 10 }}>Haetaan suosituksia...</Text>
+            <Text style={localStyles.loadingText}>Haetaan suosituksia...</Text>
           </View>
         )}
 
-        {userRecommendations.length > 0 && (
-          <View style={styles.recommendationsContainer}>
-            <Text style={styles.recommendationsTitle}>Suositellut käyttäjät</Text>
+        <UserRecommendationsList
+          userRecommendations={userRecommendations}
+          friendsList={friendsList}
+          allFriendRequests={allFriendRequests}
+          currentUserId={user?.uid}
+          onFriendRequest={handleFriendRequest}
+        />
 
-            {userRecommendations.map((item) => {
-              const isFriend = friendsList.some((f) => f.id === item.user_id);
-
-              const userRequest = allFriendRequests.find(
-                (r) =>
-                  (r.fromUserId === user.uid && r.toUserId === item.user_id) ||
-                  (r.toUserId === user.uid && r.fromUserId === item.user_id)
-              );
-
-              const requestStatus = userRequest?.status;
-              const isPending = requestStatus === "pending";
-              const isDeclined = requestStatus === "declined";
-              const isAccepted = requestStatus === "accepted";
-              const canSendRequest = !isFriend && !isPending && !isAccepted;
-
-              return (
-                <View key={item.user_id} style={styles.recommendationCard}>
-                  <Text style={styles.recommendationName}>
-                    {item.firstName || "Tuntematon"}
-                  </Text>
-                  <Text>Kaupunki: {item.city || "Ei tiedossa"}</Text>
-                  <Text>Match score: {Math.round(item.score * 100)}%</Text>
-                  <Text>Yhteisiä harrastuksia: {item.shared_count || 0}</Text>
-
-                  {item.shared_hobbies && item.shared_hobbies.length > 0 && (
-                    <Text>{item.shared_hobbies.join(", ")}</Text>
-                  )}
-
-                  <Text style={{ marginTop: 6, color: "#666" }}>
-                    Debug status: {requestStatus || "ei pyyntöä"}
-                  </Text>
-
-                  {canSendRequest && (
-                    <TouchableOpacity
-                      onPress={() => handleFriendRequest(item)}
-                      style={localStyles.friendButton}
-                    >
-                      <Text style={localStyles.friendButtonText}>
-                        Lisää kaveriksi
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {isPending && (
-                    <Text style={localStyles.pendingText}>Pyyntö lähetetty</Text>
-                  )}
-
-                  {isDeclined && (
-                    <Text style={localStyles.declinedText}>Pyyntö hylätty</Text>
-                  )}
-
-                  {isAccepted && !isFriend && (
-                    <Text style={localStyles.friendText}>Pyyntö hyväksytty</Text>
-                  )}
-
-                  {isFriend && (
-                    <Text style={localStyles.friendText}>Jo kavereita</Text>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        <View style={styles.recommendationsContainer}>
-          <Text style={styles.recommendationsTitle}>Suositellut kaveriryhmät</Text>
-
-          {groupRecommendations.length === 0 ? (
-            <Text>Ei ryhmäsuosituksia juuri nyt.</Text>
-          ) : (
-            groupRecommendations.map((item) => (
-              <View key={item.group_id} style={styles.recommendationCard}>
-                <Text style={styles.recommendationName}>{item.group_name}</Text>
-                <Text>{item.description}</Text>
-                <Text>Jäseniä: {item.member_count}</Text>
-                <Text>Match score: {Math.round(item.score * 100)}%</Text>
-              </View>
-            ))
-          )}
-        </View>
+        <GroupRecommendationsList
+          groupRecommendations={groupRecommendations}
+        />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const localStyles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 220,
-    flexGrow: 1,
-  },
-  friendButton: {
-    backgroundColor: "#007AFF",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-    alignItems: "center",
-  },
-  friendButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  pendingText: {
-    color: "#999",
-    marginTop: 8,
-  },
-  declinedText: {
-    color: "#aaa",
-    marginTop: 8,
-  },
-  friendText: {
-    color: "green",
-    marginTop: 8,
-    fontWeight: "600",
-  },
-});

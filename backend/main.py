@@ -35,19 +35,6 @@ class HobbyUserRecommendationRequest(BaseModel):
     candidates: list[CandidateUser] = Field(default_factory=list)
 
 
-# Testi "tietokanta"
-users = {
-    1: {
-        "interests": ["ai", "python"],
-        "skills": ["python", "ml"],
-        "hobby_interests": ["pelaaminen", "sali"]
-    },
-    2: {
-        "interests": ["web", "design"],
-        "skills": ["html", "css"],
-        "hobby_interests": ["sali", "matkustelu"]
-    }
-}
 
 groups = [
     {
@@ -55,40 +42,40 @@ groups = [
         "name": "AI Study Group",
         "type": "study",
         "description": "Opiskellaan machine learningia ja AI:ta yhdessä",
-        "member_count": 5,
-        "interests": ["ai", "machine learning"],
+        "member_count": [],
+        "study_interests": ["ai", "machine learning"],
+        "hobby_interests": [],
         "skills": ["python"],
-        "hobby_interests": []
     },
     {
         "id": 2,
         "name": "Web Dev Group",
         "type": "study",
         "description": "Frontend ja backend web development",
-        "member_count": 8,
-        "interests": ["web development"],
+        "member_count": [],
+        "study_interests": ["web development"],
+        "hobby_interests": [],
         "skills": ["javascript"],
-        "hobby_interests": []
     },
     {
         "id": 3,
         "name": "Gaming Friends",
         "type": "hobby",
         "description": "Pelataan yhdessä vapaa-ajalla",
-        "member_count": 10,
-        "interests": [],
+        "member_count": [],
+        "study_interests": [],
+        "hobby_interests": ["pelaaminen"],
         "skills": [],
-        "hobby_interests": ["pelaaminen"]
     },
     {
         "id": 4,
         "name": "Gym Buddies",
         "type": "hobby",
         "description": "Käydään salilla yhdessä",
-        "member_count": 6,
-        "interests": [],
+        "member_count": [],
+        "study_interests": [],
         "skills": [],
-        "hobby_interests": ["sali"]
+        "hobby_interests": ["sali"],
     }
 ]
 

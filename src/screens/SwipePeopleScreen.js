@@ -1,6 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+} from "react-native";
+import styles from "../styles/SwipePeople";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+
 import RecommendationCard from "../components/RecommendationCard";
 import { useUser } from "../context/UserContext.js";
 import {
@@ -17,6 +33,9 @@ import {
 } from "../firebase/config";
 import { fetchUserRecommendations } from "../../services/recommendationService";
 
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
+
 export default function SwipePeopleScreen() {
   const user = useUser();
 
@@ -26,14 +45,18 @@ export default function SwipePeopleScreen() {
   const [friendsList, setFriendsList] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
 
+  const translateX = useSharedValue(0);
+  const rotate = useSharedValue(0);
+
   useEffect(() => {
     if (!user) return;
 
     const friendsRef = collection(firestore, USERS, user.uid, "friends");
+
     const unsubscribe = onSnapshot(friendsRef, (snapshot) => {
-      const friends = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const friends = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
       }));
       setFriendsList(friends);
     });
@@ -44,11 +67,17 @@ export default function SwipePeopleScreen() {
   useEffect(() => {
     if (!user) return;
 
-    const friendRequestsRef = collection(firestore, USERS, user.uid, FRIENDREQUESTS);
+    const friendRequestsRef = collection(
+      firestore,
+      USERS,
+      user.uid,
+      FRIENDREQUESTS
+    );
+
     const unsubscribe = onSnapshot(friendRequestsRef, (snapshot) => {
-      const requests = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const requests = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
       }));
       setAllFriendRequests(requests);
     });
@@ -57,7 +86,9 @@ export default function SwipePeopleScreen() {
   }, [user]);
 
   useEffect(() => {
-    fetchPeopleRecommendations();
+    if (user) {
+      fetchPeopleRecommendations();
+    }
   }, [user]);
 
   const fetchPeopleRecommendations = async () => {
@@ -75,12 +106,12 @@ export default function SwipePeopleScreen() {
       }
 
       const currentUserData = currentUserSnap.data();
-
       const usersSnapshot = await getDocs(collection(firestore, USERS));
 
       const candidates = usersSnapshot.docs
         .map((userDoc) => {
           const data = userDoc.data();
+
           return {
             user_id: userDoc.id,
             firstName: data.firstName || "",
@@ -102,6 +133,8 @@ export default function SwipePeopleScreen() {
 
       setUserRecommendations(recommendations || []);
       setCurrentIndex(0);
+      translateX.value = 0;
+      rotate.value = 0;
     } catch (error) {
       console.log("Virhe käyttäjäsuositusten haussa:", error);
       Alert.alert("Virhe", "Käyttäjäsuosituksia ei voitu hakea");
@@ -143,64 +176,157 @@ export default function SwipePeopleScreen() {
     }
   };
 
+  const resetCardPosition = () => {
+    translateX.value = 0;
+    rotate.value = 0;
+  };
+
   const handleNext = () => {
     setCurrentIndex((prev) => prev + 1);
+    resetCardPosition();
   };
 
   const currentUserItem = userRecommendations[currentIndex];
 
+  const isFriend = currentUserItem
+    ? friendsList.some((f) => f.id === currentUserItem.user_id)
+    : false;
+
+  const userRequest = currentUserItem
+    ? allFriendRequests.find(
+        (r) =>
+          (r.fromUserId === user.uid && r.toUserId === currentUserItem.user_id) ||
+          (r.toUserId === user.uid && r.fromUserId === currentUserItem.user_id)
+      )
+    : null;
+
+  const requestStatus = userRequest?.status;
+  const isPending = requestStatus === "pending";
+  const isAccepted = requestStatus === "accepted";
+  const canSendRequest =
+    !!currentUserItem && !isFriend && !isPending && !isAccepted;
+
+  const handleLikeAndNext = async (targetUser, shouldSendRequest) => {
+    try {
+      if (shouldSendRequest) {
+        await handleFriendRequest(targetUser);
+      }
+      handleNext();
+    } catch (error) {
+      console.log("Virhe tykkäyksessä:", error);
+    }
+  };
+
+  const animatedCardStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { rotate: `${rotate.value}deg` },
+      ],
+    };
+  });
+
+  const likeStyle = useAnimatedStyle(() => {
+    return {
+      opacity: translateX.value > 0 ? Math.min(translateX.value / 100, 1) : 0,
+    };
+  });
+
+  const skipStyle = useAnimatedStyle(() => {
+    return {
+      opacity: translateX.value < 0 ? Math.min(-translateX.value / 100, 1) : 0,
+    };
+  });
+
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+      rotate.value = event.translationX / 20;
+    })
+    .onEnd(() => {
+      if (!currentUserItem) {
+        translateX.value = withSpring(0);
+        rotate.value = withSpring(0);
+        return;
+      }
+
+      if (translateX.value > SWIPE_THRESHOLD) {
+        translateX.value = withSpring(SCREEN_WIDTH + 120, {}, () => {
+          translateX.value = 0;
+          rotate.value = 0;
+          runOnJS(handleLikeAndNext)(currentUserItem, canSendRequest);
+        });
+      } else if (translateX.value < -SWIPE_THRESHOLD) {
+        translateX.value = withSpring(-SCREEN_WIDTH - 120, {}, () => {
+          translateX.value = 0;
+          rotate.value = 0;
+          runOnJS(handleNext)();
+        });
+      } else {
+        translateX.value = withSpring(0);
+        rotate.value = withSpring(0);
+      }
+    });
+
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <SafeAreaView style={styles.centered}>
         <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 10 }}>Haetaan käyttäjiä...</Text>
+        <Text style={styles.loadingText}>Haetaan käyttäjiä...</Text>
       </SafeAreaView>
     );
   }
 
   if (!currentUserItem) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Ei enempää käyttäjäsuosituksia.</Text>
+      <SafeAreaView style={styles.centered}>
+        <Text style={styles.emptyText}>Ei enempää käyttäjäsuosituksia.</Text>
 
-        <TouchableOpacity onPress={fetchPeopleRecommendations} style={{ marginTop: 20 }}>
-          <Text>Hae uudelleen</Text>
+        <TouchableOpacity
+          onPress={fetchPeopleRecommendations}
+          style={styles.reloadButton}
+        >
+          <Text style={styles.reloadButtonText}>Hae uudelleen</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
-  const isFriend = friendsList.some((f) => f.id === currentUserItem.user_id);
-
-  const userRequest = allFriendRequests.find(
-    (r) =>
-      (r.fromUserId === user.uid && r.toUserId === currentUserItem.user_id) ||
-      (r.toUserId === user.uid && r.fromUserId === currentUserItem.user_id)
-  );
-
-  const requestStatus = userRequest?.status;
-
   return (
-    <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
-      <RecommendationCard
-        user={currentUserItem}
-        requestStatus={requestStatus}
-        isFriend={isFriend}
-        onAddFriend={() => handleFriendRequest(currentUserItem)}
-      />
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Swaippaa käyttäjiä</Text>
 
-      <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 24 }}>
-        <TouchableOpacity onPress={handleNext}>
-          <Text>Ohita</Text>
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={[styles.cardWrapper, animatedCardStyle]}>
+          <Animated.Text style={[styles.likeText, likeStyle]}>
+            LIKE
+          </Animated.Text>
+
+          <Animated.Text style={[styles.skipText, skipStyle]}>
+            SKIP
+          </Animated.Text>
+
+          <RecommendationCard
+            user={currentUserItem}
+            requestStatus={requestStatus}
+            isFriend={isFriend}
+            onAddFriend={() =>
+              handleLikeAndNext(currentUserItem, canSendRequest)
+            }
+          />
+        </Animated.View>
+      </GestureDetector>
+
+      <View style={styles.actionsRow}>
+        <TouchableOpacity style={styles.skipButton} onPress={handleNext}>
+          <Text style={styles.actionText}>Ohita</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={async () => {
-            await handleFriendRequest(currentUserItem);
-            handleNext();
-          }}
+          style={styles.likeButton}
+          onPress={() => handleLikeAndNext(currentUserItem, canSendRequest)}
         >
-          <Text>Tykkää</Text>
+          <Text style={styles.actionText}>Tykkää</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -3,9 +3,9 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     backgroundColor: "#f5f5f5",
     paddingHorizontal: 16,
+    paddingTop: 16,
   },
   centered: {
     flex: 1,
@@ -18,7 +18,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 8,
+  },
+  subtitle: {
+    marginTop: 6,
+    fontSize: 15,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 12,
   },
   loadingText: {
     marginTop: 10,
@@ -38,14 +45,17 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
   },
-  cardWrapper: {
-    marginTop: 8,
+  deckWrapper: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   actionsRow: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
     marginTop: 24,
+    marginBottom: 20,
     paddingHorizontal: 24,
   },
   skipButton: {
@@ -64,24 +74,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 16,
-  },
-  likeText: {
-    position: "absolute",
-    top: 20,
-    left: 20,
-    fontSize: 32,
-    fontWeight: "800",
-    color: "green",
-    zIndex: 10,
-  },
-  skipText: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    fontSize: 32,
-    fontWeight: "800",
-    color: "red",
-    zIndex: 10,
   },
 });
 

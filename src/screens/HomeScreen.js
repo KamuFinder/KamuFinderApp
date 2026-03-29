@@ -19,6 +19,7 @@ export default function HomeScreen() {
   const [listOfUsers, setUsersList] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
+  const navigation = useNavigation();
 
 
   useEffect(() => {
@@ -157,7 +158,11 @@ export default function HomeScreen() {
             {filteredUsers.length > 0 ? (
               filteredUsers.map((u) => (
                 <View key= {u.id} style={styles.friendReguestbutton}>
-                    <Text> {u.firstName} {u.lastName} </Text>
+
+                    <TouchableOpacity onPress={() => navigation.navigate("Profile", { userId: u.id })}>
+                      <Text style={{ color: "#000", fontWeight: "bold" }}> {u.firstName} {u.lastName} </Text>
+                    </TouchableOpacity>
+
                     <FriendRequestButton
                       user={user}
                       targetUserId={u.id}

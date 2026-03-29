@@ -132,11 +132,13 @@ export default function Notifications() {
       const currentUserRef = doc(firestore, USERS, user.uid)
       const otherUserRef = doc(firestore, USERS, req.fromUserId)
 
-      const currentUserSnap = await getDoc(currentUserRef)
-      const otherUserSnap = await getDoc(otherUserRef)
+      const [currentUserSnap, otherUserSnap] = await Promise.all([
+        getDoc(currentUserRef),
+        getDoc(otherUserRef)
+      ]);
 
 
-      if (!otherUserSnap.exists()) {
+      if (!otherUserSnap.exists() || !currentUserSnap.exists()) {
         Alert.alert("Virhe", "Käyttäjä on poistettu, et voi hyväksyä tätä kaveripyyntöä");
         await deleteDoc(doc(firestore, USERS, user.uid, FRIENDREQUESTS, req.id))
         return;

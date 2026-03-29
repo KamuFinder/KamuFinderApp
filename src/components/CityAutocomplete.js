@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   TextInput,
   FlatList,
   TouchableOpacity,
   Text,
+  Keyboard,
 } from "react-native";
 
 export default function CityAutocomplete({
@@ -15,10 +16,21 @@ export default function CityAutocomplete({
 }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [hasUserTyped, setHasUserTyped] = useState(false);
+  const justSelectedRef= useRef(false);
+
+  const API_KEY = process.env.EXPO_PUBLIC_DIGITRANSIT_API_KEY;
 
   useEffect(() => {
-    if (!value || value.trim().length < 2) {
+    if (!hasUserTyped) return;
+
+    if (typeof value !== "string" || value.trim().length < 2) {
       setResults([]);
+      return;
+    }
+
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
       return;
     }
 
@@ -31,27 +43,46 @@ export default function CityAutocomplete({
 
   const fetchCities = async (query) => {
     try {
+
+      const cleanQuery = query.trim();
+
+      if (cleanQuery.length < 2) {
+        setResults([]);
+        return;
+      }
+      
       setLoading(true);
 
       const url =
         `https://api.digitransit.fi/geocoding/v1/autocomplete` +
         `?text=${encodeURIComponent(query)}` +
         `&lang=fi` +
-        `&layers=localadmin,region` +
-        `&sources=nlsfi,osm`;
+        `&layers=localadmin`;
 
-      const res = await fetch(url);
-      const data = await res.json();
+      const res = await fetch(url, {
+        headers: {
+          "digitransit-subscription-key": API_KEY,
+      },
+      });
+
+      const text = await res.text();
+     
+
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = JSON.parse(text);
 
       const seen = new Set();
       const cities = [];
 
       for (const item of data.features || []) {
-        let name =
-          item.properties?.label || item.properties?.name || "";
+        const props = item.properties || {};
 
-        // Otetaan vain kaupungin nimi (ennen pilkkua)
-        name = name.split(",")[0].trim();
+        const layer = props.layer;
+        const name=(props.name || props.label || "").split(",")[0].trim();
+        
+        if (layer !== "localadmin" || !name) continue;
 
         if (name && !seen.has(name)) {
           seen.add(name);
@@ -72,16 +103,22 @@ export default function CityAutocomplete({
   };
 
   const handleSelect = (city) => {
+    justSelectedRef.current = true;
     onChange(city);
     setResults([]);
+    Keyboard.dismiss();
   };
 
   return (
     <View style={{ width: "100%", position: "relative", zIndex: 999 }}>
       <TextInput
         style={style}
-        value={value}
-        onChangeText={onChange}
+        value={typeof value === "string" ? value : ""}
+        onChangeText={(text) => {
+          setHasUserTyped(true);
+          justSelectedRef.current = false;
+          onChange(text);
+        }}
         placeholder={placeholder}
       />
 
@@ -102,6 +139,8 @@ export default function CityAutocomplete({
             borderRadius: 8,
             maxHeight: 200,
             zIndex: 1000,
+            marginTop: 4,
+            elevation: 5,
           }}
         >
           {results.map((item) => (

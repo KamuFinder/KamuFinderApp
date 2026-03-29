@@ -381,10 +381,14 @@ export default function Notifications() {
           elevation: req.read ? 1 : 3,
         }}
         >
-          <Text style={{ fontWeight: "bold", fontSize:24, color: req.status === "declined" ? "red" : "black" }}>
-            {req.name} - {req.Date ? req.Date.toLocaleDateString() : ""} 
-            {req.status === "declined" ? " (Hylätty)" : ""}
-          </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Profile", { userId: req.fromUserId })}
+          >
+            <Text style={{ fontWeight: "bold", color: "#007bff" }}>
+              {req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}
+              {req.status === "declined" ? " (Hylätty)" : ""}
+            </Text>
+          </TouchableOpacity>
           {req.isDeletedUser ? (
             <TouchableOpacity onPress={() => handleRemoveRequest(req)}>
               <Text style={{ color: "red" }}>Poista X</Text>
@@ -432,7 +436,14 @@ export default function Notifications() {
           elevation: 1,
         }}
         >
-          <Text style={{ fontWeight: "bold" }}>{req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Profile", { userId: req.fromUserId })}
+          >
+            <Text style={{ fontWeight: "bold", color: "#007bff" }}>
+              {req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}
+              {req.status === "declined" ? " (Hylätty)" : ""}
+            </Text>
+          </TouchableOpacity>
           <View style={{ flexDirection: "row", gap: 10, marginTop: 5 }}>
             <TouchableOpacity onPress={() => handleAccept(req)}>
               <Text style={{ color: "green" }}>Hyväksy</Text>

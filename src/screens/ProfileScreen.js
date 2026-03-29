@@ -68,9 +68,9 @@ export default function ProfileScreen() {
 
   // Get friends list and count from firebase
   useEffect(() => {
-    if (!user || !isOwnProfile) return;
+    if (!profileUserId) return;
 
-    const friendsRef = collection(firestore, USERS, user.uid, FRIENDS);
+    const friendsRef = collection(firestore, USERS, profileUserId, FRIENDS);
 
     const unsubscribe = onSnapshot(friendsRef, (snapshot) => {
       setFriendsCount(snapshot.size);
@@ -88,7 +88,7 @@ export default function ProfileScreen() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [profileUserId]);
 
   // Get all friend requests (sent and received) for the user
   useEffect(() => {
@@ -163,7 +163,8 @@ export default function ProfileScreen() {
         <View style={{ marginLeft: 24, flex: 1 }}>
           <Text style={{fontSize: 18, fontWeight: "bold"}}>{userInfo.nickName}</Text>
           <Text>{userInfo.firstName} {userInfo.lastName}</Text>
-          <Text>{user?.email}</Text>
+          {/* Email only shown on own profile for privacy reasons */}
+          {isOwnProfile && <Text>{user?.email}</Text>}
           <Text>Kaupunki: {userInfo.city}</Text>
         </View>
       </View>
@@ -171,17 +172,19 @@ export default function ProfileScreen() {
       <View style={styles.infoContainer2}>
       
 
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
-          <View style={{ flexDirection: "row", alignItems: "center",marginBottom: 16 }}>
-            <FontAwesome5 name="user-friends" size={24} color="#de58c8"/>
-             <Text style={{paddingHorizontal: 10}}>{friendsCount}</Text>
-          </View>
+        {isOwnProfile && (
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16 }}>
+              <FontAwesome5 name="user-friends" size={24} color="#de58c8"/>
+              <Text style={{paddingHorizontal: 10}}>{friendsCount}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
           
 
            <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Opiskelu: {userInfo.study_interests.length > 0 ? userInfo.study_interests.join(", ") : "Ei asetettu"}</Text>
            <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Harrastukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
             <Text style={{fontFamily:"monospace",paddingVertical: 10}}>"{userInfo.profile_text}"</Text>
-        </TouchableOpacity>
         
       </View>
 

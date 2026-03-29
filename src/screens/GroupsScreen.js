@@ -223,6 +223,8 @@ const createGroup = async () => {
       ) : (
         <FlatList
           data={groups}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={true}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={[

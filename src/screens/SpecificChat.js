@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, FlatList, TextInput, 
   KeyboardAvoidingView, Platform } from "react-native";
 import { useRoute } from "@react-navigation/native";
@@ -17,6 +17,8 @@ export default function HomeScreen() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [otherUserId, setOtherUserId] = useState(null);
+  const flatListRef = useRef(null);
+  const [ready, setReady] = useState(false)
   
 
 
@@ -91,6 +93,19 @@ export default function HomeScreen() {
     markAsRead()
   }, [messages])
 
+      useEffect(() => {
+      if (messages.length > 0) {
+        setReady(false);
+
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: false });
+          setReady(true);
+        }, 200);
+      } else {
+        setReady(true);
+      }
+    }, [messages]);
+
 
 
   const sendMessage = async () => {
@@ -132,6 +147,8 @@ export default function HomeScreen() {
 
 
       <FlatList
+        ref={flatListRef}
+        style={{ flex: 1, opacity: ready ? 1 : 0 }}
         data={messages}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="handled"

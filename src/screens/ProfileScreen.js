@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -26,7 +26,7 @@ export default function ProfileScreen() {
     nickName: "",
     city: "",
     profile_text: "",
-    interests: [],
+    study_interests: [],
     hobby_interests: [],
   });
 
@@ -36,7 +36,7 @@ export default function ProfileScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const isOwnProfile = true; // Placeholder, can be used for future features like viewing other users' profiles
 
-  useEffect(() => {
+  
     const fetchUserData = async () => {
       if (!user) return;
 
@@ -55,11 +55,19 @@ export default function ProfileScreen() {
           interests: snap.data().interests || snap.data().intrests || [],
 
           hobby_interests: snap.data().hobby_interests || [],
+          study_interests: snap.data().study_interests || [],
         });
       }
     };
 
-    fetchUserData();
+      useFocusEffect(
+        useCallback(() => {
+        fetchUserData();
+      }, [user])
+      );
+
+  useEffect(() => {
+    if (!user) return;
 
     const friendsRef = collection(firestore, USERS, user.uid, FRIENDS);
 
@@ -147,9 +155,9 @@ export default function ProfileScreen() {
           </View>
           
 
-           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Kiinnostuksen kohteet: {userInfo.interests}</Text>
-           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Harrastuskiinnostukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
-            <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Profiiliteksti: {userInfo.profile_text}</Text>
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Opiskelu: {userInfo.study_interests.length > 0 ? userInfo.study_interests.join(", ") : "Ei asetettu"}</Text>
+           <Text style={{fontFamily:"monospace",paddingVertical: 10}}>Harrastukset: {userInfo.hobby_interests.length > 0 ? userInfo.hobby_interests.join(", ") : "Ei asetettu"}</Text>
+            <Text style={{fontFamily:"monospace",paddingVertical: 10}}>"{userInfo.profile_text}"</Text>
         </TouchableOpacity>
         
       </View>

@@ -9,6 +9,8 @@ import Logo from "../../assets/Logo.png";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 
+
+
 const chatColors = [
   "#E3F2FD",
   "#FCE4EC",
@@ -57,13 +59,17 @@ export default function PrivaChats() {
 
 
     return (
+        
         <View style={styles.container}>
             <Image source={Logo} style={styles.logo} />
         <Text style={styles.title}>Keskustelut</Text>
 
         <FlatList
+        style={{flex: 1}}
+        contentContainerStyle={{ paddingBottom: 100 }}
         data={allChats}
         keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={true}
         renderItem={({ item }) => {
 
 
@@ -108,5 +114,6 @@ export default function PrivaChats() {
       />
         
     </View>
+    
     );
 }

@@ -1,13 +1,20 @@
-import React, { useState, useEffect} from "react";
-import { TouchableOpacity, Text, View, Alert } from "react-native";
-import { firestore, USERS, FRIENDREQUESTS, doc, collection, onSnapshot, addDoc, serverTimestamp, setDoc} from "../firebase/config";
+import React, { useState, useEffect, use} from "react";
+import { TouchableOpacity, Text, Alert } from "react-native";
+import { firestore, USERS, FRIENDREQUESTS, doc, collection, onSnapshot, getDoc, serverTimestamp, setDoc} from "../firebase/config";
 import { Ionicons } from "@expo/vector-icons";
 
 
 export default function FriendRequestButton({ user, targetUserId, friendsList =[], allFriendRequests = []}) {
-    if (!user || !targetUserId) return null;
+    const [isFriend, setIsFriend] = useState(false);
 
-    const isFriend = friendsList.some(friend => friend.id === targetUserId); 
+    useEffect(() => {
+        if (!user || !targetUserId) return;
+        const friendsRef = doc(firestore, USERS, user.uid, "friends", targetUserId);
+        const unsubscribe = onSnapshot(friendsRef, (snapshot) => {
+            setIsFriend(snapshot.exists());
+        });
+        return () => unsubscribe();
+    }, [user, targetUserId]);
     
     const request = allFriendRequests.find(req =>
         (req.fromUserId === user.uid && req.toUserId === targetUserId) ||
@@ -18,6 +25,13 @@ export default function FriendRequestButton({ user, targetUserId, friendsList =[
     const handleFriendRequest = async () => {
 
     try {
+        const targetUserSnap = await getDoc(doc(firestore, USERS, targetUserId));
+        if (!targetUserSnap.exists()) {
+            Alert.alert("Virhe", "Käyttäjää ei löydy");
+            return;
+        }
+        const targetUserData = targetUserSnap.data();
+
         const currentUserRequestsRef = collection(firestore, USERS, user.uid, FRIENDREQUESTS)
         const targetUserRequestsRef = collection(firestore, USERS, targetUserId, FRIENDREQUESTS)
         
@@ -31,7 +45,7 @@ export default function FriendRequestButton({ user, targetUserId, friendsList =[
         await setDoc(requestDocRef, requestData)
         await setDoc(doc(targetUserRequestsRef, requestDocRef.id), requestData)
 
-        Alert.alert("Pyyntö lähetetty", `Kaveripyyntö lähetetty käyttäjälle ${targetUserId}`)
+        Alert.alert("Pyyntö lähetetty", `Kaveripyyntö lähetetty käyttäjälle ${targetUserData.firstName} ${targetUserData.lastName}`);
     } catch (error) {
         console.error("Error sending friend request:", error)
         Alert.alert("Virhe", "Kaveripyynnön lähetys epäonnistui.")

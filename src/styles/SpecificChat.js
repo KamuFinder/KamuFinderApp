@@ -16,9 +16,10 @@ export default StyleSheet.create({
 
   messageContainer: {
     maxWidth: "75%",
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderRadius: 12,
-    marginVertical: 5,
+    marginBottom:10,
   },
 
   myMessage: {
@@ -47,6 +48,7 @@ export default StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     padding: 10,
+    marginBottom: 50,
     borderTopWidth: 1,
     borderTopColor: "#ccc",
   },

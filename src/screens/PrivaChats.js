@@ -1,16 +1,42 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, FlatList, } from "react-native";
+import { View, Text, TouchableOpacity, FlatList,Image } from "react-native";
 import {  useNavigation } from '@react-navigation/native';
 import { firestore, collection, query, onSnapshot, orderBy, USERS, USERSPRIVATECHATS } from "../firebase/config.js";
 import { useUser } from "../context/UserContext.js";
 import styles from "../styles/PrivaChats.js";
 import { Ionicons } from "@expo/vector-icons";
+import Logo from "../../assets/Logo.png";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
+
+
+
+const chatColors = [
+  "#E3F2FD",
+  "#FCE4EC",
+  "#E8F5E9",
+  "#FFF3E0",
+  "#F3E5F5",
+  "#E0F7FA",
+  "#FFF9C4",
+];
+
+const getChatColor = (text) => {
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    hash = text.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return chatColors[Math.abs(hash) % chatColors.length];
+};
 
 export default function PrivaChats() {
     const navigation = useNavigation()
     const [allChats, setAllChats] = useState([])
     const user = useUser()
+    
+    
 
     useEffect(() => {
         if (!user) return;
@@ -33,17 +59,19 @@ export default function PrivaChats() {
 
 
     return (
+        
         <View style={styles.container}>
-      
+            <Image source={Logo} style={styles.logo} />
         <Text style={styles.title}>Keskustelut</Text>
 
-
-        
-
         <FlatList
+        style={{flex: 1}}
+        contentContainerStyle={{ paddingBottom: 100 }}
         data={allChats}
         keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={true}
         renderItem={({ item }) => {
+
 
             const time = item.updatedAt?.toDate ? item.updatedAt.toDate() : new Date();
 
@@ -59,7 +87,9 @@ export default function PrivaChats() {
                 padding: 15,
                 marginBottom: 10,
                 borderRadius: 10,
-                backgroundColor: item.unReadMessages ? "#cce5ff" : "#f5f5f5"
+                borderWidth: item.unReadMessages ? 2 : 0,
+                borderColor:"#f53232", 
+                backgroundColor:getChatColor (item.otherUserName || item.id),
                 }}
                 onPress={() =>
                 navigation.navigate("SpecificChat", {
@@ -68,17 +98,22 @@ export default function PrivaChats() {
                 })
                 }
             >
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                    <Text style={{ fontWeight: "bold" }}>{item.otherUserName}</Text>
-                    <Text style={{ color: "#555" }}>{formattedTime}</Text>
-                </View>
+                
+                    <View style={styles.messageContainer}>
+                        <Text style={styles.messageHeader}>{item.otherUserName}</Text>
+                        <Text style={styles.messageTime}>{formattedTime}</Text>
+                    </View>
 
-                <Text numberOfLines={1}>{item.latestMessage || ""}</Text>
+                    <Text style={styles.message} numberOfLines={1}>
+                        {item.latestMessage || ""}
+                    </Text>
+                
             </TouchableOpacity>
             )
         }}
       />
         
     </View>
+    
     );
 }

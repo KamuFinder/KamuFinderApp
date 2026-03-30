@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, FlatList, TextInput  } from "react-native";
+import React, { useRef, useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, FlatList, TextInput, 
+  KeyboardAvoidingView, Platform } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { useUser } from "../context/UserContext.js";
 import { firestore, collection, query, onSnapshot, orderBy, addDoc, serverTimestamp, PRIVATECHATS, MESSAGES, getDoc, USERS, USERSPRIVATECHATS } from "../firebase/config.js";
 import { doc, updateDoc } from "firebase/firestore";
 import {  useNavigation } from '@react-navigation/native';
 import styles from "../styles/SpecificChat.js";
+import DateDivider from "../components/dateDivider.js";
 
 export default function HomeScreen() {
   const user = useUser()
@@ -15,6 +17,9 @@ export default function HomeScreen() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [otherUserId, setOtherUserId] = useState(null);
+  const flatListRef = useRef(null);
+  const [ready, setReady] = useState(false)
+  
 
 
   useEffect(() => {
@@ -88,6 +93,19 @@ export default function HomeScreen() {
     markAsRead()
   }, [messages])
 
+      useEffect(() => {
+      if (messages.length > 0) {
+        setReady(false);
+
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: false });
+          setReady(true);
+        }, 200);
+      } else {
+        setReady(true);
+      }
+    }, [messages]);
+
 
 
   const sendMessage = async () => {
@@ -119,20 +137,43 @@ export default function HomeScreen() {
   
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={40}
+    >
     <View style={styles.container}>
       <Text style={styles.title}>{otherUserName}</Text>
 
 
-      <View style={{ flex: 1, padding: 10 }}>
-        {messages.length === 0 ? (
-          <Text style={{ textAlign: "center", marginTop: 20 }}>Ei viestejä</Text>
-        ) : (
-          messages.map((item) => {
-            const isMe = item.userId === user.uid;
-            const time = item.timestamp?.toDate ? item.timestamp.toDate() : new Date();
-            const formattedTime = `${time.getHours().toString().padStart(2, "0")}:${time.getMinutes().toString().padStart(2, "0")}`;
+      <FlatList
+        ref={flatListRef}
+        style={{ flex: 1, opacity: ready ? 1 : 0 }}
+        data={messages}
+        keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 10 }}
+        renderItem={({ item, index }) => {
+          const isMe = item.userId === user.uid;
+          const time = item.timestamp?.toDate ? item.timestamp.toDate() : new Date();
 
+          const previousItem = index > 0 ? messages[index - 1] : null;
+          const previousTime = previousItem?.timestamp?.toDate
+            ? previousItem.timestamp.toDate()
+            : null;
+
+          const isNewDay =
+            !previousTime ||
+            time.getDate() !== previousTime.getDate() ||
+            time.getMonth() !== previousTime.getMonth() ||
+            time.getFullYear() !== previousTime.getFullYear();
+
+          const formattedTime = `${time.getHours().toString().padStart(2, "0")}:${time.getMinutes().toString().padStart(2, "0")}`;
+        
           return (
+            <>
+              {isNewDay && <DateDivider date={time} />}
+
             <View
               key={item.id}
               style={[
@@ -143,11 +184,22 @@ export default function HomeScreen() {
               <Text style={styles.messageText}>{item.text}</Text>
               <Text style={styles.messageTime}>{formattedTime}</Text>
             </View>
+            </>
           );
-        })
-      )}
-      </View>
-      <View style={[styles.inputContainer, { marginBottom: 50 }]}>
+  
+        }}
+        ListEmptyComponent={
+          <View style={{ alignItems: "center", marginTop: 20 }}>
+            <Text style={{ fontSize: 16, color: "#888" }}>
+              Ei vielä yhtään viestejä
+            </Text>
+          </View>
+        }
+
+      
+      />
+      
+      <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Kirjoita viesti..."
@@ -162,5 +214,6 @@ export default function HomeScreen() {
 
       
     </View>
+    </KeyboardAvoidingView>
   );
 }

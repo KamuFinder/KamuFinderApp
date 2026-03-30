@@ -1,31 +1,145 @@
+import { signOut } from "firebase/auth";
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     padding: 20,
     backgroundColor: "#fff",
   },
+
+  header: {
+    width: "100%",
+    flexDirection: "row", 
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    paddingHorizontal:10,
+  },
+
+  menuOverlay: {
+    flex:1,
+    alignItems:"flex-end",
+    paddingTop:90,
+    paddingRight:15,
+  },
+
+  dropdown:{
+    backgroundColor: "#fff",
+    flexDirection: "column",
+    borderRadius: 16,
+    width: 200,
+    paddingVertical: 32,
+    paddingHorizontal: 16,
+    elevation: 5,
+  },
+
+  dropdownItem: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    marginBottom: 10,
+    backgroundColor: "#F99D11",
+  },
+
+  dropdownItemText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+
+  signOut: {
+    color: "white",
+    backgroundColor: "red",
+    fontWeight: "bold",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderColor: "red",
+    borderWidth: 1,
+    borderRadius: 20,
+    textAlign: "center",
+  },
+
   title: {
     fontSize: 32,
     fontWeight: "bold",
     marginBottom: 10,
   },
+
+  infoContainer: {
+    flexDirection: "row",
+    width: "100%",
+    paddingVertical: 10,
+    //backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    marginBottom: 20,
+    alignItems: "center",
+    
+  },
+
+  infoContainer2: {
+    width: "100%",
+    paddingVertical: 10,
+    alignItems: "left",
+  },
+
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.45)",
+  justifyContent: "center",
+  alignItems: "center",
+},
   modalContainer: { 
-    flex: 1, 
-    padding: 20, 
-    backgroundColor: 'white' 
+    width: "100%",
+    maxHeight: "70%",
+    backgroundColor: "#fff",
+    paddingTop: 20,
+    paddingHorizontal: 30,
+    paddingBottom: 30,
+    
   },
   modalTitle: { 
-    fontSize: 24, 
-    marginBottom: 20 
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
   },
-  modalItem: { 
-    fontSize: 18, 
-    marginVertical: 5 
+
+  friendRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    borderBottomEndRadius: 10,
+    backgroundColor: "#f9f9f9",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    elevation: 1,
   },
+
+  friendInfo: {
+    flex: 1,
+    marginRight: 10,
+  },
+
+  friendName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#222",
+  },
+
+  friendDate: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 4,
+  },
+ 
   modalClose: { 
     fontSize: 18, 
     color: 'red', 

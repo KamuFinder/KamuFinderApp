@@ -2,20 +2,24 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity,Image, TextInput, Alert } from "react-native";
 import { useUser } from "../context/UserContext.js";
 import { useNavigation } from "@react-navigation/native";
-import { firestore, USERS, doc, getDoc, collection, onSnapshot} from "../firebase/config";
+import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, collection, onSnapshot, addDoc, serverTimestamp, setDoc} from "../firebase/config";
 import styles from "../styles/Home.js";
 import { Ionicons } from "@expo/vector-icons";
-import NavbarBottom from "../components/NavbarBottom";
 import Logo from "../../assets/Logo.png";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
+import FriendRequestButton from "../components/FriendRequestButton.js";
+
 
 export default function HomeScreen() {
   const user = useUser();
   const [firstName, setFirstName] = useState("");
-  const navigation = useNavigation();
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [ searchQuery , setSearchQuery ] = useState('');
   const [listOfUsers, setUsersList] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
+  const [allFriendRequests, setAllFriendRequests] = useState([]);
+  const navigation = useNavigation();
 
 
   useEffect(() => {
@@ -59,6 +63,32 @@ export default function HomeScreen() {
 
   }, [user]);
 
+  // Checks pending friend requests (sent and received)
+  useEffect(() => {
+    if(!user) return;
+    
+    const friendRequestsRef = collection(firestore, USERS, user.uid, FRIENDREQUESTS);
+    const unsubscribe = onSnapshot(friendRequestsRef, (snapshot) => {
+      const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      setAllFriendRequests(requests);
+    });
+    
+    return () => unsubscribe();
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Kun screen tulee fokukseen → ei tehdä mitään
+
+      return () => {
+        // Kun poistutaan screeniltä → tyhjennetään
+        setSearchQuery("");
+        setFilteredUsers([]);
+      };
+    }, [])
+  );
+
 
   // Handles the search query input, filters the list of users, and updates the filtered results
   const handleSearch =  (query) => {
@@ -90,11 +120,6 @@ export default function HomeScreen() {
   };
 
 
-  const handleFriendRequest = (u) => {
-    Alert.alert("Ystävä pyyntö", `Nappia painettu käyttäjälle ${u.firstName} ${u.lastName}`)
-  }
-
-
   
   return (
     <View style={styles.container}>
@@ -104,6 +129,13 @@ export default function HomeScreen() {
       </View>
 
       <Text style={styles.helloUser}>Tervetuloa takaisin {firstName}!</Text>
+
+      <Text style={{ marginTop: 12, marginBottom: 12 }}>Löydä uusia kavereita sydän-välilehdeltä!</Text>
+
+      
+
+
+
 
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
@@ -124,28 +156,22 @@ export default function HomeScreen() {
           <View style={{ marginTop: 10 }}>
             
             {filteredUsers.length > 0 ? (
-              filteredUsers.map((u) => {
-                const isFriend = friendsList.some(f => f.id === u.id)
-                return (
-                  <View key= {u.id} style={styles.friendReguestbutton}>
-                    <Text> {u.firstName} {u.lastName} </Text>
-                    {!isFriend && (
-                      <TouchableOpacity
-                        onPress={() => handleFriendRequest(u)}
-                        style={{
-                          backgroundColor: "#e7e7e7",
-                          paddingHorizontal: 10,
-                          paddingVertical: 4,
-                          borderRadius: 6,
-                        }}
-                      >
-                        <Text style={{ color: "#fff", fontWeight: "bold" }}>+</Text>
-                      </TouchableOpacity>
-                    )}                  
+              filteredUsers.map((u) => (
+                <View key= {u.id} style={styles.friendReguestbutton}>
+
+                    <TouchableOpacity onPress={() => navigation.navigate("Profile", { userId: u.id })}>
+                      <Text style={{ color: "#000", fontWeight: "bold" }}> {u.firstName} {u.lastName} </Text>
+                    </TouchableOpacity>
+
+                    <FriendRequestButton
+                      user={user}
+                      targetUserId={u.id}
+                      friendsList={friendsList}
+                      allFriendRequests={allFriendRequests}
+                    />
                   </View>
-                )
               
-              })
+              ))
             ) : (
               <Text>Ei tuloksia</Text>
             )}

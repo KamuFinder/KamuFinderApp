@@ -46,14 +46,3 @@ def recommend_hobby_groups(user, groups):
 
     results.sort(key=lambda x: x[1], reverse=True)
     return results
-
-#Testidatan testaukseen:
-#print("Recommender loaded")
-
-#def recommend_groups(user, groups):
-#    results = []
-
-#    for group in groups:
-#        results.append((group["id"], 1.0))
-
-#    return results

@@ -11,12 +11,16 @@ import isStrongPassword from 'validator/lib/isStrongPassword';
 import { getDocs } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { SafeAreaView,useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 import styles from "../styles/SignIn_And_Up.js";
 
 
 export default function SignUpScreen() {
+
+    const insets = useSafeAreaInsets();
+
     const navigation = useNavigation()
     const [userInfo, setUserInfo] = useState({
       firstName: '',
@@ -118,17 +122,17 @@ export default function SignUpScreen() {
   }
 
   return (
-    //<SafeAreaView style={{flex:1,alignItems:'center',justifyContent:'flex-start', backgroundColor:'#fff'}}>
+    <SafeAreaView style={{flex:1}} edges={['top', 'bottom']}>
       <KeyboardAwareScrollView
         enableOnAndroid={true}
-        extraScrollHeight={120}
-        extraHeight={120}
+        extraScrollHeight={180}
+        extraHeight={180}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{flexGrow:1, alignItems:'center',padding:10, paddingBottom:120}}
+        contentContainerStyle={{flexGrow:1, alignItems:'center',padding:10, paddingBottom: insets.bottom + 20}}
         keyboardShouldPersistTaps="handled"
       >
       
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      
         <View style={{ width: "100%", alignItems: "center"}}>
         <View style={{justifyContent: "flex-start", alignItems: "center"}}>
                 <Image source={require("../../assets/Logo.png")} style={{ width: 120, height: 120, }} />
@@ -304,21 +308,23 @@ export default function SignUpScreen() {
         numberOfLines={1}
         autoCapitalize='none'
         autoCorrect={false}
+        
       />
 
       </View>
       </View>
 
-      <View style={{width:"80%", marginBottom:32, marginTop:30, alignItems:'center'}}>
+      <View style={{width:"80%", paddingBottom:20, marginTop:30, alignItems:'center'}}>
       <TouchableOpacity style={{width:"100%", backgroundColor: "#F99D11", 
         paddingVertical: 15, borderRadius: 20, alignItems:'center'}} onPress={handleSignUp}>
         <Text style={{color:'white',textAlign:'center', fontSize: 16, fontWeight: 'bold'}}>Rekisteröidy</Text>
       </TouchableOpacity>
         </View>
+        
     </View>
-    </TouchableWithoutFeedback>
+   
     </KeyboardAwareScrollView>
-    //</SafeAreaView>
+    </SafeAreaView>
   );
 }
 

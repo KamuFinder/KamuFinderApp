@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Logo from "../../assets/Logo.png";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import FriendRequestButton from "../components/FriendRequestButton.js";
 
 
 export default function HomeScreen() {
@@ -18,6 +19,7 @@ export default function HomeScreen() {
   const [listOfUsers, setUsersList] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
+  const navigation = useNavigation();
 
 
   useEffect(() => {
@@ -117,30 +119,6 @@ export default function HomeScreen() {
     setFilteredUsers(results)
   };
 
-  // fuction to handle friend requests 
-  const handleFriendRequest = async (u) => {
-
-    try {
-      const currentUserRequestsRef = collection(firestore, USERS, user.uid, FRIENDREQUESTS)
-      const targetUserRequestsRef = collection(firestore, USERS, u.id, FRIENDREQUESTS)
-      
-      const requestData = {
-        fromUserId: user.uid,
-        toUserId: u.id,
-        status: "pending",
-        timestamp: serverTimestamp(),
-      }
-      const requestDocRef = doc(currentUserRequestsRef)
-      await setDoc(requestDocRef, requestData)
-      await setDoc(doc(targetUserRequestsRef, requestDocRef.id), requestData)
-
-      Alert.alert("Pyyntö lähetetty", `Kaveripyyntö lähetetty käyttäjälle ${u.firstName} ${u.lastName}`)
-    } catch (error) {
-      console.error("Error sending friend request:", error)
-      Alert.alert("Virhe", "Kaveripyynnön lähetys epäonnistui.")
-    }
-
-  }
 
   
   return (
@@ -178,42 +156,22 @@ export default function HomeScreen() {
           <View style={{ marginTop: 10 }}>
             
             {filteredUsers.length > 0 ? (
-              filteredUsers.map((u) => {
-                const isFriend = friendsList.some(f => f.id === u.id);
-                const userRequest = allFriendRequests.find(r => 
-                  (r.fromUserId === user.uid && r.toUserId === u.id) || 
-                  (r.toUserId === user.uid && r.fromUserId === u.id)
-                );
-                const hasRequest = !!userRequest;
-                const isPending = userRequest?.status === "pending";
-                const isDeclined = userRequest?.status === "declined";
-                
-                return (
-                  <View key= {u.id} style={styles.friendReguestbutton}>
-                    <Text> {u.firstName} {u.lastName} </Text>
-                    {!isFriend && !hasRequest && (
-                      <TouchableOpacity
-                        onPress={() => handleFriendRequest(u)}
-                        style={{
-                          backgroundColor: "#e7e7e7",
-                          paddingHorizontal: 10,
-                          paddingVertical: 4,
-                          borderRadius: 6,
-                        }}
-                      >
-                        <Text style={{ color: "#fff", fontWeight: "bold" }}>+</Text>
-                      </TouchableOpacity>
-                    )}
-                    {isPending && (
-                      <Text style={{ color: "#999", fontSize: 12 }}>Odottavissa</Text>
-                    )}
-                    {isDeclined && (
-                      <Text style={{ color: "#aaa", fontSize: 12 }}>Hylätty</Text>
-                    )}
+              filteredUsers.map((u) => (
+                <View key= {u.id} style={styles.friendReguestbutton}>
+
+                    <TouchableOpacity onPress={() => navigation.navigate("Profile", { userId: u.id })}>
+                      <Text style={{ color: "#000", fontWeight: "bold" }}> {u.firstName} {u.lastName} </Text>
+                    </TouchableOpacity>
+
+                    <FriendRequestButton
+                      user={user}
+                      targetUserId={u.id}
+                      friendsList={friendsList}
+                      allFriendRequests={allFriendRequests}
+                    />
                   </View>
-                )
               
-              })
+              ))
             ) : (
               <Text>Ei tuloksia</Text>
             )}

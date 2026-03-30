@@ -12,7 +12,8 @@ export default function EditProfileScreen() {
 
         const insets = useSafeAreaInsets();
         const user = useUser();
-        const [modalVisible, setModalVisible] = useState(false);
+        const [hobbyModalVisible, setHobbyModalVisible] = useState(false);
+        const [studyModalVisible, setStudyModalVisible] = useState(false);
 
         const hobbyOptions = 
         [
@@ -168,7 +169,7 @@ export default function EditProfileScreen() {
                 </Text>
             </View>
 
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <TouchableOpacity onPress={() => setHobbyModalVisible(true)}>
                 <Text style={{ color: "#007BFF", marginTop: 10 }}>+ Lisää harrastuksia</Text>
             </TouchableOpacity>
 
@@ -181,7 +182,7 @@ export default function EditProfileScreen() {
                 </Text>
             </View>
 
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <TouchableOpacity onPress={() => setStudyModalVisible(true)}>
                 <Text style={{ color: "#007BFF", marginTop: 10 }}>+ Lisää koulutus</Text>
             </TouchableOpacity>
         </View>
@@ -206,7 +207,7 @@ export default function EditProfileScreen() {
     
    </KeyboardAwareScrollView>
 
-   <Modal visible={modalVisible}
+   <Modal visible={hobbyModalVisible}
         transparent={true}
         animationType="slide"
         >
@@ -255,7 +256,7 @@ export default function EditProfileScreen() {
             </ScrollView>
 
             <TouchableOpacity
-              onPress={() => setModalVisible(false)}
+              onPress={() => setHobbyModalVisible(false)}
               style={{
                 marginTop: 15,
                 backgroundColor: "#333",
@@ -272,7 +273,7 @@ export default function EditProfileScreen() {
         </View>
         </Modal>
 
-        <Modal visible={modalVisible}
+        <Modal visible={studyModalVisible}
         transparent={true}
         animationType="slide"
         >
@@ -321,7 +322,7 @@ export default function EditProfileScreen() {
             </ScrollView>
 
             <TouchableOpacity
-              onPress={() => setModalVisible(false)}
+              onPress={() => setStudyModalVisible(false)}
               style={{
                 marginTop: 15,
                 backgroundColor: "#333",

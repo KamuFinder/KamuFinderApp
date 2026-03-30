@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigation, useFocusEffect, useRoute } from "@react-navigation/native";
 import { View, Text, TouchableOpacity, Alert, Modal, FlatList,} from "react-native";
-import {firestore,USERS,doc,getDoc,FRIENDS,auth,signOut, FRIENDREQUESTS} from "../firebase/config.js";
+import {firestore,USERS,doc,getDoc,setDoc,deleteDoc, serverTimestamp,FRIENDS,auth,signOut, FRIENDREQUESTS} from "../firebase/config.js";
 import { collection, onSnapshot } from "firebase/firestore";
 import styles from "../styles/Profile.js";
 import { useUser } from "../context/UserContext.js";
@@ -43,7 +43,7 @@ export default function ProfileScreen() {
       const snap = await getDoc(ref);
 
       if (snap.exists()) {
-        setUserInfo({
+        const profileData = {
           firstName: snap.data().firstName || "",
           lastName: snap.data().lastName || "",
           nickName: snap.data().nickName || "",
@@ -55,14 +55,19 @@ export default function ProfileScreen() {
 
           hobby_interests: snap.data().hobby_interests || [],
           study_interests: snap.data().study_interests || [],
-        });
+        };
+        setUserInfo(profileData);
+
+        if (isOwnProfile) {
+          await checkProfileCompletionAndNotify(profileData);
+        }
       }
     };
 
       useFocusEffect(
         useCallback(() => {
         fetchUserData();
-      }, [user])
+      }, [user,profileUserId, isOwnProfile])
       );
 
 
@@ -124,6 +129,55 @@ export default function ProfileScreen() {
       Alert.alert("Error", error.message);
     });
   };
+
+  const checkProfileCompletionAndNotify = async (profileData) => {
+  if (!user || !isOwnProfile) return;
+
+  const missingFields = [];
+
+  if (!profileData.city || profileData.city.trim() === "") {
+    missingFields.push("paikkakunta");
+  }
+
+  if (!profileData.profile_text || profileData.profile_text.trim() === "") {
+    missingFields.push("profiiliteksti");
+  }
+
+  const hasStudyInterests =
+    Array.isArray(profileData.study_interests) &&
+    profileData.study_interests.length > 0;
+
+  const hasHobbyInterests =
+    Array.isArray(profileData.hobby_interests) &&
+    profileData.hobby_interests.length > 0;
+
+  if (!hasStudyInterests) {
+    missingFields.push("Opiskelu");
+  }
+
+  if (!hasHobbyInterests) {
+    missingFields.push("Harrastukset");
+  }
+
+  const notifRef = doc(firestore, USERS, user.uid, "notifications", "incomplete-profile");
+
+  try {
+    if (missingFields.length > 0) {
+      await setDoc(notifRef, {
+        type: "profile_incomplete",
+        message: `Profiilistasi puuttuu vielä: ${missingFields.join(", ")}. Viimeistele profiilisi, jotta muut käyttäjät näkevät sinusta enemmän.`,
+        read: false,
+        screen: "Profile",
+        persistent: true,
+        timestamp: serverTimestamp(),
+      });
+    } else {
+      await deleteDoc(notifRef);
+    }
+  } catch (error) {
+    console.error("Error handling profile completion notification:", error);
+  }
+};
 
 
   return (

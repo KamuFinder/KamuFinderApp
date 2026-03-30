@@ -304,7 +304,8 @@ export default function Notifications() {
 
   // Mark notifications as read
   const markNotificationsReadData = async (notificationsData) => {
-    const unread = notificationsData.filter(n => !n.read)
+    const unread = notificationsData.filter(
+      (n) => !n.read && n.type !=="profile_incomplete");
   
     if (!unread.length || !user) return;
 
@@ -488,9 +489,20 @@ export default function Notifications() {
          }}
          >
          Uudet ilmoitukset:</Text>}
-      {newNotifications.map((notif) => (
-        <View
-          key={notif.id}
+      {newNotifications.map((notif) => {
+        const isProfileIncomplete = notif.type === "profile_incomplete";
+      
+        return (
+          <TouchableOpacity
+            key={notif.id}
+            onPress={() => {
+              if (notif.screen) {
+                navigation.navigate(notif.screen);
+              }
+            }}
+      
+      
+          activeOpacity={0.8}
           style={{
             width: "90%",
             alignItems: "center",
@@ -500,18 +512,56 @@ export default function Notifications() {
             padding: 10,
             paddingVertical: 12,
             borderBottomRightRadius: 16,
-            backgroundColor: notif.read ? "#f0f0f0" : "#ffeeba", 
-            borderWidth: 1,
-            borderColor: "#ccc",
-            elevation: notif.read ? 1 : 3,
+            backgroundColor: isProfileIncomplete ? "#f0f0f0" : "#ffeeba", 
+            borderWidth: isProfileIncomplete ? 2 : 1,
+            borderColor:isProfileIncomplete ? "#6500a" : "#ccc",
+            elevation: isProfileIncomplete ? 4 : 3,
           }}
         >
-          <Text style={{ fontWeight: "bold" }}>{notif.message}</Text>
+          {isProfileIncomplete && (
+            <Text style={{
+              fontWeight: "bold",
+              fontSize: 24,
+              color: "#6500a",
+              marginBottom: 8,}}>
+              Täydennä profiilisi
+              </Text>
+          )}
+              
+          <Text style={{ 
+            fontWeight: "medium",
+            textAlign: "center",
+            color: isProfileIncomplete ? "#555" : "#555",
+             }}
+             >
+              {notif.message}
+            </Text>
+          
+          {notif.screen && (
+            <Text style={{
+              marginTop: 8,
+              fontFamily:"roboto",
+              fontWeight: "bold",
+              color: "#fff",
+              backgroundColor: "#F99D11",
+              borderWidth: 1,
+              borderColor: "#F99D11",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 20,
+              marginBottom: 8,
+              
+            }}>
+              Siirry profiiliin
+            </Text>
+          )}
+          
           <Text style={{ fontSize: 12, color: "#555" }}>
             {notif.timestamp?.toDate ? notif.timestamp.toDate().toLocaleDateString() : ""}
           </Text>
-        </View>
-      ))}
+        </TouchableOpacity>
+        );
+    })}
 
       {readNotifications.length > 0 && 
       <Text 

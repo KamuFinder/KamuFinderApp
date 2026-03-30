@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, query, addDoc, setDoc, getDoc, getDocs,updateDoc, onSnapshot, orderBy, serverTimestamp, doc, where,  } from "firebase/firestore";
+import { getFirestore, collection, query, addDoc, setDoc, getDoc, getDocs,updateDoc,deleteDoc, onSnapshot, orderBy, serverTimestamp, doc, where,  } from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, initializeAuth, signOut, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'
 export const API_BASE_URL = "https://kamufinder-backend.onrender.com";
@@ -38,6 +38,7 @@ export {
     getDoc,
     getDocs,
     updateDoc,
+    deleteDoc,
     doc,
     onSnapshot,
     orderBy,

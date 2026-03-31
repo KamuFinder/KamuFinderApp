@@ -7,12 +7,14 @@ import {firestore,USERS,doc,getDoc,updateDoc} from "../firebase/config.js";
 import styles from "../styles/EditProfile.js";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import CityAutocomplete from "../components/CityAutocomplete.js";
+import AvatarPicker from "../components/AvatarPicker.js";
 
 export default function EditProfileScreen() {
 
         const insets = useSafeAreaInsets();
         const user = useUser();
-        const [modalVisible, setModalVisible] = useState(false);
+        const [hobbyModalVisible, setHobbyModalVisible] = useState(false);
+        const [studyModalVisible, setStudyModalVisible] = useState(false);
 
         const hobbyOptions = 
         [
@@ -20,6 +22,8 @@ export default function EditProfileScreen() {
             "pelaaminen",
             "puutarhanhoito",
             "eläimet",
+            "siivoaminen",
+            "musiikki",
         ];
 
         const studyOptions =
@@ -27,6 +31,9 @@ export default function EditProfileScreen() {
             "AI",
             "eläintenhoito",
             "lääketiede",
+            "maanpuolustus",
+            "markkinointi",
+            "brändäys",
         ];
 
 
@@ -38,6 +45,8 @@ export default function EditProfileScreen() {
             profile_text: "",
             hobby_interests: [],
             study_interests: [],
+            avatarSeed: "",
+            avatarStyle: "fun-emoji",
             });;
         
 
@@ -55,6 +64,10 @@ export default function EditProfileScreen() {
                 profile_text: snap.data().profile_text || "",
                 hobby_interests: snap.data().hobby_interests || [],
                 study_interests: snap.data().study_interests || [],
+                avatarSeed: snap.data().avatarSeed || generateAvatarSeed(),
+                avatarStyle: snap.data().avatarStyle === "fun emoji"
+                    ? "fun-emoji"
+                    : (snap.data().avatarStyle || "fun-emoji"),
                 });
             }
             };
@@ -74,6 +87,8 @@ export default function EditProfileScreen() {
                 profile_text: userInfo.profile_text,
                 hobby_interests: userInfo.hobby_interests,
                 study_interests: userInfo.study_interests,
+                avatarSeed: userInfo.avatarSeed,
+                avatarStyle: userInfo.avatarStyle,
                 });
 
                 alert("Muutokset tallennettu");
@@ -124,7 +139,16 @@ export default function EditProfileScreen() {
         <Text style={styles.title}>Edit Profile Screen</Text>
 
         <View style={{ marginTop: 40, alignSelf: "left", paddingHorizontal: 20  }}>
-            <Text style={{ fontSize: 18, color: "#555", marginBottom: 10 }}>Tähän tulee profiilikuva</Text>
+            <AvatarPicker
+              avatarStyle={userInfo.avatarStyle}
+              avatarSeed={userInfo.avatarSeed}
+              setAvatarStyle={(style) =>
+                setUserInfo((prev) => ({ ...prev, avatarStyle: style }))
+              }
+              setAvatarSeed={(seed) =>
+                setUserInfo((prev) => ({ ...prev, avatarSeed: seed }))
+              }
+            />
         </View>
 
         <View style={styles.inputContainer}>
@@ -168,7 +192,7 @@ export default function EditProfileScreen() {
                 </Text>
             </View>
 
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <TouchableOpacity onPress={() => setHobbyModalVisible(true)}>
                 <Text style={{ color: "#007BFF", marginTop: 10 }}>+ Lisää harrastuksia</Text>
             </TouchableOpacity>
 
@@ -181,7 +205,7 @@ export default function EditProfileScreen() {
                 </Text>
             </View>
 
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <TouchableOpacity onPress={() => setStudyModalVisible(true)}>
                 <Text style={{ color: "#007BFF", marginTop: 10 }}>+ Lisää koulutus</Text>
             </TouchableOpacity>
         </View>
@@ -206,7 +230,7 @@ export default function EditProfileScreen() {
     
    </KeyboardAwareScrollView>
 
-   <Modal visible={modalVisible}
+   <Modal visible={hobbyModalVisible}
         transparent={true}
         animationType="slide"
         >
@@ -255,7 +279,7 @@ export default function EditProfileScreen() {
             </ScrollView>
 
             <TouchableOpacity
-              onPress={() => setModalVisible(false)}
+              onPress={() => setHobbyModalVisible(false)}
               style={{
                 marginTop: 15,
                 backgroundColor: "#333",
@@ -272,7 +296,7 @@ export default function EditProfileScreen() {
         </View>
         </Modal>
 
-        <Modal visible={modalVisible}
+        <Modal visible={studyModalVisible}
         transparent={true}
         animationType="slide"
         >
@@ -321,7 +345,7 @@ export default function EditProfileScreen() {
             </ScrollView>
 
             <TouchableOpacity
-              onPress={() => setModalVisible(false)}
+              onPress={() => setStudyModalVisible(false)}
               style={{
                 marginTop: 15,
                 backgroundColor: "#333",

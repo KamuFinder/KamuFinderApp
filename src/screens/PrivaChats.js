@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, FlatList,Image } from "react-native";
 import {  useNavigation } from '@react-navigation/native';
-import { firestore, collection, query, onSnapshot, orderBy, USERS, USERSPRIVATECHATS } from "../firebase/config.js";
+import { firestore, collection, query, onSnapshot, orderBy, doc, getDoc,
+    USERS, USERSPRIVATECHATS } from "../firebase/config.js";
 import { useUser } from "../context/UserContext.js";
 import styles from "../styles/PrivaChats.js";
 import { Ionicons } from "@expo/vector-icons";
 import Logo from "../../assets/Logo.png";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import UserAvatar from "../components/UserAvatar.js";
 
 
 
@@ -34,6 +35,7 @@ const getChatColor = (text) => {
 export default function PrivaChats() {
     const navigation = useNavigation()
     const [allChats, setAllChats] = useState([])
+    const [chatUsers, setChatUsers] = useState({})
     const user = useUser()
     
     
@@ -55,8 +57,47 @@ export default function PrivaChats() {
         })
         return unsubscribe;
     }, [user])
-    
 
+
+            useEffect(() => {
+            const fetchChatUsers = async () => {
+            if (!allChats.length) {
+                setChatUsers({});
+                return;
+            }
+
+            const usersData = {};
+            const uniqueUserIds = [
+                ...new Set(allChats.map((chat) => chat.otherUser).filter(Boolean)),
+            ];
+
+            for (const userId of uniqueUserIds) {
+                try {
+                const userRef = doc(firestore, USERS, userId);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+
+                    usersData[userId] = {
+                    avatarSeed: data.avatarSeed || "",
+                    avatarStyle:
+                        data.avatarStyle === "fun emoji"
+                        ? "fun-emoji"
+                        : data.avatarStyle || "fun-emoji",
+                    };
+                }
+                } catch (error) {
+                console.log("Virhe käyttäjän avatarin haussa:", error);
+                }
+            }
+
+            setChatUsers(usersData);
+            };
+
+            fetchChatUsers();
+        }, [allChats]);
+    
 
     return (
         
@@ -81,6 +122,14 @@ export default function PrivaChats() {
             const formattedTime = isToday ? `${time.getHours().toString().padStart(2, "0")}:${time.getMinutes().toString().padStart(2, "0")}`
                                         : `${time.getDate()}.${(time.getMonth() + 1)}`;
 
+            const avatarInfo = item.otherUser ? chatUsers[item.otherUser] : null;
+
+            const avatarUrl = avatarInfo?.avatarSeed
+                ? `https://api.dicebear.com/9.x/${avatarInfo.avatarStyle}/png?seed=${encodeURIComponent(
+                    avatarInfo.avatarSeed
+                )}`
+                : null;
+
             return (
                 <TouchableOpacity
                 style={{
@@ -98,6 +147,14 @@ export default function PrivaChats() {
                 })
                 }
             >
+
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <UserAvatar
+                    avatarSeed={avatarInfo?.avatarSeed}
+                    avatarStyle={avatarInfo?.avatarStyle}
+                    size={50}
+                />
+                
                 
                     <View style={styles.messageContainer}>
                         <Text style={styles.messageHeader}>{item.otherUserName}</Text>
@@ -107,13 +164,16 @@ export default function PrivaChats() {
                     <Text style={styles.message} numberOfLines={1}>
                         {item.latestMessage || ""}
                     </Text>
+                </View>
                 
             </TouchableOpacity>
             )
         }}
       />
+
         
     </View>
+
     
     );
 }

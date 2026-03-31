@@ -31,6 +31,10 @@ export default function SignUpScreen() {
       confirmedPassword: ''
     })
 
+    const generateAvatarSeed = () => {
+      return `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+    }
+
     const validateInputs = () => {
 
       if (isEmpty(userInfo.email.trim())){
@@ -95,10 +99,17 @@ export default function SignUpScreen() {
         }
 
         const userCredential = await createUserWithEmailAndPassword(auth, userInfo.email, userInfo.password)
+        
+        const avatarSeed = generateAvatarSeed();
+        const avatarStyle = "fun-emoji"
+        
         await setDoc(doc(firestore, USERS, userCredential.user.uid), {
           firstName: userInfo.firstName,
           lastName: userInfo.lastName,
           nickName: userInfo.nickName,
+          email: userInfo.email,
+          avatarSeed: avatarSeed,
+          avatarStyle: avatarStyle,
         })
         setUserInfo({
           firstName: '',

@@ -41,6 +41,8 @@ export default StyleSheet.create({
     messageHeader: {
         fontSize: 16,
         fontWeight: "bold",
+        paddingVertical: 5,
+        paddingHorizontal: 10,
     },
 
     messageTime: {

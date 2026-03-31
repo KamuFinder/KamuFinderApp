@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigation, useFocusEffect, useRoute } from "@react-navigation/native";
-import { View, Text, TouchableOpacity, Alert, Modal, FlatList,} from "react-native";
+import { View, Text, TouchableOpacity, Alert, Modal, FlatList, Image} from "react-native";
 import {firestore,USERS,doc,getDoc,setDoc,deleteDoc, serverTimestamp,FRIENDS,auth,signOut, FRIENDREQUESTS} from "../firebase/config.js";
 import { collection, onSnapshot } from "firebase/firestore";
 import styles from "../styles/Profile.js";
@@ -22,6 +22,8 @@ export default function ProfileScreen() {
     profile_text: "",
     study_interests: [],
     hobby_interests: [],
+    avatarSeed: "",
+    avatarStyle: "fun-emoji",
   });
 
   const [friendsCount, setFriendsCount] = useState(0);
@@ -33,6 +35,13 @@ export default function ProfileScreen() {
   const  route = useRoute()
   const profileUserId = route.params?.userId || user?.uid;
   const isOwnProfile = profileUserId === user?.uid;
+
+  const normalizedAvatarStyle =
+  userInfo.avatarStyle === "fun emoji" ? "fun-emoji" : (userInfo.avatarStyle || "fun-emoji");
+
+  const avatarUrl = userInfo.avatarSeed
+  ? `https://api.dicebear.com/9.x/${normalizedAvatarStyle}/png?seed=${encodeURIComponent(userInfo.avatarSeed)}`
+  : null;
 
   
   // Get users data from firebase and set it to state
@@ -55,6 +64,8 @@ export default function ProfileScreen() {
 
           hobby_interests: snap.data().hobby_interests || [],
           study_interests: snap.data().study_interests || [],
+          avatarSeed: snap.data().avatarSeed || "",
+          avatarStyle: snap.data().avatarStyle || "fun-emoji",
         };
         setUserInfo(profileData);
 
@@ -211,9 +222,16 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.infoContainer}>
+        
         <View style={{ alignItems: "center" }}>
-          <Ionicons name="person-circle" size={100} color="#e6500a" />
+          {avatarUrl && (
+          <Image
+              source={{ uri: avatarUrl }}
+              style={{ width: 100, height: 100, borderRadius: 50 }}
+          />
+          )}
         </View>
+        
         <View style={{ marginLeft: 24, flex: 1 }}>
           <Text style={{fontSize: 18, fontWeight: "bold"}}>{userInfo.nickName}</Text>
           <Text>{userInfo.firstName} {userInfo.lastName}</Text>

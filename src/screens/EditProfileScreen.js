@@ -7,6 +7,7 @@ import {firestore,USERS,doc,getDoc,updateDoc} from "../firebase/config.js";
 import styles from "../styles/EditProfile.js";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import CityAutocomplete from "../components/CityAutocomplete.js";
+import AvatarPicker from "../components/AvatarPicker.js";
 
 export default function EditProfileScreen() {
 
@@ -21,6 +22,8 @@ export default function EditProfileScreen() {
             "pelaaminen",
             "puutarhanhoito",
             "eläimet",
+            "siivoaminen",
+            "musiikki",
         ];
 
         const studyOptions =
@@ -28,6 +31,9 @@ export default function EditProfileScreen() {
             "AI",
             "eläintenhoito",
             "lääketiede",
+            "maanpuolustus",
+            "markkinointi",
+            "brändäys",
         ];
 
 
@@ -39,6 +45,8 @@ export default function EditProfileScreen() {
             profile_text: "",
             hobby_interests: [],
             study_interests: [],
+            avatarSeed: "",
+            avatarStyle: "fun-emoji",
             });;
         
 
@@ -56,6 +64,10 @@ export default function EditProfileScreen() {
                 profile_text: snap.data().profile_text || "",
                 hobby_interests: snap.data().hobby_interests || [],
                 study_interests: snap.data().study_interests || [],
+                avatarSeed: snap.data().avatarSeed || generateAvatarSeed(),
+                avatarStyle: snap.data().avatarStyle === "fun emoji"
+                    ? "fun-emoji"
+                    : (snap.data().avatarStyle || "fun-emoji"),
                 });
             }
             };
@@ -75,6 +87,8 @@ export default function EditProfileScreen() {
                 profile_text: userInfo.profile_text,
                 hobby_interests: userInfo.hobby_interests,
                 study_interests: userInfo.study_interests,
+                avatarSeed: userInfo.avatarSeed,
+                avatarStyle: userInfo.avatarStyle,
                 });
 
                 alert("Muutokset tallennettu");
@@ -125,7 +139,16 @@ export default function EditProfileScreen() {
         <Text style={styles.title}>Edit Profile Screen</Text>
 
         <View style={{ marginTop: 40, alignSelf: "left", paddingHorizontal: 20  }}>
-            <Text style={{ fontSize: 18, color: "#555", marginBottom: 10 }}>Tähän tulee profiilikuva</Text>
+            <AvatarPicker
+              avatarStyle={userInfo.avatarStyle}
+              avatarSeed={userInfo.avatarSeed}
+              setAvatarStyle={(style) =>
+                setUserInfo((prev) => ({ ...prev, avatarStyle: style }))
+              }
+              setAvatarSeed={(seed) =>
+                setUserInfo((prev) => ({ ...prev, avatarSeed: seed }))
+              }
+            />
         </View>
 
         <View style={styles.inputContainer}>

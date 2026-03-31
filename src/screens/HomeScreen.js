@@ -9,7 +9,7 @@ import Logo from "../../assets/Logo.png";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import FriendRequestButton from "../components/FriendRequestButton.js";
-
+import UserAvatar from "../components/UserAvatar.js";
 
 export default function HomeScreen() {
   const user = useUser();
@@ -44,6 +44,8 @@ export default function HomeScreen() {
         id: doc.id,
         firstName: doc.data().firstName,
         lastName: doc.data().lastName,
+        avatarSeed: doc.data().avatarSeed || "",
+        avatarStyle: doc.data().avatarStyle || "",
       })). filter( (u) => u.id !== user.uid)
       setUsersList(usersList)
     })
@@ -132,11 +134,6 @@ export default function HomeScreen() {
 
       <Text style={{ marginTop: 12, marginBottom: 12 }}>Löydä uusia kavereita sydän-välilehdeltä!</Text>
 
-      
-
-
-
-
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
           
@@ -159,8 +156,21 @@ export default function HomeScreen() {
               filteredUsers.map((u) => (
                 <View key= {u.id} style={styles.friendReguestbutton}>
 
-                    <TouchableOpacity onPress={() => navigation.navigate("Profile", { userId: u.id })}>
-                      <Text style={{ color: "#000", fontWeight: "bold" }}> {u.firstName} {u.lastName} </Text>
+                    <TouchableOpacity 
+                        onPress={() => navigation.navigate("Profile", { userId: u.id })}
+                         style={{ flexDirection: "row", alignItems: "center", flexShrink: 1 }}
+                    >
+  
+                    <UserAvatar
+                      avatarSeed={u.avatarSeed}
+                      avatarStyle={u.avatarStyle}
+                      size={30}
+    />
+                    <View style={{ marginLeft: 8, flexShrink: 1 }}>
+                      <Text 
+                        style={{ color: "#000", fontWeight: "bold", marginRight: 24 }}> {u.firstName} {u.lastName} 
+                      </Text>
+                    </View>                   
                     </TouchableOpacity>
 
                     <FriendRequestButton

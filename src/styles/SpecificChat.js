@@ -10,8 +10,7 @@ export default StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+   
   },
 
   messageContainer: {

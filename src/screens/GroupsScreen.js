@@ -132,7 +132,7 @@ export default function GroupScreen() {
     );
   };
 
-  // RYHMÄN LUONTI FIRESTOREEN
+ // RYHMÄN LUONTI FIRESTOREEN
 const createGroup = async () => {
   try {
     if (!groupName.trim()) {
@@ -150,15 +150,20 @@ const createGroup = async () => {
 
     const groupId = groupRef.id;
 
-    // Lisätään creator automaattisesti jäseneksi
+    // Lisätään Group creator automaattisesti jäseneksi
     const allMembers = [...selectedFriends, user.uid];
 
     // Lisätään members subcollection
     for (const memberId of allMembers) {
+
+      //  määritetää rooli,  jos memberId on ryhmän luoja (user.uid) : admin ja muuten member
+      const role = memberId === user.uid ? "admin" : "member";
+
       await setDoc(
         doc(firestore, "groups", groupId, "members", memberId),
         {
           joinedAt: serverTimestamp(),
+          role: role, //groups->groupId->members->memberId-> rooli admin/member
         }
       );
 
@@ -175,6 +180,7 @@ const createGroup = async () => {
           groupName: groupName,
           description: groupDescription,
           joined: serverTimestamp(),
+          role: role, // Myös tänne tulee nyt sit tuo rooli nii säästää firestore queryja myöhemmin
         }
       );
     }

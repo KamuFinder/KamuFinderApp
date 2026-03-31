@@ -26,7 +26,7 @@ export default function DateDivider({ date }) {
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 12,
-        marginVertical: 10,
+        marginVertical: 16,
       }}
     >
       <Text style={{ fontSize: 12, color: "#444", fontWeight: "bold" }}>

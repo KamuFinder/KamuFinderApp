@@ -6,6 +6,41 @@ from ai.similarity import jaccard_similarity
 
 app = FastAPI()
 
+from typing import List
+from pydantic import BaseModel
+
+class StudyGroup(BaseModel):
+    group_id: str
+    name: str
+    description: str
+    tags: list[str]
+    memberCount: int = 0
+
+
+class StudyGroupRecommendationRequest(BaseModel):
+    user_id: str
+    study_interests: list[str]
+    groups: list[StudyGroup]
+
+
+@app.post("/recommend/study-groups")
+def recommend_study_groups_endpoint(request: StudyGroupRecommendationRequest):
+    user = {
+        "study_interests": request.study_interests
+    }
+
+    groups = [
+        {
+            "group_id": g.group_id,
+            "name": g.name,
+            "description": g.description,
+            "tags": g.tags,
+            "memberCount": g.memberCount,
+        }
+        for g in request.groups
+    ]
+
+    return recommend_study_groups(user, groups)
 
 def normalize_hobbies(hobbies: List[str]) -> List[str]:
     return [

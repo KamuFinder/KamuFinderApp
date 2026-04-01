@@ -8,6 +8,9 @@ import styles from "../styles/EditProfile.js";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import CityAutocomplete from "../components/CityAutocomplete.js";
 import AvatarPicker from "../components/AvatarPicker.js";
+import ChangeEmail from "../components/ChangeEmail.js";
+import ChangePassword from "../components/ChangePassword.js";
+import Divider from "../components/Divider.js";
 
 export default function EditProfileScreen() {
 
@@ -15,6 +18,7 @@ export default function EditProfileScreen() {
         const user = useUser();
         const [hobbyModalVisible, setHobbyModalVisible] = useState(false);
         const [studyModalVisible, setStudyModalVisible] = useState(false);
+        const [loading, setLoading] = useState(false);
 
         const hobbyOptions = 
         [
@@ -79,6 +83,8 @@ export default function EditProfileScreen() {
             try {
                 if (!user) return;
 
+                setLoading(true);
+
                 const userRef = doc(firestore, USERS, user.uid);
 
                 await updateDoc(userRef, {
@@ -96,7 +102,10 @@ export default function EditProfileScreen() {
                 console.log("Virhe profiilin päivittämisessä:", error.message);
                 alert("Muutosten tallennus epäonnistui");
             }
-            };
+            finally {
+                setLoading(false);
+            }
+        };
 
             const toggleHobby = (hobby) => {
                 setUserInfo((prev) => {
@@ -160,12 +169,6 @@ export default function EditProfileScreen() {
             placeholder="Uusi käyttäjätunnus"
             />
             
-            {/*Sähköpostin muuttaminen vaatii muutoksia Firebasen autentikointiin, joten jätetään tämä vielä pois */}
-            <Text style={styles.label}>Uusi sähköpostiosoite</Text>  
-            <TextInput 
-            style={styles.input} 
-            placeholder="Uusi sähköposti"
-            />
 
             <Text style={styles.label}>Uusi kuvaus</Text>
             <TextInput 
@@ -215,6 +218,7 @@ export default function EditProfileScreen() {
         <TouchableOpacity 
         style={{ 
             backgroundColor: "#F99D11", 
+            opacity: loading ? 0.7 : 1,
             padding: 15, 
             borderRadius: 30, 
             marginTop: 20, 
@@ -223,9 +227,21 @@ export default function EditProfileScreen() {
             
         }}
             onPress={handleSaveChanges}
+            disabled={loading}
         >
-                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>Hyväksy muutokset</Text>
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+                  {loading ? "Tallennetaan..." : "Hyväksy muutokset"}
+                </Text>
             </TouchableOpacity>
+    </View>
+
+    
+
+    <View style={{ marginTop: 40, alignSelf: "left", paddingHorizontal: 20  }}>
+        <Divider style={{ }} />
+        <ChangeEmail />
+        <Divider style={{ }} />
+        <ChangePassword />
     </View>
     
    </KeyboardAwareScrollView>

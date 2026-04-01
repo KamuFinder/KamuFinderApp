@@ -5,6 +5,8 @@ import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, onSnapshot, setDoc} from
 import { collection, deleteDoc, serverTimestamp, writeBatch, updateDoc, query, where, getDocs } from "firebase/firestore";
 import { useNavigation } from '@react-navigation/native';
 import styles from "../styles/Notifications.js";
+import Loading from "../components/Loading.js";
+import { ActivityIndicator } from "react-native";
 
 export default function Notifications() {
   const user = useUser();
@@ -12,6 +14,10 @@ export default function Notifications() {
   const [ sentFriendRequests, setSentFriendRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const navigation = useNavigation();
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [loadingNotifications, setLoadingNotifications] = useState(true);
+  const initialLoading = loadingRequests || loadingNotifications;
+  const [processing, setProcessing] = useState(null);
   
   // Use refs to track latest state without changing listener
   const friendRequestsRef = useRef([]);
@@ -35,10 +41,7 @@ export default function Notifications() {
     const friendRequestsRef = collection(firestore, USERS, user.uid, FRIENDREQUESTS)
     const unsubscribe = onSnapshot(friendRequestsRef, async (querySnapshot) => {
 
-      const incomming = []
-      const outgoing = []
-
-      for ( const docSnap of querySnapshot.docs) {
+      const promises = querySnapshot.docs.map(async (docSnap) => {
         const data = docSnap.data()
         let name = "Poistettu käyttäjä";
         let Date = data.timestamp?.toDate?.() || null;
@@ -53,7 +56,7 @@ export default function Notifications() {
           else {
             isDeletedUser = true
           }
-          incomming.push({ id: docSnap.id, name, Date, isDeletedUser, ...data })
+          return { type: "incomming",data: { id: docSnap.id, name, Date, isDeletedUser, ...data } }
 
         } else if (data.fromUserId === user.uid) {
           const toUserSnap = await getDoc(doc(firestore, USERS, data.toUserId))
@@ -64,11 +67,24 @@ export default function Notifications() {
           else {
             isDeletedUser = true
           }
-          outgoing.push({ id: docSnap.id, name, Date, isDeletedUser, ...data })
+          return { type: "outgoing", data: { id: docSnap.id, name, Date, isDeletedUser, ...data } }
         }
-      }
-      setFriendRequests(incomming)
-      setSentFriendRequests(outgoing)
+        return null;
+      })
+      const results = await Promise.all(promises)
+      const incoming = []
+      const outgoing = []
+
+      results.forEach(result => {
+        if (!result) return;
+        if (result.type === "incomming") { incoming.push(result.data)} 
+        else if (result.type === "outgoing") {outgoing.push(result.data)}
+      })
+      setFriendRequests(incoming);
+      setSentFriendRequests(outgoing);
+
+      setLoadingRequests(false);
+        
   })
 
     return () => unsubscribe(); 
@@ -86,6 +102,7 @@ export default function Notifications() {
         notifications.push({ id: doc.id, ...doc.data() })
       });
       setNotifications(notifications)
+      setLoadingNotifications(false);
     });
 
     return () => unsubscribe();
@@ -129,6 +146,7 @@ export default function Notifications() {
   //User accepting friend request
   const handleAccept = async (req) => {
     try {
+      setProcessing(req.id)
       const currentUserRef = doc(firestore, USERS, user.uid)
       const otherUserRef = doc(firestore, USERS, req.fromUserId)
 
@@ -172,7 +190,10 @@ export default function Notifications() {
 
     }catch (error) {
       console.error("Error accepting friend request:", error)
-    } 
+    } finally {
+      setProcessing(null)
+      Alert.alert("Kaveripyyntö hyväksytty", "Olet nyt kavereita! Voitte aloittaa keskustelun yksityisissä viesteissä.")
+    }
 
   }
 
@@ -349,6 +370,9 @@ export default function Notifications() {
   }
 };
 
+if (initialLoading) {
+    return <Loading text="Ladataan ilmoituksia..." />;
+  }
 
   return (
     <View style={styles.container}>
@@ -396,8 +420,14 @@ export default function Notifications() {
             </TouchableOpacity>
           ) : (
           <View style={{ flexDirection: "row", gap: 10, marginTop: 5 }}>
-            <TouchableOpacity onPress={() => handleAccept(req)}>
-              <Text style={{ color: "green" }}>Hyväksy</Text>
+            <TouchableOpacity onPress={() => handleAccept(req) } disabled={processing === req.id}>
+              
+              {processing === req.id ? (
+                <ActivityIndicator size="small" color="green" />
+              ) : (
+                <Text style={{ color: "green" }}>Hyväksy</Text>
+              )}
+
             </TouchableOpacity>
             <TouchableOpacity onPress={() => handleDecline(req)}>
               <Text style={{ color: "red" }}>X</Text>

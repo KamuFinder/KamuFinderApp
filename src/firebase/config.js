@@ -15,6 +15,7 @@ import {
   doc,
   where,
   increment,
+  runTransaction
 } from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, initializeAuth, signOut, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'
@@ -76,4 +77,5 @@ export {
   FRIENDREQUESTS,
   PUBLIC_GROUPS,
   SUB_GROUPS,
+  runTransaction
 };

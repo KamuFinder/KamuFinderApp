@@ -11,6 +11,7 @@ import {  useNavigation } from '@react-navigation/native';
 import styles from "../styles/SpecificChat.js";
 import DateDivider from "../components/dateDivider.js";
 import UserAvatar from "../components/UserAvatar.js";
+import Loading from "../components/Loading.js";
 
 export default function HomeScreen() {
   const user = useUser()
@@ -31,6 +32,9 @@ export default function HomeScreen() {
 
   const flatListRef = useRef(null);
   const [ready, setReady] = useState(false)
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAtBottom, setIsAtBottom] = useState(true);
   
 
 
@@ -47,6 +51,7 @@ export default function HomeScreen() {
           ...doc.data(),
         }));
         setMessages(msgs);
+        setIsLoading(false);
       });
 
       return unsubscribe;
@@ -55,6 +60,8 @@ export default function HomeScreen() {
         setMessages([])
     }
   }, [chatId, user]);
+
+
 
   useEffect(() =>{
     if (!user || !chatId) return;
@@ -84,6 +91,8 @@ export default function HomeScreen() {
 
   }, [user, chatId])
 
+
+
   useEffect(() => {
     if (!otherUserId) return;
 
@@ -112,7 +121,9 @@ export default function HomeScreen() {
       }, [otherUserId]);
 
 
-      useEffect(() => {
+
+
+  useEffect(() => {
   if (!user) return;
 
       const fetchMyAvatar = async () => {
@@ -139,6 +150,8 @@ export default function HomeScreen() {
       fetchMyAvatar();
     }, [user]);
 
+
+
   useEffect(() => {
     if (!user || !chatId || messages.length === 0) return;
 
@@ -160,20 +173,26 @@ export default function HomeScreen() {
     markAsRead()
   }, [messages])
 
-      useEffect(() => {
-      if (messages.length > 0) {
-        setReady(false);
 
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: false });
-          setReady(true);
-        }, 200);
-      } else {
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    if (initialLoad) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({offset: 0, animated: false });
         setReady(true);
-      }
-    }, [messages]);
+        setInitialLoad(false);
+      }, 100);
+    }
+  }, [messages]);
 
 
+  useEffect(() => {
+    if (!initialLoad && isAtBottom) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
 
   const sendMessage = async () => {
     if (newMessage.trim() === "" || !otherUserId) return;
@@ -202,6 +221,9 @@ export default function HomeScreen() {
     setNewMessage("");
   }
   
+  if (isLoading) {
+    return <Loading text="Ladataan viestejä..."/>;
+  }
 
   return (
     <KeyboardAvoidingView
@@ -236,11 +258,23 @@ export default function HomeScreen() {
 
       <FlatList
         ref={flatListRef}
-        style={{ flex: 1, opacity: ready ? 1 : 0 }}
+        style={{ flex: 1,  }}
         data={messages}
         keyExtractor={(item) => item.id}
+        keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 10 }}
+        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 10, flexGrow: 1}}
+
+        onScroll={(event) => {
+          const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+
+          const isAtBottom =
+            layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+
+          setIsAtBottom(isAtBottom);
+        }}
+        scrollEventThrottle={16}
+
         renderItem={({ item, index }) => {
           const isMe = item.userId === user.uid;
           const time = item.timestamp?.toDate ? item.timestamp.toDate() : new Date();

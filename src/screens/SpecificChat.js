@@ -51,7 +51,7 @@ export default function HomeScreen() {
           ...doc.data(),
         }));
         setMessages(msgs);
-        setIsLoading(false);
+        if (initialLoad)  setIsLoading(false);
       });
 
       return unsubscribe;
@@ -152,16 +152,15 @@ export default function HomeScreen() {
 
 
 
-  useEffect(() => {
+   useEffect(() => {
     if (!user || !chatId || messages.length === 0) return;
 
+    const lastMessage = messages[messages.length - 1]
+
+    if (!lastMessage || lastMessage.userId === user.uid) return;
+
     const markAsRead = async () => {
-
       try {
-        const lastMessage = messages[messages.length - 1]
-
-        if (lastMessage.userId === user.uid) return;
-
         const chatRef = doc(firestore,USERS, user.uid, USERSPRIVATECHATS,chatId)
         await updateDoc (chatRef, {
           unReadMessages: false,
@@ -174,25 +173,6 @@ export default function HomeScreen() {
   }, [messages])
 
 
-
-  useEffect(() => {
-    if (messages.length === 0) return;
-
-    if (initialLoad) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({offset: 0, animated: false });
-        setReady(true);
-        setInitialLoad(false);
-      }, 100);
-    }
-  }, [messages]);
-
-
-  useEffect(() => {
-    if (!initialLoad && isAtBottom) {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }
-  }, [messages]);
 
   const sendMessage = async () => {
     if (newMessage.trim() === "" || !otherUserId) return;
@@ -274,6 +254,24 @@ export default function HomeScreen() {
           setIsAtBottom(isAtBottom);
         }}
         scrollEventThrottle={16}
+
+        onMomentumScrollEnd={(event) => {
+          const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+
+          const isBottom =
+            layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+
+          setIsAtBottom(isBottom);
+        }}
+
+          onContentSizeChange={() => {
+            if (initialLoad) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+              setInitialLoad(false);
+            } else if (isAtBottom) {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
 
         renderItem={({ item, index }) => {
           const isMe = item.userId === user.uid;

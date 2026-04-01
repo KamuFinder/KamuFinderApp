@@ -26,7 +26,8 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
-  onSnapshot
+  onSnapshot,
+  runTransaction,
 } from "../firebase/config";
 import {
   fetchUserRecommendations,
@@ -135,17 +136,30 @@ export default function SwipingScreen({ navigation }) {
 
       const groupsSnapshot = await getDocs(collection(firestore, PUBLIC_GROUPS));
 
-      const groups = groupsSnapshot.docs.map((groupDoc) => {
-        const data = groupDoc.data();
+      const groups = await Promise.all(
+  groupsSnapshot.docs.map(async (groupDoc) => {
+    const data = groupDoc.data();
 
-        return {
-          group_id: groupDoc.id,
-          name: data.groupName || "",
-          description: data.desc || "",
-          tags: Array.isArray(data.tags) ? data.tags : [],
-          memberCount: data.memberCount || 0,
-        };
-      });
+    const userSubGroupRef = doc(
+      firestore,
+      USERS,
+      user.uid,
+      SUB_GROUPS,
+      groupDoc.id
+    );
+
+    const membershipSnap = await getDoc(userSubGroupRef);
+
+    return {
+      group_id: groupDoc.id,
+      name: data.groupName || "",
+      description: data.desc || "",
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      memberCount: data.memberCount || 0,
+      alreadyJoined: membershipSnap.exists(),
+    };
+  })
+);
 
       console.log("USER study_interests:", currentUserData.study_interests);
       console.log("GROUPS FROM FIRESTORE:", groups);
@@ -238,30 +252,44 @@ export default function SwipingScreen({ navigation }) {
   };
 
   const handleJoinStudyGroup = async (group) => {
-    try {
-      if (!user?.uid || !group?.group_id) return;
+  try {
+    if (!user?.uid || !group?.group_id) return;
 
-      const currentUserRef = doc(firestore, USERS, user.uid);
-      const currentUserSnap = await getDoc(currentUserRef);
+    const currentUserRef = doc(firestore, USERS, user.uid);
+    const currentUserSnap = await getDoc(currentUserRef);
 
-      if (!currentUserSnap.exists()) {
-        Alert.alert("Virhe", "Käyttäjän tietoja ei löytynyt");
-        return;
+    if (!currentUserSnap.exists()) {
+      Alert.alert("Virhe", "Käyttäjän tietoja ei löytynyt");
+      return;
+    }
+
+    const currentUserData = currentUserSnap.data();
+
+    const userSubGroupRef = doc(
+      firestore,
+      USERS,
+      user.uid,
+      SUB_GROUPS,
+      group.group_id
+    );
+
+    const groupRef = doc(firestore, PUBLIC_GROUPS, group.group_id);
+
+    const result = await runTransaction(firestore, async (transaction) => {
+      const membershipSnap = await transaction.get(userSubGroupRef);
+      const groupSnap = await transaction.get(groupRef);
+
+      if (!groupSnap.exists()) {
+        throw new Error("Ryhmää ei löytynyt");
       }
 
-      const currentUserData = currentUserSnap.data();
+      if (membershipSnap.exists()) {
+        return { alreadyJoined: true };
+      }
 
-      const userSubGroupRef = doc(
-        firestore,
-        USERS,
-        user.uid,
-        SUB_GROUPS,
-        group.group_id
-      );
+      const currentMemberCount = groupSnap.data()?.memberCount || 0;
 
-      const groupRef = doc(firestore, PUBLIC_GROUPS, group.group_id);
-
-      await setDoc(userSubGroupRef, {
+      transaction.set(userSubGroupRef, {
         userId: user.uid,
         firstName: currentUserData?.firstName || "",
         joinedAt: serverTimestamp(),
@@ -270,18 +298,26 @@ export default function SwipingScreen({ navigation }) {
         groupName: group.name,
       });
 
-      await updateDoc(groupRef, {
-        memberCount: increment(1),
+      transaction.update(groupRef, {
+        memberCount: currentMemberCount + 1,
       });
 
-      Alert.alert("Onnistui", `Liityit ryhmään ${group.name}`);
+      return { alreadyJoined: false };
+    });
 
-      await fetchGroupRecommendations();
-    } catch (error) {
-      console.error("Virhe ryhmään liittymisessä:", error);
-      Alert.alert("Virhe", "Ryhmään liittyminen epäonnistui");
+    if (result.alreadyJoined) {
+      Alert.alert("Info", "Olet jo tämän ryhmän jäsen");
+      return;
     }
-  };
+
+    Alert.alert("Onnistui", `Liityit ryhmään ${group.name}`);
+
+    await fetchGroupRecommendations();
+  } catch (error) {
+    console.error("Virhe ryhmään liittymisessä:", error);
+    Alert.alert("Virhe", error?.message || "Ryhmään liittyminen epäonnistui");
+  }
+};
 
   return (
     <SafeAreaView style={localStyles.safeArea}>

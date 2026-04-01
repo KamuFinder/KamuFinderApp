@@ -347,19 +347,26 @@ if (isLoading) {
             <Text style={styles.dropdownItemText}>Muokkaa profiilia</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-          style={styles.dropdownItem}
+          
+
+        <TouchableOpacity onPress={() => confirmSignOut()}>
+        <Text style={styles.signOut}>Kirjaudu ulos</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+          style={{marginTop: 64, justifyContent: "center",
+          alignItems: "center",
+          paddingVertical: 10,
+          paddingHorizontal: 15,
+          borderRadius: 20,
+          backgroundColor: "red",}}
           onPress={() => {
             setMenuVisible(false);
             navigation.navigate("ChangePassword");
           }}
         >
-          <Text style={styles.dropdownItemText}>Vaihda salasana</Text>
+          <Text style={styles.dropdownItemText}>Poista tili</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => confirmSignOut()}>
-        <Text style={styles.signOut}>sign-out</Text>
-      </TouchableOpacity>
 
           </View>
         </TouchableOpacity>

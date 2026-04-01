@@ -54,11 +54,11 @@ export default StyleSheet.create({
 
   signOut: {
     color: "white",
-    backgroundColor: "red",
+    backgroundColor: "#F99D11",
     fontWeight: "bold",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    borderColor: "red",
+    borderColor: "#F99D11",
     borderWidth: 1,
     borderRadius: 20,
     textAlign: "center",

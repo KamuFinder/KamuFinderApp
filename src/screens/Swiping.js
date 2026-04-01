@@ -26,7 +26,7 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
-  onSnapshot,
+  onSnapshot
 } from "../firebase/config";
 import {
   fetchUserRecommendations,
@@ -162,7 +162,7 @@ export default function SwipingScreen({ navigation }) {
 
       setGroupRecommendations(recommendations || []);
     } catch (error) {
-      console.log("❌ VIRHE STUDY GROUP HAUSSA:");
+      console.log("VIRHE STUDY GROUP HAUSSA:");
       console.log("error:", error);
       console.log("status:", error?.response?.status);
       console.log("data:", error?.response?.data);

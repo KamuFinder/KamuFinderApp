@@ -11,7 +11,6 @@ def normalize_list(values):
 
 def recommend_study_groups(user, groups):
     results = []
-
     user_study_interests = normalize_list(user.get("study_interests", []))
 
     for group in groups:

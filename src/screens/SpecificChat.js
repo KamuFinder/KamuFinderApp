@@ -31,7 +31,6 @@ export default function HomeScreen() {
   const [myAvatar, setMyAvatar] = useState(emptyAvatar);
 
   const flatListRef = useRef(null);
-  const [ready, setReady] = useState(false)
   const [initialLoad, setInitialLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -45,21 +44,47 @@ export default function HomeScreen() {
       const messagesRef = collection(firestore, PRIVATECHATS, chatId, MESSAGES);
       const q = query(messagesRef, orderBy("timestamp", "asc"));
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      const unsubscribe = onSnapshot(q, async(snapshot) => {
         const msgs = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
         setMessages(msgs);
-        if (initialLoad)  setIsLoading(false);
-      });
+
+        //First time loading the messages, scroll to bottom without animation
+        if (initialLoad) {
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+            setInitialLoad(false);
+            setIsLoading(false);
+          }, 50)
+
+        } else if (isAtBottom) {
+            requestAnimationFrame(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+          });
+        }
+      try {
+        if (msgs.length > 0) {
+          const lastMessage = msgs[msgs.length - 1];
+          if (lastMessage && lastMessage.userId !== user.uid) {
+            const chatRef = doc(firestore, USERS, user.uid, USERSPRIVATECHATS, chatId);
+            await updateDoc(chatRef, { unReadMessages: false });
+          }
+        }
+      } catch (err) {
+        console.log("Mark as read failed:", err.message);
+      }
+    })
 
       return unsubscribe;
     } catch (error) {
         console.log("No messages awailable", error.message)
         setMessages([])
     }
-  }, [chatId, user]);
+  }, [chatId, user, initialLoad, isAtBottom]);
+
+
 
 
 
@@ -151,26 +176,6 @@ export default function HomeScreen() {
     }, [user]);
 
 
-
-   useEffect(() => {
-    if (!user || !chatId || messages.length === 0) return;
-
-    const lastMessage = messages[messages.length - 1]
-
-    if (!lastMessage || lastMessage.userId === user.uid) return;
-
-    const markAsRead = async () => {
-      try {
-        const chatRef = doc(firestore,USERS, user.uid, USERSPRIVATECHATS,chatId)
-        await updateDoc (chatRef, {
-          unReadMessages: false,
-        })
-      } catch (error) {
-        console.log("Error in marking message as read", error.message)
-      }
-    }
-    markAsRead()
-  }, [messages])
 
 
 

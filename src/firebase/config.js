@@ -1,5 +1,21 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, query, addDoc, setDoc, getDoc, getDocs,updateDoc,deleteDoc, onSnapshot, orderBy, serverTimestamp, doc, where,  } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  query,
+  addDoc,
+  setDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  orderBy,
+  serverTimestamp,
+  doc,
+  where,
+  increment,
+} from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, initializeAuth, signOut, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'
 export const API_BASE_URL = "https://kamufinder-backend.onrender.com";
@@ -24,35 +40,40 @@ const USERSPRIVATECHATS = 'usersPrivateChats'
 const PRIVATECHATS = 'privateChats'
 const MESSAGES = 'messages'
 const FRIENDREQUESTS = 'friendRequests'
+const PUBLIC_GROUPS = "public-Groups";
+const SUB_GROUPS = "sub_groups";
 
 const auth = initializeAuth(app, {
     persistence: getReactNativePersistence(ReactNativeAsyncStorage)
 })
 
 export {
-    firestore,
-    collection,
-    query,
-    addDoc,
-    setDoc,
-    getDoc,
-    getDocs,
-    updateDoc,
-    deleteDoc,
-    doc,
-    onSnapshot,
-    orderBy,
-    where,
-    serverTimestamp,
-    getAuth,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    USERS,
-    auth,
-    signOut,
-    FRIENDS,
-    USERSPRIVATECHATS,
-    PRIVATECHATS,
-    MESSAGES,
-    FRIENDREQUESTS,
+  firestore,
+  collection,
+  query,
+  addDoc,
+  setDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  where,
+  serverTimestamp,
+  increment,
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  USERS,
+  auth,
+  signOut,
+  FRIENDS,
+  USERSPRIVATECHATS,
+  PRIVATECHATS,
+  MESSAGES,
+  FRIENDREQUESTS,
+  PUBLIC_GROUPS,
+  SUB_GROUPS,
 };

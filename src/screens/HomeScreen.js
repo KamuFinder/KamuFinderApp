@@ -10,6 +10,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import FriendRequestButton from "../components/FriendRequestButton.js";
 import UserAvatar from "../components/UserAvatar.js";
+import Loading from "../components/Loading.js";
+
 
 export default function HomeScreen() {
   const user = useUser();
@@ -20,6 +22,7 @@ export default function HomeScreen() {
   const [friendsList, setFriendsList] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
   const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(true);
 
 
   useEffect(() => {
@@ -27,11 +30,13 @@ export default function HomeScreen() {
     const fetchUserData = async () => {
       if (!user) return;
 
-      const ref = doc(firestore, USERS, user.uid);
-      const snap = await getDoc(ref);
+      setIsLoading(true)
+
+      const ref = doc(firestore, USERS, user.uid)
+      const snap = await getDoc(ref)
 
       if (snap.exists()) {
-        setFirstName(snap.data().firstName);
+        setFirstName(snap.data().firstName)
       }
     }
     fetchUserData();
@@ -48,6 +53,8 @@ export default function HomeScreen() {
         avatarStyle: doc.data().avatarStyle || "",
       })). filter( (u) => u.id !== user.uid)
       setUsersList(usersList)
+      setIsLoading(false)
+
     })
     return () => unsubscribe()
   }, [user]);
@@ -121,7 +128,9 @@ export default function HomeScreen() {
     setFilteredUsers(results)
   };
 
-
+  if (isLoading) {
+    return (<Loading />);
+  }
   
   return (
     <View style={styles.container}>

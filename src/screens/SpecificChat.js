@@ -11,6 +11,7 @@ import {  useNavigation } from '@react-navigation/native';
 import styles from "../styles/SpecificChat.js";
 import DateDivider from "../components/dateDivider.js";
 import UserAvatar from "../components/UserAvatar.js";
+import Loading from "../components/Loading.js";
 
 export default function HomeScreen() {
   const user = useUser()
@@ -30,7 +31,9 @@ export default function HomeScreen() {
   const [myAvatar, setMyAvatar] = useState(emptyAvatar);
 
   const flatListRef = useRef(null);
-  const [ready, setReady] = useState(false)
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAtBottom, setIsAtBottom] = useState(true);
   
 
 
@@ -41,20 +44,49 @@ export default function HomeScreen() {
       const messagesRef = collection(firestore, PRIVATECHATS, chatId, MESSAGES);
       const q = query(messagesRef, orderBy("timestamp", "asc"));
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      const unsubscribe = onSnapshot(q, async(snapshot) => {
         const msgs = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
         setMessages(msgs);
-      });
+
+        //First time loading the messages, scroll to bottom without animation
+        if (initialLoad) {
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+            setInitialLoad(false);
+            setIsLoading(false);
+          }, 50)
+
+        } else if (isAtBottom) {
+            requestAnimationFrame(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+          });
+        }
+      try {
+        if (msgs.length > 0) {
+          const lastMessage = msgs[msgs.length - 1];
+          if (lastMessage && lastMessage.userId !== user.uid) {
+            const chatRef = doc(firestore, USERS, user.uid, USERSPRIVATECHATS, chatId);
+            await updateDoc(chatRef, { unReadMessages: false });
+          }
+        }
+      } catch (err) {
+        console.log("Mark as read failed:", err.message);
+      }
+    })
 
       return unsubscribe;
     } catch (error) {
         console.log("No messages awailable", error.message)
         setMessages([])
     }
-  }, [chatId, user]);
+  }, [chatId, user, initialLoad, isAtBottom]);
+
+
+
+
 
   useEffect(() =>{
     if (!user || !chatId) return;
@@ -84,6 +116,8 @@ export default function HomeScreen() {
 
   }, [user, chatId])
 
+
+
   useEffect(() => {
     if (!otherUserId) return;
 
@@ -112,7 +146,9 @@ export default function HomeScreen() {
       }, [otherUserId]);
 
 
-      useEffect(() => {
+
+
+  useEffect(() => {
   if (!user) return;
 
       const fetchMyAvatar = async () => {
@@ -139,39 +175,7 @@ export default function HomeScreen() {
       fetchMyAvatar();
     }, [user]);
 
-  useEffect(() => {
-    if (!user || !chatId || messages.length === 0) return;
 
-    const markAsRead = async () => {
-
-      try {
-        const lastMessage = messages[messages.length - 1]
-
-        if (lastMessage.userId === user.uid) return;
-
-        const chatRef = doc(firestore,USERS, user.uid, USERSPRIVATECHATS,chatId)
-        await updateDoc (chatRef, {
-          unReadMessages: false,
-        })
-      } catch (error) {
-        console.log("Error in marking message as read", error.message)
-      }
-    }
-    markAsRead()
-  }, [messages])
-
-      useEffect(() => {
-      if (messages.length > 0) {
-        setReady(false);
-
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: false });
-          setReady(true);
-        }, 200);
-      } else {
-        setReady(true);
-      }
-    }, [messages]);
 
 
 
@@ -202,6 +206,9 @@ export default function HomeScreen() {
     setNewMessage("");
   }
   
+  if (isLoading) {
+    return <Loading text="Ladataan viestejä..."/>;
+  }
 
   return (
     <KeyboardAvoidingView
@@ -236,11 +243,41 @@ export default function HomeScreen() {
 
       <FlatList
         ref={flatListRef}
-        style={{ flex: 1, opacity: ready ? 1 : 0 }}
+        style={{ flex: 1,  }}
         data={messages}
         keyExtractor={(item) => item.id}
+        keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 10 }}
+        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 10, flexGrow: 1}}
+
+        onScroll={(event) => {
+          const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+
+          const isAtBottom =
+            layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+
+          setIsAtBottom(isAtBottom);
+        }}
+        scrollEventThrottle={16}
+
+        onMomentumScrollEnd={(event) => {
+          const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+
+          const isBottom =
+            layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+
+          setIsAtBottom(isBottom);
+        }}
+
+          onContentSizeChange={() => {
+            if (initialLoad) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+              setInitialLoad(false);
+            } else if (isAtBottom) {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
+
         renderItem={({ item, index }) => {
           const isMe = item.userId === user.uid;
           const time = item.timestamp?.toDate ? item.timestamp.toDate() : new Date();

@@ -9,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5'
 import Divider from "../components/Divider.js";
 import FriendRequestButton from "../components/FriendRequestButton.js";
+import Loading from "../components/Loading.js";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -31,6 +32,7 @@ export default function ProfileScreen() {
   const [allFriendRequests, setAllFriendRequests] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   // Params for checking if it's own profile or not
   const  route = useRoute()
   const profileUserId = route.params?.userId || user?.uid;
@@ -47,6 +49,7 @@ export default function ProfileScreen() {
   // Get users data from firebase and set it to state
   const fetchUserData = async () => {
       if (!user) return;
+      setIsLoading(true);
 
       const ref = doc(firestore, USERS, profileUserId);
       const snap = await getDoc(ref);
@@ -73,13 +76,15 @@ export default function ProfileScreen() {
           await checkProfileCompletionAndNotify(profileData);
         }
       }
+      setIsLoading(false);
     };
 
-      useFocusEffect(
-        useCallback(() => {
-        fetchUserData();
-      }, [user,profileUserId, isOwnProfile])
-      );
+    // Refetch user data (if changes were made ) 
+  useFocusEffect(
+      useCallback(() => {
+      fetchUserData();
+    }, [user,profileUserId, isOwnProfile])
+    );
 
 
   // Get friends list and count from firebase
@@ -190,6 +195,10 @@ export default function ProfileScreen() {
   }
 };
 
+// Loading state while fetching user data
+if (isLoading) {
+  return <Loading text="Ladataan profiilia..." />;
+}
 
   return (
     <View style={styles.container}>

@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from ai.recommender import recommend_study_groups, recommend_hobby_groups
@@ -5,7 +6,43 @@ from ai.similarity import jaccard_similarity
 
 app = FastAPI()
 
-def normalize_hobbies(hobbies: list[str]) -> list[str]:
+from typing import List
+from pydantic import BaseModel
+
+class StudyGroup(BaseModel):
+    group_id: str
+    name: str
+    description: str
+    tags: list[str]
+    memberCount: int = 0
+
+
+class StudyGroupRecommendationRequest(BaseModel):
+    user_id: str
+    study_interests: list[str]
+    groups: list[StudyGroup]
+
+
+@app.post("/recommend/study-groups")
+def recommend_study_groups_endpoint(request: StudyGroupRecommendationRequest):
+    user = {
+        "study_interests": request.study_interests
+    }
+
+    groups = [
+        {
+            "group_id": g.group_id,
+            "name": g.name,
+            "description": g.description,
+            "tags": g.tags,
+            "memberCount": g.memberCount,
+        }
+        for g in request.groups
+    ]
+
+    return recommend_study_groups(user, groups)
+
+def normalize_hobbies(hobbies: List[str]) -> List[str]:
     return [
         hobby.strip().lower()
         for hobby in hobbies
@@ -13,76 +50,61 @@ def normalize_hobbies(hobbies: list[str]) -> list[str]:
     ]
 
 
-def get_shared_hobbies(user_hobbies: list[str], candidate_hobbies: list[str]) -> list[str]:
+def get_shared_hobbies(user_hobbies: List[str], candidate_hobbies: List[str]) -> List[str]:
     user_set = set(normalize_hobbies(user_hobbies))
     candidate_set = set(normalize_hobbies(candidate_hobbies))
     return list(user_set.intersection(candidate_set))
 
+
+
+
 class HobbyRequest(BaseModel):
-    hobby_interests: list[str]
+    hobby_interests: List[str]
 
 
 class CandidateUser(BaseModel):
     user_id: str
     firstName: str = ""
     city: str = ""
-    hobby_interests: list[str] = Field(default_factory=list)
+    hobby_interests: List[str] = Field(default_factory=list)
 
 
 class HobbyUserRecommendationRequest(BaseModel):
     current_user_id: str
-    hobby_interests: list[str]
-    candidates: list[CandidateUser] = Field(default_factory=list)
+    hobby_interests: List[str]
+    candidates: List[CandidateUser] = Field(default_factory=list)
 
 
+class StudyGroupCandidate(BaseModel):
+    group_id: str
+    name: str
+    description: str = ""
+    tags: List[str] = Field(default_factory=list)
+    memberCount: int = 0
 
-groups = [
-    {
-        "id": 1,
-        "name": "AI Study Group",
-        "type": "study",
-        "description": "Opiskellaan machine learningia ja AI:ta yhdessä",
-        "member_count": [],
-        "study_interests": ["ai", "machine learning"],
-        "hobby_interests": [],
-        "skills": ["python"],
-    },
-    {
-        "id": 2,
-        "name": "Web Dev Group",
-        "type": "study",
-        "description": "Frontend ja backend web development",
-        "member_count": [],
-        "study_interests": ["web development"],
-        "hobby_interests": [],
-        "skills": ["javascript"],
-    },
-    {
-        "id": 3,
-        "name": "Gaming Friends",
-        "type": "hobby",
-        "description": "Pelataan yhdessä vapaa-ajalla",
-        "member_count": [],
-        "study_interests": [],
-        "hobby_interests": ["pelaaminen"],
-        "skills": [],
-    },
-    {
-        "id": 4,
-        "name": "Gym Buddies",
-        "type": "hobby",
-        "description": "Käydään salilla yhdessä",
-        "member_count": [],
-        "study_interests": [],
-        "skills": [],
-        "hobby_interests": ["sali"],
-    }
-]
+
+class StudyGroupRecommendationRequest(BaseModel):
+    user_id: str
+    study_interests: List[str] = Field(default_factory=list)
+    groups: List[StudyGroupCandidate] = Field(default_factory=list)
+
+
+class StudyGroupRecommendationResponse(BaseModel):
+    group_id: str
+    name: str
+    description: str
+    tags: List[str]
+    score: float
+    shared_interests: List[str]
+    shared_count: int
+    memberCount: int
+
 
 
 @app.get("/")
 def root():
-    return {"message": "API on käynnissä", "version": "v3"}
+    return {"message": "API on käynnissä", "version": "v5"}
+
 
 
 @app.post("/recommend/hobby")
@@ -96,14 +118,16 @@ def post_hobby_recommendations(request: HobbyRequest):
     formatted = []
 
     for group_id, score in hobby_recs:
-        group = next(g for g in groups if g["id"] == group_id)
+        group = next((g for g in groups if g["id"] == group_id), None)
+        if not group:
+            continue
 
         formatted.append({
             "group_id": group_id,
             "group_name": group["name"],
             "description": group["description"],
             "member_count": group["member_count"],
-            "score": score
+            "score": round(score, 3),
         })
 
     return {
@@ -111,11 +135,11 @@ def post_hobby_recommendations(request: HobbyRequest):
     }
 
 
+
 @app.post("/recommend/users/hobby")
 def recommend_users_by_hobby(request: HobbyUserRecommendationRequest):
     results = []
 
-#poistetaan kirjoitusvirheiden mahdollisuudet
     current_user_hobbies = normalize_hobbies(request.hobby_interests)
 
     for candidate in request.candidates:
@@ -142,11 +166,10 @@ def recommend_users_by_hobby(request: HobbyUserRecommendationRequest):
                 "hobby_interests": candidate.hobby_interests,
                 "shared_hobbies": shared_hobbies,
                 "shared_count": len(shared_hobbies),
-                "score": round(score, 3)
+                "score": round(score, 3),
             })
 
     results.sort(key=lambda x: x["score"], reverse=True)
-    #palautetaan parhaat 10
     results = results[:10]
 
     return {
@@ -154,62 +177,24 @@ def recommend_users_by_hobby(request: HobbyUserRecommendationRequest):
     }
 
 
-@app.get("/recommend/hobby/{user_id}")
-def get_hobby_recommendations_by_user(user_id: int):
-    user = users.get(user_id)
-
-    if not user:
-        return {"error": "Käyttäjää ei löydy"}
-
-    hobby_recs = recommend_hobby_groups(user, groups)
-
-    formatted = []
-
-    for group_id, score in hobby_recs:
-        group = next(g for g in groups if g["id"] == group_id)
-
-        formatted.append({
-            "group_id": group_id,
-            "group_name": group["name"],
-            "description": group["description"],
-            "member_count": group["member_count"],
-            "score": score
-        })
-
-    return {
-        "user_id": user_id,
-        "recommendations": formatted
+@app.post(
+    "/recommend/study-groups",
+    response_model=List[StudyGroupRecommendationResponse]
+)
+def recommend_study_groups_endpoint(request: StudyGroupRecommendationRequest):
+    user = {
+        "study_interests": request.study_interests
     }
 
+    formatted_groups = [
+        {
+            "group_id": group.group_id,
+            "name": group.name,
+            "description": group.description,
+            "tags": group.tags,
+            "memberCount": group.memberCount,
+        }
+        for group in request.groups
+    ]
 
-@app.get("/recommend-groups/{user_id}")
-def get_recommendations(user_id: int):
-    user = users.get(user_id)
-
-    if not user:
-        return {"error": "Käyttäjää ei löydy"}
-
-    study_recs = recommend_study_groups(user, groups)
-    hobby_recs = recommend_hobby_groups(user, groups)
-
-    def format_results(recommendations):
-        formatted = []
-
-        for group_id, score in recommendations:
-            group = next(g for g in groups if g["id"] == group_id)
-
-            formatted.append({
-                "group_id": group_id,
-                "group_name": group["name"],
-                "description": group["description"],
-                "member_count": group["member_count"],
-                "score": score
-            })
-
-        return formatted
-
-    return {
-        "user_id": user_id,
-        "study_recommendations": format_results(study_recs),
-        "hobby_recommendations": format_results(hobby_recs)
-    }
+    return recommend_study_groups(user, formatted_groups)

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Dimensions } from "react-native";
-import RecommendationCard from "./RecommendationCard";
+import RecommendationCard from "./RecommendationsCard";
 
 const { height } = Dimensions.get("window");
 

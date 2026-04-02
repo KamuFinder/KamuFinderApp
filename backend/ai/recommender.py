@@ -1,48 +1,63 @@
-#interest_score	kuinka kiinnostukset matchaa
-#skill_score	kuinka taidot matchaa
-#total_score	yhdistetty tulos
-
 from ai.similarity import jaccard_similarity
+
+
+def normalize_list(values):
+    return [
+        value.strip().lower()
+        for value in values
+        if isinstance(value, str) and value.strip()
+    ]
 
 
 def recommend_study_groups(user, groups):
     results = []
+    user_study_interests = normalize_list(user.get("study_interests", []))
 
     for group in groups:
-        if group.get("type") != "study":
+        group_tags = normalize_list(group.get("tags", []))
+
+        if not group_tags:
             continue
 
-        interest_score = jaccard_similarity(
-            user.get("interests", []),
-            group.get("interests", [])
-        )
+        score = jaccard_similarity(user_study_interests, group_tags)
 
-        skill_score = jaccard_similarity(
-            user.get("skills", []),
-            group.get("skills", [])
-        )
+        shared_interests = list(set(user_study_interests).intersection(set(group_tags)))
 
-        total_score = 0.7 * interest_score + 0.3 * skill_score
+        if score > 0:
+            results.append({
+                "group_id": group.get("group_id", ""),
+                "name": group.get("name", ""),
+                "description": group.get("description", ""),
+                "tags": group.get("tags", []),
+                "score": round(score, 3),
+                "shared_interests": sorted(shared_interests),
+                "shared_count": len(shared_interests),
+                "memberCount": group.get("memberCount", 0),
+            })
 
-        results.append((group["id"], total_score))
+    results.sort(
+        key=lambda x: (x["shared_count"], x["score"], x["memberCount"]),
+        reverse=True
+    )
 
-    results.sort(key=lambda x: x[1], reverse=True)
     return results
 
 
 def recommend_hobby_groups(user, groups):
     results = []
 
+    user_hobbies = normalize_list(user.get("hobby_interests", []))
+
     for group in groups:
         if group.get("type") != "hobby":
             continue
 
-        hobby_score = jaccard_similarity(
-            user.get("hobby_interests", []),
-            group.get("hobby_interests", [])
-        )
+        group_hobbies = normalize_list(group.get("hobby_interests", []))
 
-        results.append((group["id"], hobby_score))
+        score = jaccard_similarity(user_hobbies, group_hobbies)
+
+        if score > 0:
+            results.append((group["id"], score))
 
     results.sort(key=lambda x: x[1], reverse=True)
     return results

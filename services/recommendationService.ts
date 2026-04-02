@@ -1,4 +1,30 @@
+import axios from "axios";
 const API_BASE_URL = "https://kamufinder-backend.onrender.com";
+
+
+export const fetchStudyGroupRecommendations = async (
+  userId,
+  studyInterests,
+  groups
+) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/recommend/study-groups`,
+      {
+        user_id: userId,
+        study_interests: studyInterests,
+        groups,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Virhe study group -suositusten haussa:", error);
+    throw error;
+  }
+};
+
+
 
 export type CandidateUser = {
   user_id: string;

@@ -421,8 +421,6 @@ const createGroup = async () => {
   </Text>
 </TouchableOpacity>
 
-/>
-
 <GroupAvatarPicker
       avatarSeed={groupAvatarSeed}
       avatarStyle={groupAvatarStyle}

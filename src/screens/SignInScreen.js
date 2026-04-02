@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, TextInput, Alert,Image,
  } from "react-native";
  import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, signInWithEmailAndPassword } from '../firebase/config.js';
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from '../firebase/config.js';
 import styles from "../styles/SignIn_And_Up.js";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -26,6 +26,52 @@ export default function SignInScreen({ setLogged }) {
         Alert.alert("Virhe", "Sähköposti tai salasana on väärin");
         console.log(error);
       });
+  };
+
+  const handleForgotPassword = async () => {
+  const trimmedEmail = email.trim();
+
+  if (!trimmedEmail) {
+    Alert.alert("Virhe", "Syötä sähköpostiosoite ensin");
+    return;
+  }
+
+  Alert.alert(
+    "Palauta salasana",
+    `Lähetetäänkö salasanan palautuslinkki osoitteeseen:\n${trimmedEmail}?`,
+    [
+      {
+        text: "Peruuta",
+        style: "cancel",
+      },
+      {
+        text: "Lähetä",
+        onPress: async () => {
+
+  try {
+    const auth = getAuth();
+
+    auth.languageCode = "fi";
+
+    await sendPasswordResetEmail(auth, trimmedEmail);
+
+    Alert.alert(
+      "Sähköposti lähetetty",
+      "Salasanan palautuslinkki on lähetetty sähköpostiisi"
+    );
+  } catch (error) {
+    console.log("Virhe salasanan resetoinnissa:", error);
+
+    if (error.code === "auth/invalid-email") {
+      Alert.alert("Virhe", "Sähköpostiosoite ei ole oikeassa muodossa");
+    } else {
+      Alert.alert("Virhe", "Palautussähköpostin lähetys epäonnistui");
+    }
+  }
+},
+      },
+      ]
+    );
   };
 
   return (
@@ -106,6 +152,14 @@ export default function SignInScreen({ setLogged }) {
         autoCorrect={false}
       />
       </View>
+
+      <TouchableOpacity onPress={handleForgotPassword} style={{ marginTop: 16,marginBottom:16, alignSelf: "center" }}>
+           <Text style={{ color: "#FB7318", fontWeight: "bold" }}>
+              Unohtuiko salasana?
+            </Text>
+       </TouchableOpacity>
+          
+
       </View>
 
       <View style={{alignItems:'center', marginBottom:20,flexDirection:'row'}}>

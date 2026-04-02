@@ -5,9 +5,9 @@ import { firestore, collection, query, onSnapshot, orderBy, doc, getDoc,
     USERS, USERSPRIVATECHATS } from "../firebase/config.js";
 import { useUser } from "../context/UserContext.js";
 import styles from "../styles/PrivaChats.js";
-import { Ionicons } from "@expo/vector-icons";
 import Logo from "../../assets/Logo.png";
 import UserAvatar from "../components/UserAvatar.js";
+import Loading from "../components/Loading.js";
 
 
 
@@ -37,11 +37,12 @@ export default function PrivaChats() {
     const [allChats, setAllChats] = useState([])
     const [chatUsers, setChatUsers] = useState({})
     const user = useUser()
-    
+    const [isLoading, setIsLoading] = useState(true);    
     
 
     useEffect(() => {
         if (!user) return;
+        setIsLoading(true);
 
         const q = query(collection(firestore,USERS,user.uid,USERSPRIVATECHATS),
         orderBy("updatedAt", "desc")
@@ -54,6 +55,7 @@ export default function PrivaChats() {
             }))
             
             setAllChats(chatList);
+            setIsLoading(false);
         })
         return unsubscribe;
     }, [user])
@@ -98,6 +100,9 @@ export default function PrivaChats() {
             fetchChatUsers();
         }, [allChats]);
     
+    if (isLoading) {
+        return <Loading text="Ladataan keskusteluja..." />;
+    }
 
     return (
         

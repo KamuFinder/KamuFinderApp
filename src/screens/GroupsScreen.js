@@ -63,6 +63,9 @@ export default function GroupScreen() {
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
 
+ 
+  const [isPublicGroup, setIsPublicGroup] = useState(false);
+
   useEffect(() => {
     if (!user?.uid) return; // Jos käyttäjää ei ole (uid undefined), älä tee mitään
 
@@ -146,6 +149,7 @@ const createGroup = async () => {
       desc: groupDescription,
       createdAt: serverTimestamp(),
       createdBy: user.uid,
+      isPublic: isPublicGroup,
     });
 
     const groupId = groupRef.id;
@@ -157,7 +161,15 @@ const createGroup = async () => {
     for (const memberId of allMembers) {
 
       //  määritetää rooli,  jos memberId on ryhmän luoja (user.uid) : admin ja muuten member
-      const role = memberId === user.uid ? "admin" : "member";
+      let role = "member";
+
+      if (memberId === user.uid) {
+        role = "admin";
+      } 
+      // Tässä kutsutut kaverit saa myös admin oikeudet kun luodaan julkinen ryhmä
+      else if (isPublicGroup && selectedFriends.includes(memberId)) {
+        role = "admin";
+      }
 
       await setDoc(
         doc(firestore, "groups", groupId, "members", memberId),
@@ -192,6 +204,7 @@ const createGroup = async () => {
     setSelectedFriends([]);
     setGroupName("");
     setGroupDescription("");
+    setIsPublicGroup(false); 
 
   } catch (error) { //Jos luontivaiheessa tulee joku virhe nii error handling
     console.log("Group creation error:", error);
@@ -223,9 +236,8 @@ const createGroup = async () => {
 
       {loading ? (
         <ActivityIndicator size="large" />
-        // Näytetään latauspyörä kun dataa haetaan
       ) : groups.length === 0 ? (
-        <Text>Et kuulu vielä ryhmiin</Text> // Jos käyttäjä ei kuulu vielä mihinkää ryhmää nii lukee tää
+        <Text>Et kuulu vielä ryhmiin</Text>
       ) : (
         <FlatList
           data={groups}
@@ -277,7 +289,7 @@ const createGroup = async () => {
         />
       )}
 
-     {/* MODAL — KAVERILISTA Tässä*/}
+{/* MODAL — KAVERILISTA Tässä*/}
 <Modal
   visible={modalVisible}
   transparent={true}
@@ -287,7 +299,8 @@ const createGroup = async () => {
 
   <View style={styles.modalOverlay}>
     <View style={styles.modalContainer}>
-    <TextInput
+
+<TextInput
   placeholder="Ryhmän nimi"
   value={groupName}
   onChangeText={setGroupName}
@@ -312,6 +325,26 @@ const createGroup = async () => {
     marginBottom: 16,
   }}
 />
+
+{/* julkinen ryhmä */}
+<TouchableOpacity
+  onPress={() => setIsPublicGroup(!isPublicGroup)}
+  style={{
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  }}
+>
+  <Ionicons
+    name={isPublicGroup ? "checkbox" : "square-outline"}
+    size={24}
+    color="#f17a0a"
+  />
+  <Text style={{ marginLeft: 10, fontSize: 16 }}>
+    Luo julkinen ryhmä
+  </Text>
+</TouchableOpacity>
+
       <Text style={{
         fontSize: 20,
         fontWeight: "bold",

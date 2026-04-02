@@ -63,7 +63,7 @@ export default function GroupScreen() {
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
 
-  // ⭐ PUBLIC GROUP ADDITION
+ 
   const [isPublicGroup, setIsPublicGroup] = useState(false);
 
   useEffect(() => {

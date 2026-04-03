@@ -17,7 +17,7 @@ import {
   increment,
   runTransaction
 } from "firebase/firestore";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, initializeAuth, signOut, getReactNativePersistence } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, initializeAuth, signOut, getReactNativePersistence, sendPasswordResetEmail } from "firebase/auth";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'
 export const API_BASE_URL = "https://kamufinder-backend.onrender.com";
 
@@ -66,6 +66,7 @@ export {
   increment,
   getAuth,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   createUserWithEmailAndPassword,
   USERS,
   auth,
@@ -77,5 +78,6 @@ export {
   FRIENDREQUESTS,
   PUBLIC_GROUPS,
   SUB_GROUPS,
-  runTransaction
+  runTransaction,
+  
 };

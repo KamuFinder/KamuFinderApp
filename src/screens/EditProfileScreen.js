@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, FlatList, TextInput, Modal,
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUser } from "../context/UserContext.js";
 import {firestore,USERS,doc,getDoc,updateDoc} from "../firebase/config.js";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import styles from "../styles/EditProfile.js";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import CityAutocomplete from "../components/CityAutocomplete.js";
@@ -19,6 +20,7 @@ export default function EditProfileScreen() {
         const [hobbyModalVisible, setHobbyModalVisible] = useState(false);
         const [studyModalVisible, setStudyModalVisible] = useState(false);
         const [loading, setLoading] = useState(false);
+        const [originalNickName, setOriginalNickName] = useState("");
 
         const hobbyOptions = 
         [
@@ -73,6 +75,7 @@ export default function EditProfileScreen() {
                     ? "fun-emoji"
                     : (snap.data().avatarStyle || "fun-emoji"),
                 });
+                 setOriginalNickName(snap.data().nickName || ""); // Tallennetaan alkuperäinen käyttäjätunnus vertailua varten
             }
             };
 
@@ -85,10 +88,33 @@ export default function EditProfileScreen() {
 
                 setLoading(true);
 
+                const trimmedNickName = userInfo.nickName.trim();
+
+                    if (!trimmedNickName) {
+                        alert("Käyttäjänimi ei voi olla tyhjä");
+                        return;
+                    }
+
+                    // Tarkistetaan uniikkius vain jos nickname on muuttunut
+                    if (trimmedNickName !== originalNickName.trim()) {
+                        const usersRef = collection(firestore, USERS);
+                        const q = query(usersRef, where("nickName", "==", trimmedNickName));
+                        const querySnapshot = await getDocs(q);
+
+                        const nicknameTaken = querySnapshot.docs.some(
+                            (docSnap) => docSnap.id !== user.uid
+                        );
+
+                        if (nicknameTaken) {
+                            alert("Tämä käyttäjänimi on jo käytössä");
+                            return;
+                        }
+                    }
+
                 const userRef = doc(firestore, USERS, user.uid);
 
                 await updateDoc(userRef, {
-                nickName: userInfo.nickName,
+                nickName: trimmedNickName,
                 city: userInfo.city,
                 profile_text: userInfo.profile_text,
                 hobby_interests: userInfo.hobby_interests,
@@ -97,6 +123,7 @@ export default function EditProfileScreen() {
                 avatarStyle: userInfo.avatarStyle,
                 });
 
+                setOriginalNickName(trimmedNickName); // Päivitetään alkuperäinen nickname tallennuksen jälkeen vertailua varten  
                 alert("Muutokset tallennettu");
             } catch (error) {
                 console.log("Virhe profiilin päivittämisessä:", error.message);

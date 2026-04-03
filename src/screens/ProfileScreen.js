@@ -10,6 +10,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5'
 import Divider from "../components/Divider.js";
 import FriendRequestButton from "../components/FriendRequestButton.js";
 import Loading from "../components/Loading.js";
+import DeleteFriend from "../components/DeleteFriend.js";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -295,24 +296,13 @@ if (isLoading) {
               return (
                 <View style={styles.friendRow}>
                   <View style={styles.friendInfo}>
-                <Text style={styles.friendName}>{item.name}</Text>
-                  <Text style={styles.friendDate}>
-                    ystävä alkaen: {date}
-                </Text>
+                    <Text style={styles.friendName}>{item.name}</Text>
+                      <Text style={styles.friendDate}>
+                        ystävä alkaen: {date}
+                    </Text>
                   </View>
 
-                  <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => Alert.alert("Poista ystävä", "Haluatko varmasti poistaa tämän ystävän?", [
-                  {
-                    text: "Kyllä",
-                    onPress: () => {} // Poista ystävä logiikka tähän
-                  },
-                  { text: "Ei" }
-                ])}
-              >
-                <Ionicons name="trash" size={24} color="#0b0a0a" />
-              </TouchableOpacity>
+                  <DeleteFriend friendId={item.id} onRemoved={fetchUserData} />
                 </View>
               );
             }}

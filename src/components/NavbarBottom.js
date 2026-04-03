@@ -1,13 +1,16 @@
 import React from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import useUnreadCounts from "../hooks/useUnreadCounts";
+
 
 export default function NavbarBottom() {
   const navigation = useNavigation();
   const route = useRoute();
   const fit = useSafeAreaInsets();
+  const { unreadChatsCount } = useUnreadCounts();
 
   const isHomeScreen = route.name === "Home"
 
@@ -33,7 +36,17 @@ export default function NavbarBottom() {
       <TouchableOpacity 
         style={styles.buttonContainer}
         onPress={() => navigation.navigate("PrivaChats")}>
-        <MaterialIcons name="chat" size={32} color={route.name === "PrivaChats" ? "#FB7318" : "#999"} />
+        <View style={{ position: "relative" }}>
+          <MaterialIcons name="chat" size={32} color={route.name === "PrivaChats" ? "#FB7318" : "#999"} />
+
+          {unreadChatsCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {unreadChatsCount > 9 ? "9+" : unreadChatsCount}
+              </Text>
+            </View>
+          )}
+        </View>
       </TouchableOpacity>
 
 
@@ -70,6 +83,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  badge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "red",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4
 
+  },
+
+  badgeText: {
+    color: "white", 
+    fontSize: 10, 
+    fontWeight: "bold" 
+  },
 
 });

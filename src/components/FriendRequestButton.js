@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use} from "react";
+import React, { useState, useEffect} from "react";
 import { TouchableOpacity, Text, Alert } from "react-native";
 import { firestore, USERS, FRIENDREQUESTS, doc, collection, onSnapshot, getDoc, serverTimestamp, setDoc} from "../firebase/config";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,10 +8,11 @@ export default function FriendRequestButton({ user, targetUserId, friendsList =[
     const [isFriend, setIsFriend] = useState(false);
 
     useEffect(() => {
-        if (!user || !targetUserId) return;
-        const friendsRef = doc(firestore, USERS, user.uid, "friends", targetUserId);
+        if (!user?.uid || !targetUserId) return;
+        const friendsRef = doc(firestore, USERS, user.uid, "friends", targetUserId)
         const unsubscribe = onSnapshot(friendsRef, (snapshot) => {
-            setIsFriend(snapshot.exists());
+            setIsFriend(snapshot.exists()),
+            (error) => console.error("Error checking friendship status:", error);
         });
         return () => unsubscribe();
     }, [user, targetUserId]);
@@ -23,6 +24,11 @@ export default function FriendRequestButton({ user, targetUserId, friendsList =[
 
     // fuction to handle friend requests 
     const handleFriendRequest = async () => {
+
+        if (user.uid === targetUserId) {
+            Alert.alert("Virhe", "Et voi lähettää kaveripyyntöä itsellesi.");
+            return;
+        }
 
     try {
         const targetUserSnap = await getDoc(doc(firestore, USERS, targetUserId));
@@ -43,7 +49,7 @@ export default function FriendRequestButton({ user, targetUserId, friendsList =[
         }
         const requestDocRef = doc(currentUserRequestsRef)
         await setDoc(requestDocRef, requestData)
-        await setDoc(doc(targetUserRequestsRef, requestDocRef.id), requestData)
+        await setDoc(doc(targetUserRequestsRef, requestDocRef.id), {...requestData, read: false,})
 
         Alert.alert("Pyyntö lähetetty", `Kaveripyyntö lähetetty käyttäjälle ${targetUserData.firstName} ${targetUserData.lastName}`);
     } catch (error) {
@@ -66,6 +72,7 @@ export default function FriendRequestButton({ user, targetUserId, friendsList =[
     return (
         <TouchableOpacity
             onPress={handleFriendRequest}   
+            disabled={!!request?.status}
             style={{
                 backgroundColor: "#e7e7e7",
                 paddingHorizontal: 10,

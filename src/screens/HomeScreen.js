@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity,Image, TextInput, Alert } from "react-native";
 import { useUser } from "../context/UserContext.js";
 import { useNavigation } from "@react-navigation/native";
-import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, collection, onSnapshot, addDoc, serverTimestamp, setDoc} from "../firebase/config";
+import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, collection, onSnapshot, addDoc, serverTimestamp, setDoc, USERSPRIVATECHATS} from "../firebase/config";
 import styles from "../styles/Home.js";
 import { Ionicons } from "@expo/vector-icons";
 import Logo from "../../assets/Logo.png";
@@ -86,12 +86,15 @@ export default function HomeScreen() {
     return () => unsubscribe();
   }, [user]);
 
+
+
+  // Clears the search results and query when the screen is unfocused to prevent showing old search results when user returns to the screen
   useFocusEffect(
     useCallback(() => {
-      // Kun screen tulee fokukseen → ei tehdä mitään
+      // Screen focused 
 
       return () => {
-        // Kun poistutaan screeniltä → tyhjennetään
+        // Screen unfocused, clear search results and query
         setSearchQuery("");
         setFilteredUsers([]);
       };
@@ -110,23 +113,24 @@ export default function HomeScreen() {
     }
     const formattedQuery = query.toLowerCase()
 
-  let results = [];
+    let results = [];
 
-  if (formattedQuery.length === 1) {
-    results = listOfUsers.filter(
-      (user) =>
-        user.firstName?.toLowerCase().startsWith(formattedQuery) ||
-        user.lastName?.toLowerCase().startsWith(formattedQuery)
-    );
-  } else {
-    results = listOfUsers.filter(
-      (user) =>
-        user.firstName?.toLowerCase().includes(formattedQuery) ||
-        user.lastName?.toLowerCase().includes(formattedQuery)
-    );
-  }
-    setFilteredUsers(results)
+    if (formattedQuery.length === 1) {
+      results = listOfUsers.filter(
+        (user) =>
+          user.firstName?.toLowerCase().startsWith(formattedQuery) ||
+          user.lastName?.toLowerCase().startsWith(formattedQuery)
+      );
+    } else {
+      results = listOfUsers.filter(
+        (user) =>
+          user.firstName?.toLowerCase().includes(formattedQuery) ||
+          user.lastName?.toLowerCase().includes(formattedQuery)
+      );
+    }
+      setFilteredUsers(results)
   };
+
 
   if (isLoading) {
     return (<Loading />);
@@ -138,6 +142,8 @@ export default function HomeScreen() {
       <View style={styles.logoContainer}>
         <Image source={Logo} style={styles.logo} />
       </View>
+
+
 
       <Text style={styles.helloUser}>Tervetuloa takaisin {firstName}!</Text>
 

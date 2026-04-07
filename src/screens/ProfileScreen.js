@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigation, useFocusEffect, useRoute } from "@react-navigation/native";
-import { View, Text, TouchableOpacity, Alert, Modal, FlatList,} from "react-native";
+import { View, Text, TouchableOpacity, Alert, Modal, FlatList, Image} from "react-native";
 import {firestore,USERS,doc,getDoc,setDoc,deleteDoc, serverTimestamp,FRIENDS,auth,signOut, FRIENDREQUESTS} from "../firebase/config.js";
 import { collection, onSnapshot } from "firebase/firestore";
 import styles from "../styles/Profile.js";
@@ -9,6 +9,8 @@ import { Ionicons } from "@expo/vector-icons";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5'
 import Divider from "../components/Divider.js";
 import FriendRequestButton from "../components/FriendRequestButton.js";
+import Loading from "../components/Loading.js";
+import DeleteFriend from "../components/DeleteFriend.js";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -22,6 +24,8 @@ export default function ProfileScreen() {
     profile_text: "",
     study_interests: [],
     hobby_interests: [],
+    avatarSeed: "",
+    avatarStyle: "fun-emoji",
   });
 
   const [friendsCount, setFriendsCount] = useState(0);
@@ -29,15 +33,24 @@ export default function ProfileScreen() {
   const [allFriendRequests, setAllFriendRequests] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   // Params for checking if it's own profile or not
   const  route = useRoute()
   const profileUserId = route.params?.userId || user?.uid;
   const isOwnProfile = profileUserId === user?.uid;
 
+  const normalizedAvatarStyle =
+  userInfo.avatarStyle === "fun emoji" ? "fun-emoji" : (userInfo.avatarStyle || "fun-emoji");
+
+  const avatarUrl = userInfo.avatarSeed
+  ? `https://api.dicebear.com/9.x/${normalizedAvatarStyle}/png?seed=${encodeURIComponent(userInfo.avatarSeed)}`
+  : null;
+
   
   // Get users data from firebase and set it to state
   const fetchUserData = async () => {
       if (!user) return;
+      setIsLoading(true);
 
       const ref = doc(firestore, USERS, profileUserId);
       const snap = await getDoc(ref);
@@ -55,6 +68,8 @@ export default function ProfileScreen() {
 
           hobby_interests: snap.data().hobby_interests || [],
           study_interests: snap.data().study_interests || [],
+          avatarSeed: snap.data().avatarSeed || "",
+          avatarStyle: snap.data().avatarStyle || "fun-emoji",
         };
         setUserInfo(profileData);
 
@@ -62,13 +77,15 @@ export default function ProfileScreen() {
           await checkProfileCompletionAndNotify(profileData);
         }
       }
+      setIsLoading(false);
     };
 
-      useFocusEffect(
-        useCallback(() => {
-        fetchUserData();
-      }, [user,profileUserId, isOwnProfile])
-      );
+    // Refetch user data (if changes were made ) 
+  useFocusEffect(
+      useCallback(() => {
+      fetchUserData();
+    }, [user,profileUserId, isOwnProfile])
+    );
 
 
   // Get friends list and count from firebase
@@ -179,6 +196,10 @@ export default function ProfileScreen() {
   }
 };
 
+// Loading state while fetching user data
+if (isLoading) {
+  return <Loading text="Ladataan profiilia..." />;
+}
 
   return (
     <View style={styles.container}>
@@ -211,9 +232,16 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.infoContainer}>
+        
         <View style={{ alignItems: "center" }}>
-          <Ionicons name="person-circle" size={100} color="#e6500a" />
+          {avatarUrl && (
+          <Image
+              source={{ uri: avatarUrl }}
+              style={{ width: 100, height: 100, borderRadius: 50 }}
+          />
+          )}
         </View>
+        
         <View style={{ marginLeft: 24, flex: 1 }}>
           <Text style={{fontSize: 18, fontWeight: "bold"}}>{userInfo.nickName}</Text>
           <Text>{userInfo.firstName} {userInfo.lastName}</Text>
@@ -268,24 +296,13 @@ export default function ProfileScreen() {
               return (
                 <View style={styles.friendRow}>
                   <View style={styles.friendInfo}>
-                <Text style={styles.friendName}>{item.name}</Text>
-                  <Text style={styles.friendDate}>
-                    ystävä alkaen: {date}
-                </Text>
+                    <Text style={styles.friendName}>{item.name}</Text>
+                      <Text style={styles.friendDate}>
+                        ystävä alkaen: {date}
+                    </Text>
                   </View>
 
-                  <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => Alert.alert("Poista ystävä", "Haluatko varmasti poistaa tämän ystävän?", [
-                  {
-                    text: "Kyllä",
-                    onPress: () => {} // Poista ystävä logiikka tähän
-                  },
-                  { text: "Ei" }
-                ])}
-              >
-                <Ionicons name="trash" size={24} color="#0b0a0a" />
-              </TouchableOpacity>
+                  <DeleteFriend friendId={item.id} onRemoved={fetchUserData} />
                 </View>
               );
             }}
@@ -320,19 +337,26 @@ export default function ProfileScreen() {
             <Text style={styles.dropdownItemText}>Muokkaa profiilia</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-          style={styles.dropdownItem}
+          
+
+        <TouchableOpacity onPress={() => confirmSignOut()}>
+        <Text style={styles.signOut}>Kirjaudu ulos</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+          style={{marginTop: 64, justifyContent: "center",
+          alignItems: "center",
+          paddingVertical: 10,
+          paddingHorizontal: 15,
+          borderRadius: 20,
+          backgroundColor: "red",}}
           onPress={() => {
             setMenuVisible(false);
             navigation.navigate("ChangePassword");
           }}
         >
-          <Text style={styles.dropdownItemText}>Vaihda salasana</Text>
+          <Text style={styles.dropdownItemText}>Poista tili</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => confirmSignOut()}>
-        <Text style={styles.signOut}>sign-out</Text>
-      </TouchableOpacity>
 
           </View>
         </TouchableOpacity>

@@ -29,6 +29,7 @@ export default StyleSheet.create({
     alignItems: "center",
     paddingVertical: 15,
     paddingHorizontal: 20,
+    padding: 20,
     marginBottom: 10,
     borderRadius: 5,
   },

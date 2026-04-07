@@ -28,6 +28,10 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { TextInput } from "react-native";
+import GroupAvatarPicker from "../components/GroupAvatarPicker.js";
+import { SvgUri} from "react-native-svg";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 
 const groupColors = [
   "#E3F2FD",
@@ -38,6 +42,8 @@ const groupColors = [
   "#E0F7FA",
   "#FFF9C4",
 ];
+
+
 
 const getGroupColor = (groupName) => {
   let hash = 0;
@@ -54,6 +60,7 @@ export default function GroupScreen() {
   const user = useUser();  // Haetaan tällä hetkellä kirjautuneen käyttäjän tiedot
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
 
   // MODAL + KAVERIT
   const [modalVisible, setModalVisible] = useState(false);
@@ -62,6 +69,29 @@ export default function GroupScreen() {
 
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
+
+  const [groupAvatarStyle, setGroupAvatarStyle] = useState("1");
+  const [groupAvatarSeed, setGroupAvatarSeed] = useState("");
+
+  const generateGroupSeed = () => {
+    return `group-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  };
+
+  const getGroupAvatarUrl = (seed, style, name = "Group", size = 60 ) => {
+  if (!seed || !style) return null;
+
+  const params = new URLSearchParams({
+    email: seed,
+    name,
+    v: String(style),
+    size: String(size),
+  });
+
+  return `https://classyprofile.com/api/avatar?${params.toString()}`;
+};
+
+ 
+  const [isPublicGroup, setIsPublicGroup] = useState(false);
 
   useEffect(() => {
     if (!user?.uid) return; // Jos käyttäjää ei ole (uid undefined), älä tee mitään
@@ -82,7 +112,9 @@ export default function GroupScreen() {
           id: doc.id,
           name: data.groupName || "Nimetön ryhmä",
           description: data.description || "",
-          joined: data.joined?.toDate() || null // Tämän laitoin nyt tähän, kun firestoressa luki mutta menee vain console logiin.
+          joined: data.joined?.toDate() || null, // Tämän laitoin nyt tähän, kun firestoressa luki mutta menee vain console logiin.
+          avatarStyle: data.avatarStyle || "1", // Haetaan avatarStyle ja avatarSeed myös user-groupsista, jotta voidaan näyttää oikea avatar ryhmälle
+          avatarSeed: data.avatarSeed || "",// Jos avatarSeed puuttuu, generoidaan uusi satunnainen seed, jotta saadaan silti avatar näkyviin
         };
       });
 
@@ -132,7 +164,7 @@ export default function GroupScreen() {
     );
   };
 
-  // RYHMÄN LUONTI FIRESTOREEN
+ // RYHMÄN LUONTI FIRESTOREEN
 const createGroup = async () => {
   try {
     if (!groupName.trim()) {
@@ -146,19 +178,36 @@ const createGroup = async () => {
       desc: groupDescription,
       createdAt: serverTimestamp(),
       createdBy: user.uid,
+      isPublic: isPublicGroup,
+      avatarStyle: groupAvatarStyle,
+      avatarSeed: groupAvatarSeed 
     });
 
     const groupId = groupRef.id;
 
-    // Lisätään creator automaattisesti jäseneksi
+    // Lisätään Group creator automaattisesti jäseneksi
     const allMembers = [...selectedFriends, user.uid];
 
     // Lisätään members subcollection
     for (const memberId of allMembers) {
+
+      //  määritetää rooli,  jos memberId on ryhmän luoja (user.uid) : admin ja muuten member
+      let role = "member";
+
+      if (memberId === user.uid) {
+        role = "admin";
+      } 
+      // Tässä kutsutut kaverit saa myös admin oikeudet kun luodaan julkinen ryhmä
+      else if (isPublicGroup && selectedFriends.includes(memberId)) {
+        role = "admin";
+      }
+
       await setDoc(
         doc(firestore, "groups", groupId, "members", memberId),
         {
           joinedAt: serverTimestamp(),
+          role: role, //groups->groupId->members->memberId-> rooli admin/member
+          
         }
       );
 
@@ -175,7 +224,11 @@ const createGroup = async () => {
           groupName: groupName,
           description: groupDescription,
           joined: serverTimestamp(),
+          role: role, // Myös tänne tulee nyt sit tuo rooli nii säästää firestore queryja myöhemmin
+          avatarSeed: groupAvatarSeed, // Tallenna ryhmän avatarSeed myös käyttäjään, jotta voidaan hakea sama avatar käyttäjälle joka on ryhmässä
+          avatarStyle: groupAvatarStyle, // Tallenna ryhmän avatarStyle myös käyttäjään
         }
+
       );
     }
 
@@ -186,6 +239,9 @@ const createGroup = async () => {
     setSelectedFriends([]);
     setGroupName("");
     setGroupDescription("");
+    setIsPublicGroup(false); 
+    setGroupAvatarSeed("");
+    setGroupAvatarStyle("1");
 
   } catch (error) { //Jos luontivaiheessa tulee joku virhe nii error handling
     console.log("Group creation error:", error);
@@ -194,7 +250,9 @@ const createGroup = async () => {
 };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container,
+      { paddingBottom: insets.bottom }, // Lisätään alareunan safe area padding, jotta sisältö ei jää piiloon puhelimen reunojen taakse
+    ]}>
 
       <Image source={Logo} style={styles.logo} />
       <Text style={styles.title}>Omat ryhmäsi:</Text>
@@ -208,7 +266,11 @@ const createGroup = async () => {
           alignSelf: "flex-start",
           marginBottom: 16,
         }}
-        onPress={() => setModalVisible(true)}
+        onPress={() => {
+          setGroupAvatarSeed(generateGroupSeed()); // Generoi uusi satunnainen seed joka kerta kun avataan modal, jotta saadaan erilainen avatar jokaiselle ryhmälle
+          setGroupAvatarStyle("1");
+          setModalVisible(true);
+        }}
       >
         <Text style={{ color: "white", fontWeight: "bold" }}>
           Luo ryhmä
@@ -217,21 +279,50 @@ const createGroup = async () => {
 
       {loading ? (
         <ActivityIndicator size="large" />
-        // Näytetään latauspyörä kun dataa haetaan
       ) : groups.length === 0 ? (
-        <Text>Et kuulu vielä ryhmiin</Text> // Jos käyttäjä ei kuulu vielä mihinkää ryhmää nii lukee tää
+        <Text>Et kuulu vielä ryhmiin</Text>
       ) : (
         <FlatList
           data={groups}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 60 }}
           showsVerticalScrollIndicator={true}
+          scrollIndicatorInsets={{bottom: insets.bottom + 120}}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={[
               styles.groupItem,
-              { backgroundColor: getGroupColor(item.name) }
+              { backgroundColor: getGroupColor(item.name),
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 12,
+                borderRadius: 12,
+               }
             ]}>
-              <View>
+              <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                {item.avatarSeed ? (
+                   <View
+                      style={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 30,
+                        overflow: "hidden",
+                        backgroundColor: "#ddd",
+                        marginRight: 12,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                  <SvgUri
+                      uri={getGroupAvatarUrl(item.avatarSeed, item.avatarStyle, item.name, 60)}
+                      width={60}
+                      height={60}
+                    />
+                  </View>
+                  
+                ) : null}
+              
+
+              <View style={{ flex: 1}}>
                 <Text style={{
                   fontSize: 32,
                   fontWeight: "bold",
@@ -245,11 +336,14 @@ const createGroup = async () => {
                     color: "#555",
                     fontSize: 16,
                     fontFamily: "monospace"
-                  }}>
+                  }}
+                  numberOfLines={2}>
                     {item.description}
                   </Text>
                 ) : null}
+                </View>
               </View>
+
 
               <TouchableOpacity
                 onPress={() =>
@@ -271,7 +365,7 @@ const createGroup = async () => {
         />
       )}
 
-     {/* MODAL — KAVERILISTA Tässä*/}
+{/* MODAL — KAVERILISTA Tässä*/}
 <Modal
   visible={modalVisible}
   transparent={true}
@@ -281,7 +375,8 @@ const createGroup = async () => {
 
   <View style={styles.modalOverlay}>
     <View style={styles.modalContainer}>
-    <TextInput
+
+<TextInput
   placeholder="Ryhmän nimi"
   value={groupName}
   onChangeText={setGroupName}
@@ -306,6 +401,33 @@ const createGroup = async () => {
     marginBottom: 16,
   }}
 />
+
+{/* julkinen ryhmä */}
+<TouchableOpacity
+  onPress={() => setIsPublicGroup(!isPublicGroup)}
+  style={{
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  }}
+>
+  <Ionicons
+    name={isPublicGroup ? "checkbox" : "square-outline"}
+    size={24}
+    color="#f17a0a"
+  />
+  <Text style={{ marginLeft: 10, fontSize: 16 }}>
+    Luo julkinen ryhmä
+  </Text>
+</TouchableOpacity>
+
+<GroupAvatarPicker
+      avatarSeed={groupAvatarSeed}
+      avatarStyle={groupAvatarStyle}
+      setAvatarSeed={setGroupAvatarSeed}
+      setAvatarStyle={setGroupAvatarStyle}
+      groupName={groupName}
+            />
       <Text style={{
         fontSize: 20,
         fontWeight: "bold",

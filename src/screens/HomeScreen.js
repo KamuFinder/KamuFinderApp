@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity,Image, TextInput, Alert } from "react-native";
 import { useUser } from "../context/UserContext.js";
 import { useNavigation } from "@react-navigation/native";
-import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, collection, onSnapshot, addDoc, serverTimestamp, setDoc} from "../firebase/config";
+import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, collection, onSnapshot, addDoc, serverTimestamp, setDoc, USERSPRIVATECHATS} from "../firebase/config";
 import styles from "../styles/Home.js";
 import { Ionicons } from "@expo/vector-icons";
 import Logo from "../../assets/Logo.png";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import FriendRequestButton from "../components/FriendRequestButton.js";
+import UserAvatar from "../components/UserAvatar.js";
+import Loading from "../components/Loading.js";
 
 
 export default function HomeScreen() {
@@ -20,6 +22,7 @@ export default function HomeScreen() {
   const [friendsList, setFriendsList] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
   const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(true);
 
 
   useEffect(() => {
@@ -27,11 +30,13 @@ export default function HomeScreen() {
     const fetchUserData = async () => {
       if (!user) return;
 
-      const ref = doc(firestore, USERS, user.uid);
-      const snap = await getDoc(ref);
+      setIsLoading(true)
+
+      const ref = doc(firestore, USERS, user.uid)
+      const snap = await getDoc(ref)
 
       if (snap.exists()) {
-        setFirstName(snap.data().firstName);
+        setFirstName(snap.data().firstName)
       }
     }
     fetchUserData();
@@ -44,8 +49,12 @@ export default function HomeScreen() {
         id: doc.id,
         firstName: doc.data().firstName,
         lastName: doc.data().lastName,
+        avatarSeed: doc.data().avatarSeed || "",
+        avatarStyle: doc.data().avatarStyle || "",
       })). filter( (u) => u.id !== user.uid)
       setUsersList(usersList)
+      setIsLoading(false)
+
     })
     return () => unsubscribe()
   }, [user]);
@@ -77,12 +86,15 @@ export default function HomeScreen() {
     return () => unsubscribe();
   }, [user]);
 
+
+
+  // Clears the search results and query when the screen is unfocused to prevent showing old search results when user returns to the screen
   useFocusEffect(
     useCallback(() => {
-      // Kun screen tulee fokukseen → ei tehdä mitään
+      // Screen focused 
 
       return () => {
-        // Kun poistutaan screeniltä → tyhjennetään
+        // Screen unfocused, clear search results and query
         setSearchQuery("");
         setFilteredUsers([]);
       };
@@ -101,25 +113,28 @@ export default function HomeScreen() {
     }
     const formattedQuery = query.toLowerCase()
 
-  let results = [];
+    let results = [];
 
-  if (formattedQuery.length === 1) {
-    results = listOfUsers.filter(
-      (user) =>
-        user.firstName?.toLowerCase().startsWith(formattedQuery) ||
-        user.lastName?.toLowerCase().startsWith(formattedQuery)
-    );
-  } else {
-    results = listOfUsers.filter(
-      (user) =>
-        user.firstName?.toLowerCase().includes(formattedQuery) ||
-        user.lastName?.toLowerCase().includes(formattedQuery)
-    );
-  }
-    setFilteredUsers(results)
+    if (formattedQuery.length === 1) {
+      results = listOfUsers.filter(
+        (user) =>
+          user.firstName?.toLowerCase().startsWith(formattedQuery) ||
+          user.lastName?.toLowerCase().startsWith(formattedQuery)
+      );
+    } else {
+      results = listOfUsers.filter(
+        (user) =>
+          user.firstName?.toLowerCase().includes(formattedQuery) ||
+          user.lastName?.toLowerCase().includes(formattedQuery)
+      );
+    }
+      setFilteredUsers(results)
   };
 
 
+  if (isLoading) {
+    return (<Loading />);
+  }
   
   return (
     <View style={styles.container}>
@@ -128,14 +143,11 @@ export default function HomeScreen() {
         <Image source={Logo} style={styles.logo} />
       </View>
 
+
+
       <Text style={styles.helloUser}>Tervetuloa takaisin {firstName}!</Text>
 
       <Text style={{ marginTop: 12, marginBottom: 12 }}>Löydä uusia kavereita sydän-välilehdeltä!</Text>
-
-      
-
-
-
 
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
@@ -159,8 +171,21 @@ export default function HomeScreen() {
               filteredUsers.map((u) => (
                 <View key= {u.id} style={styles.friendReguestbutton}>
 
-                    <TouchableOpacity onPress={() => navigation.navigate("Profile", { userId: u.id })}>
-                      <Text style={{ color: "#000", fontWeight: "bold" }}> {u.firstName} {u.lastName} </Text>
+                    <TouchableOpacity 
+                        onPress={() => navigation.navigate("Profile", { userId: u.id })}
+                         style={{ flexDirection: "row", alignItems: "center", flexShrink: 1 }}
+                    >
+  
+                    <UserAvatar
+                      avatarSeed={u.avatarSeed}
+                      avatarStyle={u.avatarStyle}
+                      size={30}
+    />
+                    <View style={{ marginLeft: 8, flexShrink: 1 }}>
+                      <Text 
+                        style={{ color: "#000", fontWeight: "bold", marginRight: 24 }}> {u.firstName} {u.lastName} 
+                      </Text>
+                    </View>                   
                     </TouchableOpacity>
 
                     <FriendRequestButton

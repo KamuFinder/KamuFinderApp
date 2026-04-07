@@ -15,16 +15,24 @@ import {
   firestore,
   USERS,
   FRIENDREQUESTS,
+  SUB_GROUPS,
+  PUBLIC_GROUPS,
   doc,
   getDoc,
   collection,
   getDocs,
   addDoc,
+  setDoc,
+  updateDoc,
+  increment,
   serverTimestamp,
   onSnapshot,
-  API_BASE_URL,
+  runTransaction,
 } from "../firebase/config";
-import { fetchUserRecommendations } from "../../services/recommendationService";
+import {
+  fetchUserRecommendations,
+  fetchStudyGroupRecommendations,
+} from "../../services/recommendationService";
 import UserRecommendationsList from "../components/UserRecommendationsList";
 import GroupRecommendationsList from "../components/GroupRecommendationsList";
 
@@ -38,7 +46,7 @@ export default function SwipingScreen({ navigation }) {
   const [allFriendRequests, setAllFriendRequests] = useState([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
 
     const friendsRef = collection(firestore, USERS, user.uid, "friends");
 
@@ -54,7 +62,7 @@ export default function SwipingScreen({ navigation }) {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
 
     const friendRequestsRef = collection(
       firestore,
@@ -76,6 +84,8 @@ export default function SwipingScreen({ navigation }) {
 
   const handleFriendRequest = async (targetUser) => {
     try {
+      if (!user?.uid || !targetUser?.user_id) return;
+
       const currentUserRequestsRef = collection(
         firestore,
         USERS,
@@ -109,51 +119,81 @@ export default function SwipingScreen({ navigation }) {
 
   const fetchGroupRecommendations = async () => {
     try {
-      if (!user) {
+      if (!user?.uid) {
         Alert.alert("Virhe", "Käyttäjää ei ole kirjautuneena");
         return;
       }
 
-      const userRef = doc(firestore, USERS, user.uid);
-      const userSnap = await getDoc(userRef);
+      const currentUserRef = doc(firestore, USERS, user.uid);
+      const currentUserSnap = await getDoc(currentUserRef);
 
-      if (!userSnap.exists()) {
+      if (!currentUserSnap.exists()) {
         Alert.alert("Virhe", "Käyttäjän tietoja ei löytynyt");
         return;
       }
 
-      const userData = userSnap.data();
-      const hobbyInterests = Array.isArray(userData.hobby_interests)
-        ? userData.hobby_interests
-        : [];
+      const currentUserData = currentUserSnap.data();
 
-      const response = await fetch(`${API_BASE_URL}/recommend/hobby`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          hobby_interests: hobbyInterests,
-        }),
-      });
+      const groupsSnapshot = await getDocs(collection(firestore, PUBLIC_GROUPS));
 
-      const data = await response.json();
+      const groups = await Promise.all(
+  groupsSnapshot.docs.map(async (groupDoc) => {
+    const data = groupDoc.data();
 
-      if (data.error) {
-        Alert.alert("Virhe", data.error);
-        return;
-      }
+    const userSubGroupRef = doc(
+      firestore,
+      USERS,
+      user.uid,
+      SUB_GROUPS,
+      groupDoc.id
+    );
 
-      setGroupRecommendations(data.recommendations || []);
+    const membershipSnap = await getDoc(userSubGroupRef);
+
+    return {
+      group_id: groupDoc.id,
+      name: data.groupName || "",
+      description: data.desc || "",
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      memberCount: data.memberCount || 0,
+      alreadyJoined: membershipSnap.exists(),
+    };
+  })
+);
+
+      console.log("USER study_interests:", currentUserData.study_interests);
+      console.log("GROUPS FROM FIRESTORE:", groups);
+
+      const recommendations = await fetchStudyGroupRecommendations(
+        user.uid,
+        Array.isArray(currentUserData.study_interests)
+          ? currentUserData.study_interests
+          : [],
+        groups
+      );
+
+      console.log("BACKEND RESPONSE (study groups):", recommendations);
+
+      setGroupRecommendations(recommendations || []);
     } catch (error) {
-      console.log("Virhe ryhmäsuositusten haussa:", error);
-      Alert.alert("Virhe", "Ryhmäsuosituksia ei voitu hakea");
+      console.log("VIRHE STUDY GROUP HAUSSA:");
+      console.log("error:", error);
+      console.log("status:", error?.response?.status);
+      console.log("data:", error?.response?.data);
+      console.log("message:", error?.message);
+
+      Alert.alert(
+        "Virhe",
+        error?.response?.data?.detail
+          ? JSON.stringify(error.response.data.detail)
+          : error?.message || "Ryhmäsuosituksia ei voitu hakea"
+      );
     }
   };
 
   const fetchPeopleRecommendations = async () => {
     try {
-      if (!user) {
+      if (!user?.uid) {
         Alert.alert("Virhe", "Käyttäjää ei ole kirjautuneena");
         return;
       }
@@ -202,12 +242,82 @@ export default function SwipingScreen({ navigation }) {
   const fetchAllRecommendations = async () => {
     try {
       setLoading(true);
-      await fetchGroupRecommendations();
-      await fetchPeopleRecommendations();
+      await Promise.all([
+        fetchGroupRecommendations(),
+        fetchPeopleRecommendations(),
+      ]);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleJoinStudyGroup = async (group) => {
+  try {
+    if (!user?.uid || !group?.group_id) return;
+
+    const currentUserRef = doc(firestore, USERS, user.uid);
+    const currentUserSnap = await getDoc(currentUserRef);
+
+    if (!currentUserSnap.exists()) {
+      Alert.alert("Virhe", "Käyttäjän tietoja ei löytynyt");
+      return;
+    }
+
+    const currentUserData = currentUserSnap.data();
+
+    const userSubGroupRef = doc(
+      firestore,
+      USERS,
+      user.uid,
+      SUB_GROUPS,
+      group.group_id
+    );
+
+    const groupRef = doc(firestore, PUBLIC_GROUPS, group.group_id);
+
+    const result = await runTransaction(firestore, async (transaction) => {
+      const membershipSnap = await transaction.get(userSubGroupRef);
+      const groupSnap = await transaction.get(groupRef);
+
+      if (!groupSnap.exists()) {
+        throw new Error("Ryhmää ei löytynyt");
+      }
+
+      if (membershipSnap.exists()) {
+        return { alreadyJoined: true };
+      }
+
+      const currentMemberCount = groupSnap.data()?.memberCount || 0;
+
+      transaction.set(userSubGroupRef, {
+        userId: user.uid,
+        firstName: currentUserData?.firstName || "",
+        joinedAt: serverTimestamp(),
+        role: "member",
+        groupId: group.group_id,
+        groupName: group.name,
+      });
+
+      transaction.update(groupRef, {
+        memberCount: currentMemberCount + 1,
+      });
+
+      return { alreadyJoined: false };
+    });
+
+    if (result.alreadyJoined) {
+      Alert.alert("Info", "Olet jo tämän ryhmän jäsen");
+      return;
+    }
+
+    Alert.alert("Onnistui", `Liityit ryhmään ${group.name}`);
+
+    await fetchGroupRecommendations();
+  } catch (error) {
+    console.error("Virhe ryhmään liittymisessä:", error);
+    Alert.alert("Virhe", error?.message || "Ryhmään liittyminen epäonnistui");
+  }
+};
 
   return (
     <SafeAreaView style={localStyles.safeArea}>
@@ -251,7 +361,8 @@ export default function SwipingScreen({ navigation }) {
         />
 
         <GroupRecommendationsList
-          groupRecommendations={groupRecommendations}
+          groups={groupRecommendations}
+          onJoinGroup={handleJoinStudyGroup}
         />
       </ScrollView>
     </SafeAreaView>

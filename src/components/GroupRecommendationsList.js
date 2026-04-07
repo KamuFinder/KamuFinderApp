@@ -1,23 +1,37 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import homeStyles from "../styles/Home";
 
-export default function GroupRecommendationsList({ groupRecommendations }) {
+export default function GroupRecommendationsList({ groups, onJoinGroup }) {
   return (
     <View style={homeStyles.recommendationsContainer}>
       <Text style={homeStyles.recommendationsTitle}>
-        Suositellut kaveriryhmät
+        Suositellut study groupit
       </Text>
 
-      {groupRecommendations.length === 0 ? (
+      {!groups || groups.length === 0 ? (
         <Text>Ei ryhmäsuosituksia juuri nyt.</Text>
       ) : (
-        groupRecommendations.map((item) => (
+        groups.map((item) => (
           <View key={item.group_id} style={homeStyles.recommendationCard}>
-            <Text style={homeStyles.recommendationName}>{item.group_name}</Text>
-            <Text>{item.description}</Text>
-            <Text>Jäseniä: {item.member_count}</Text>
-            <Text>Match score: {Math.round(item.score * 100)}%</Text>
+            <Text style={homeStyles.recommendationName}>{item.name}</Text>
+
+            {!!item.description && <Text>{item.description}</Text>}
+
+            <Text>Jäseniä: {item.memberCount || 0}</Text>
+            <Text>Match score: {Math.round((item.score || 0) * 100)}%</Text>
+            <Text>Yhteisiä kiinnostuksia: {item.shared_count || 0}</Text>
+
+            {item.shared_interests?.length > 0 && (
+              <Text>{item.shared_interests.join(", ")}</Text>
+            )}
+
+            <TouchableOpacity
+              style={homeStyles.actionButton}
+              onPress={() => onJoinGroup(item)}
+            >
+              <Text style={homeStyles.actionButtonText}>Liity ryhmään</Text>
+            </TouchableOpacity>
           </View>
         ))
       )}

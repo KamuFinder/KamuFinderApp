@@ -348,7 +348,8 @@ const createGroup = async () => {
               <TouchableOpacity
                 onPress={() =>
                   navigation.navigate("SpecificGroupChat", {
-                    groupId: item.id
+                    groupId: item.id,
+                    groupName: item.name,
                   })
                 }
               >

@@ -119,6 +119,9 @@ def get_shared_hobbies(user_hobbies: List[str], candidate_hobbies: List[str]) ->
 
 
 def fetch_last_messages(user_id: str, chat_id: str, limit_count: int = 10) -> List[Dict[str, str]]:
+    if db is None:
+    return []
+
     messages_ref = (
         db.collection("user")
         .document(user_id)
@@ -250,9 +253,6 @@ def recommend_users_by_hobby(request: HobbyUserRecommendationRequest):
         "recommendations": results
     }
 
-@app.get("/")
-def root():
-    return {"status": "ok"}
 
 @app.post("/chat/ai")
 def chat_with_ai(payload: ChatRequest):

@@ -18,6 +18,8 @@
     "axios": "^1.14.0",
     "babel-preset-expo": "^55.0.12",
     "expo": "54",
+    "expo-device": "~8.0.10",
+    "expo-notifications": "~0.32.16",
     "expo-status-bar": "~3.0.9",
     "firebase": "^12.11.0",
     "react": "19.1.0",

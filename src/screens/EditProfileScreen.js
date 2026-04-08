@@ -12,6 +12,7 @@ import AvatarPicker from "../components/AvatarPicker.js";
 import ChangeEmail from "../components/ChangeEmail.js";
 import ChangePassword from "../components/ChangePassword.js";
 import Divider from "../components/Divider.js";
+import { Options } from "../components/Options.js";
 
 export default function EditProfileScreen() {
 
@@ -21,27 +22,7 @@ export default function EditProfileScreen() {
         const [studyModalVisible, setStudyModalVisible] = useState(false);
         const [loading, setLoading] = useState(false);
         const [originalNickName, setOriginalNickName] = useState("");
-
-        const hobbyOptions = 
-        [
-            "sali",
-            "pelaaminen",
-            "puutarhanhoito",
-            "eläimet",
-            "siivoaminen",
-            "musiikki",
-        ];
-
-        const studyOptions =
-        [
-            "AI",
-            "eläintenhoito",
-            "lääketiede",
-            "maanpuolustus",
-            "markkinointi",
-            "brändäys",
-        ];
-
+        
 
         const [userInfo, setUserInfo] = useState({
             firstName: "",
@@ -292,7 +273,7 @@ export default function EditProfileScreen() {
             }}>
                 <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 20 }}>Valitse harrastukset</Text>
                   <ScrollView showsVerticalScrollIndicator={false}>
-              {hobbyOptions.map((hobby) => {
+              {Options.hobbyOptions.map((hobby) => {
                 const selected = userInfo.hobby_interests.includes(hobby);
 
                 return (
@@ -358,7 +339,7 @@ export default function EditProfileScreen() {
             }}>
                 <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 20 }}>Valitse koulutus</Text>
                   <ScrollView showsVerticalScrollIndicator={false}>
-              {studyOptions.map((study) => {
+              {Options.studyOptions.map((study) => {
                 const selected = userInfo.study_interests.includes(study);
 
                 return (

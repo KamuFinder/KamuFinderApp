@@ -26,11 +26,22 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4")
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY puuttuu .env-tiedostosta")
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_PATH)
-    firebase_admin.initialize_app(cred)
+db = None
 
-db = firestore.client()
+if os.path.exists(FIREBASE_SERVICE_ACCOUNT_PATH):
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_PATH)
+        firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    print("Firebase initialized")
+else:
+    print("Firebase service account file not found, continuing without Firestore")
+#if not firebase_admin._apps:
+ #   cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_PATH)
+  #  firebase_admin.initialize_app(cred)
+
+#db = firestore.client()
+
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 app = FastAPI()

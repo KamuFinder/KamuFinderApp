@@ -8,8 +8,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Alert,
 } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { useUser } from "../context/UserContext.js";
 import {
   firestore,
@@ -27,10 +28,12 @@ import DateDivider from "../components/dateDivider.js";
 import UserAvatar from "../components/UserAvatar.js";
 import Divider from "../components/Divider.js";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import { Ionicons } from "@expo/vector-icons";
 import {SvgUri} from 'react-native-svg';
 
 export default function SpecificGroupChat() {
   const route = useRoute();
+  const navigation = useNavigation();
   const user = useUser();
 
   const { groupId, groupName } = route.params;
@@ -42,6 +45,20 @@ export default function SpecificGroupChat() {
   const [groupData, setGroupData] = useState(null); 
   const [members, setMembers] = useState([]);
   const [membersModalVisible, setMembersModalVisible] = useState(false);
+
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const currentMember = members.find((member) => member.id === user?.uid);
+  const isAdmin = currentMember?.role === "admin";
+
+  const handleGroupAction = () => {
+      setMenuVisible(false);
+
+      navigation.navigate("EditGroup", {
+        groupId,
+        isAdmin,
+      });
+    };
 
   const getGroupAvatarUrl = (seed, style, name = "Group", size = 60) => {
   if (!seed || !style) return null;
@@ -336,6 +353,7 @@ export default function SpecificGroupChat() {
       <View style={{
           flexDirection: "row",
           alignItems: "center",
+          justifyContent: "space-between",
           paddingHorizontal: 30,
           paddingTop: 20,
           marginBottom: 16,
@@ -343,6 +361,7 @@ export default function SpecificGroupChat() {
       >
 
        {/* AVATAR */}
+       <View style={{flexDirection: "row", alignItems: "center", flex: 1}}>
   {(groupData?.avatarSeed && groupData?.avatarStyle) ? (
     <View
       style={{
@@ -374,15 +393,25 @@ export default function SpecificGroupChat() {
         style={{
           textAlign: "flex-start",
           fontSize: 32,
-          paddingHorizontal: 20,
+          paddingHorizontal: 10,
           paddingTop: 20,
           fontWeight: "bold",
           marginBottom: 16,
           
         }}
       >
-        {groupName || "Ryhmäkeskustelu"}
+        {groupData?.groupName ||groupName || "Ryhmäkeskustelu"}
       </Text>
+      </View>
+
+        <TouchableOpacity
+        onPress={() => setMenuVisible(true)}
+        style={{
+          marginLeft: 20,
+          padding: 8,}}
+      >
+        <Ionicons name="ellipsis-vertical" size={24} color="black" />
+      </TouchableOpacity>
       </View>
 
        <View
@@ -574,6 +603,55 @@ export default function SpecificGroupChat() {
             </View>
           </View>
         </Modal>
+
+        <Modal
+            visible={menuVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setMenuVisible(false)}
+          >
+            <TouchableOpacity
+              style={{
+                flex: 1,
+              }}
+              activeOpacity={1}
+              onPress={() => setMenuVisible(false)}
+            >
+              <View
+                style={{
+                  position: "absolute",
+                  top: 95,
+                  right: 20,
+                  backgroundColor: "white",
+                  borderRadius: 12,
+                  paddingVertical: 8,
+                  minWidth: 170,
+                  elevation: 6,
+                  shadowColor: "#000",
+                  shadowOpacity: 0.15,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 2 },
+                }}
+              >
+                <TouchableOpacity
+                  style={{
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                  }}
+                  onPress={handleGroupAction}
+                >
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: "#111",
+                    }}
+                  >
+                    {isAdmin ? "Asetukset" : "Lisää jäseniä"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
 
       </View>
     </KeyboardAvoidingView>

@@ -40,6 +40,7 @@ export default function GroupAvatarPicker({
   setAvatarStyle,
   setAvatarSeed,
   groupName,
+  size = 120,
 }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [tempStyle, setTempStyle] = useState(avatarStyle || "1");
@@ -71,7 +72,7 @@ export default function GroupAvatarPicker({
         seed: avatarSeed,
         style: avatarStyle || "1",
         name: groupName || "Group",
-        size: 120,
+        size,
       })
     : null;
 
@@ -89,14 +90,14 @@ export default function GroupAvatarPicker({
       <View style={{ position: "relative" }}>
         {currentAvatarUrl && (
             <View style={{ 
-                width: 120,
-                height: 120,
+                width: size,
+                height: size,
                 borderRadius: 60,
                 overflow: "hidden",
                 marginBottom: 12,
              }}>
 
-          <SvgUri uri={currentAvatarUrl} width={120} height={120} />
+          <SvgUri uri={currentAvatarUrl} width={size} height={size} />
         </View>
         )}
 
@@ -137,7 +138,7 @@ export default function GroupAvatarPicker({
           <View
             style={{
               width: "85%",
-              maxHeight: "80%",
+              maxHeight: "85%",
               backgroundColor: "#fff",
               borderRadius: 20,
               padding: 20,
@@ -207,7 +208,7 @@ export default function GroupAvatarPicker({
                             overflow: "hidden",
                         }}>
 
-                      <SvgUri uri={previewAvatarUrl} width={120} height={120} />
+                      <SvgUri uri={previewAvatarUrl} width={70} height={70} />
                       </View>
 
                       <Text

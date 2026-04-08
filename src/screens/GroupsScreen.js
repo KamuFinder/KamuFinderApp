@@ -31,7 +31,7 @@ import { TextInput } from "react-native";
 import GroupAvatarPicker from "../components/GroupAvatarPicker.js";
 import { SvgUri} from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import { Options } from "../components/Options.js";
 
 const groupColors = [
   "#E3F2FD",
@@ -56,6 +56,7 @@ const getGroupColor = (groupName) => {
 };
 
 export default function GroupScreen() {
+  
   const navigation = useNavigation();
   const user = useUser();  // Haetaan tällä hetkellä kirjautuneen käyttäjän tiedot
   const [groups, setGroups] = useState([]);
@@ -72,6 +73,8 @@ export default function GroupScreen() {
 
   const [groupAvatarStyle, setGroupAvatarStyle] = useState("1");
   const [groupAvatarSeed, setGroupAvatarSeed] = useState("");
+
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const generateGroupSeed = () => {
     return `group-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
@@ -164,6 +167,15 @@ export default function GroupScreen() {
     );
   };
 
+  // TAGIEN VALINTA
+const toggleTag = (tag) => {
+  setSelectedTags((prev) =>
+    prev.includes(tag)
+      ? prev.filter((t) => t !== tag)
+      : [...prev, tag]
+  );
+};
+
  // RYHMÄN LUONTI FIRESTOREEN
 const createGroup = async () => {
   try {
@@ -180,7 +192,10 @@ const createGroup = async () => {
       createdBy: user.uid,
       isPublic: isPublicGroup,
       avatarStyle: groupAvatarStyle,
-      avatarSeed: groupAvatarSeed 
+      avatarSeed: groupAvatarSeed,
+    
+      // Tallennetaan tagit vain julkiselle ryhmälle
+      tags: isPublicGroup ? selectedTags : []
     });
 
     const groupId = groupRef.id;
@@ -242,6 +257,7 @@ const createGroup = async () => {
     setIsPublicGroup(false); 
     setGroupAvatarSeed("");
     setGroupAvatarStyle("1");
+    setSelectedTags([]);
 
   } catch (error) { //Jos luontivaiheessa tulee joku virhe nii error handling
     console.log("Group creation error:", error);
@@ -406,6 +422,8 @@ const createGroup = async () => {
 {/* julkinen ryhmä */}
 <TouchableOpacity
   onPress={() => setIsPublicGroup(!isPublicGroup)}
+
+  
   style={{
     flexDirection: "row",
     alignItems: "center",
@@ -421,6 +439,52 @@ const createGroup = async () => {
     Luo julkinen ryhmä
   </Text>
 </TouchableOpacity>
+
+{/* TAGIT (vain julkisille ryhmille) */}
+{isPublicGroup && (
+  <>
+    <Text
+      style={{
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 10,
+      }}
+    >
+      Valitse tagit
+      
+    </Text>
+    
+    <FlatList
+      
+      data={Options.studyOptions} //Tägeihin käytetään nyt studyOptions
+      
+      keyExtractor={(item) => item}
+      style={{ maxHeight: 150, width: "100%" }}
+      renderItem={({ item }) => {
+        const selected = selectedTags.includes(item);
+
+        return (
+          <TouchableOpacity
+            onPress={() => toggleTag(item)}
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              paddingVertical: 10,
+            }}
+          >
+            <Text>{item}</Text>
+
+            <Ionicons
+              name={selected ? "checkbox" : "square-outline"}
+              size={22}
+              color="#f17a0a"
+            />
+          </TouchableOpacity>
+        );
+      }}
+    />
+  </>
+)}
 
 <GroupAvatarPicker
       avatarSeed={groupAvatarSeed}

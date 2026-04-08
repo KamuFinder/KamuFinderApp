@@ -14,7 +14,7 @@ from openai import OpenAI
 from ai.recommender import recommend_study_groups, recommend_hobby_groups
 from ai.similarity import jaccard_similarity
 
-print("DEPLOY TEST 123")
+print("MAIN.PY START") #testi
 
 load_dotenv()
 
@@ -47,6 +47,8 @@ else:
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 app = FastAPI()
+
+print("FASTAPI APP CREATED") #testi 2
 
 app.add_middleware(
     CORSMiddleware,
@@ -251,6 +253,7 @@ def recommend_users_by_hobby(request: HobbyUserRecommendationRequest):
         "recommendations": results
     }
 
+print("MAIN.PY LOADED SUCCESSFULLY")#testi3
 
 @app.post("/chat/ai")
 def chat_with_ai(payload: ChatRequest):
@@ -301,7 +304,10 @@ def chat_with_ai(payload: ChatRequest):
 
         return {"reply": reply_text.strip()}
 
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+    

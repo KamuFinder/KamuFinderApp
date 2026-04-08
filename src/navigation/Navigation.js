@@ -17,6 +17,7 @@ import Notifications from "../screens/Notifications";
 import SpecificGroupChat from "../screens/SpecificGroupChat";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import ChangePasswordScreen from "../screens/ChangePasswordScreen";
+import EditGroupScreen from "../screens/EditGroupScreen";
 
 import NavbarTop from "../components/NavbarTop";
 import NavbarBottom from "../components/NavbarBottom";
@@ -36,6 +37,7 @@ export default function AppNavigator() {
             showBack={options.showBack}
             showProfile={options.showProfile}
             showNotifications={options.showNotifications}
+            groupMenu={props.route?.params?.groupMenu}
           />
           <View style={styles.content}>
             <Component {...props} />
@@ -124,6 +126,14 @@ export default function AppNavigator() {
                   showBottom: false,
                 })}
               />
+
+              <Stack.Screen
+              name="EditGroup"
+              component={withNavBars(EditGroupScreen, {
+                showBack: true,
+                showBottom: false,
+              })}
+            />
             </>
           ) : (
             <>

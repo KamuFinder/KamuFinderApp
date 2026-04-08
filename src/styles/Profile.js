@@ -94,12 +94,11 @@ export default StyleSheet.create({
   alignItems: "center",
 },
   modalContainer: { 
-    width: "100%",
-    maxHeight: "70%",
+    width: "90%",
+    maxHeight: "80%",
     backgroundColor: "#fff",
-    paddingTop: 20,
-    paddingHorizontal: 30,
-    paddingBottom: 30,
+    padding: 20,
+   borderRadius:16,
     
   },
   modalTitle: { 
@@ -116,11 +115,8 @@ export default StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginBottom: 10,
-    borderBottomEndRadius: 10,
-    backgroundColor: "#f9f9f9",
-    borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    elevation: 1,
+    borderBottomWidth: 1,
   },
 
   friendInfo: {
@@ -141,11 +137,17 @@ export default StyleSheet.create({
   },
  
   modalClose: { 
-    fontSize: 18, 
-    color: 'red', 
-    marginTop: 20, 
-    textAlign: 'center' 
+    textAlign: "center",
+    color: "white",
+    fontWeight: "bold",
   },
+
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: "#f17a0a",
+    padding: 12,
+    borderRadius: 8,
+},
   bottomHomeButton: {
     position: "absolute",
     bottom: 20,

@@ -120,7 +120,7 @@ def get_shared_hobbies(user_hobbies: List[str], candidate_hobbies: List[str]) ->
 
 def fetch_last_messages(user_id: str, chat_id: str, limit_count: int = 10) -> List[Dict[str, str]]:
     if db is None:
-    return []
+        return []
 
     messages_ref = (
         db.collection("user")

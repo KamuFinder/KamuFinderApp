@@ -46,8 +46,8 @@ export default StyleSheet.create({
   },
   
   modalContainer: {
-    width: "85%",
-    maxHeight: "75%", 
+    width: "90%",
+    maxHeight: "85%", 
     backgroundColor: "white",
     borderRadius: 16,
     padding: 20,

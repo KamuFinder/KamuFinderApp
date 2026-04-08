@@ -443,6 +443,13 @@ const createGroup = async () => {
         <FlatList
           data={friendsList}
           keyExtractor={(item) => item.id}
+          style={{
+            maxHeight: 200, 
+            width: "100%",
+          }}
+          contentContainerStyle={{
+            paddingBottom: 20,
+          }}
           renderItem={({ item }) => {
             const selected = selectedFriends.includes(item.id);
 

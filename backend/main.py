@@ -14,6 +14,8 @@ from openai import OpenAI
 from ai.recommender import recommend_study_groups, recommend_hobby_groups
 from ai.similarity import jaccard_similarity
 
+print("DEPLOY TEST 123")
+
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

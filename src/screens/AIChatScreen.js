@@ -167,10 +167,11 @@ export default function AIChatScreen() {
   return (
   <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
     <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={10}
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
     >
+
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}

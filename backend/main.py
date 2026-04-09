@@ -298,10 +298,12 @@ def chat_with_ai(payload: ChatRequest):
                 "content": user_message
             })
 
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model=OPENAI_MODEL,
-            input=input_messages,
-        )
+            messages=input_messages,
+)
+
+        reply_text = response.choices[0].message.content
 
         reply_text = response.output_text
 

@@ -17,15 +17,12 @@ from ai.similarity import jaccard_similarity
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 FIREBASE_SERVICE_ACCOUNT_PATH = os.getenv(
     "FIREBASE_SERVICE_ACCOUNT_PATH",
     "serviceAccountKey.json"
 )
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4")
 
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY puuttuu .env-tiedostosta")
 
 db = None
 
@@ -43,7 +40,17 @@ else:
 
 #db = firestore.client()
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+#Groq
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "llama-3.1-8b-instant")
+
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY puuttuu ympäristömuuttujista")
+
+client = OpenAI(
+    api_key=GROQ_API_KEY,
+    base_url="https://api.groq.com/openai/v1"
+)
 
 app = FastAPI()
 

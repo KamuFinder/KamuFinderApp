@@ -12,6 +12,7 @@ import {
   Alert,
 } from "react-native";
 
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   firestore,
   auth,
@@ -26,6 +27,7 @@ import {
   serverTimestamp,
 } from "../firebase/config";
 
+
 const BACKEND_URL = "https://kamufinder-backend.onrender.com";
 
 export default function AIChatScreen() {
@@ -37,7 +39,7 @@ export default function AIChatScreen() {
 
   const chatId = "default";
 
-  // 🔹 Refs Firestoreen
+  // Refs Firestoreen
   const chatRef = user
     ? doc(firestore, USERS, user.uid, "ai_chats", chatId)
     : null;
@@ -46,11 +48,11 @@ export default function AIChatScreen() {
     ? collection(firestore, USERS, user.uid, "ai_chats", chatId, "messages")
     : null;
 
-  // 🔹 Kuunnellaan viestejä
+  // Kuunnellaan viestejä
   useEffect(() => {
     if (!user || !messagesRef) return;
 
-    // luodaan chat jos ei ole olemassa
+    // luodaan chat jos sitä ei ole olemassa
     const initChat = async () => {
       await setDoc(
         chatRef,
@@ -78,7 +80,7 @@ export default function AIChatScreen() {
     return () => unsubscribe();
   }, [user]);
 
-  // 🔹 Lähetä viesti
+  // Lähetä viesti
   const sendMessage = async () => {
     const trimmed = input.trim();
 
@@ -116,7 +118,7 @@ export default function AIChatScreen() {
         throw new Error(data?.detail || "AI error");
       }
 
-      // 3. tallenna AI vastaus
+      // 3. tallenna AI:n vastaus
       await addDoc(messagesRef, {
         role: "assistant",
         text: data.reply,
@@ -138,7 +140,7 @@ export default function AIChatScreen() {
     }
   };
 
-  // 🔹 Render viesti
+  // Render viesti
   const renderItem = ({ item }) => {
     const isUser = item.role === "user";
 
@@ -163,9 +165,11 @@ export default function AIChatScreen() {
   }
 
   return (
+  <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={10}
     >
       <FlatList
         data={messages}
@@ -195,8 +199,9 @@ export default function AIChatScreen() {
           )}
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
-  );
+        </KeyboardAvoidingView>
+  </SafeAreaView>
+);
 }
 
 const styles = StyleSheet.create({

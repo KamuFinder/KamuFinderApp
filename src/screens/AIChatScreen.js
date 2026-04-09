@@ -197,7 +197,7 @@ useEffect(() => {
         contentContainerStyle={{ padding: 16 }}
       />
 
-     <View style={[styles.inputRow, { marginBottom: keyboardHeight > 0 ? keyboardHeight : 0 }]}>
+     <View style={[styles.inputRow, { marginBottom: keyboardHeight > 0 ? keyboardHeight * 0.45 : 0 }]}>
         <TextInput
           style={styles.input}
           placeholder="Kirjoita viesti..."

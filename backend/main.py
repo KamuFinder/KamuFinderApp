@@ -305,8 +305,6 @@ def chat_with_ai(payload: ChatRequest):
 
         reply_text = response.choices[0].message.content
 
-        reply_text = response.output_text
-
         if not reply_text:
             raise HTTPException(status_code=500, detail="AI ei palauttanut vastausta")
 

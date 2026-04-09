@@ -149,6 +149,13 @@ export default function HomeScreen() {
 
       <Text style={{ marginTop: 12, marginBottom: 12 }}>Löydä uusia kavereita sydän-välilehdeltä!</Text>
 
+      <TouchableOpacity
+        style={styles.aiButton}
+         onPress={() => navigation.navigate("AIChat")}
+      >
+      <Text style={styles.aiButtonText}>Chattaa tekoälyn kanssa</Text>
+      </TouchableOpacity>
+
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
           

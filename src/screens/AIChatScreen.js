@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Keyboard,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -38,6 +39,23 @@ export default function AIChatScreen() {
   const [sending, setSending] = useState(false);
 
   const chatId = "default";
+    
+const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+useEffect(() => {
+  const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+    setKeyboardHeight(e.endCoordinates.height);
+  });
+
+  const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+    setKeyboardHeight(0);
+  });
+
+  return () => {
+    showSub.remove();
+    hideSub.remove();
+  };
+}, []);
 
   // Refs Firestoreen
   const chatRef = user
@@ -179,7 +197,7 @@ export default function AIChatScreen() {
         contentContainerStyle={{ padding: 16 }}
       />
 
-      <View style={styles.inputRow}>
+     <View style={[styles.inputRow, { marginBottom: keyboardHeight > 0 ? keyboardHeight : 0 }]}>
         <TextInput
           style={styles.input}
           placeholder="Kirjoita viesti..."

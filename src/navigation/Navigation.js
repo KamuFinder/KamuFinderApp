@@ -71,11 +71,12 @@ export default function AppNavigator() {
                 })}
               />
               <Stack.Screen
-                name="AIChat"
+                 name="AIChat"
                  component={withNavBars(AIChatScreen, {
-                  showBack: true,
-                  showProfile: false,
-                  showNotifications: false,
+                   showBack: true,
+                   showProfile: false,
+                   showNotifications: false,
+                   showBottom: false,
                 })}
               />
               <Stack.Screen

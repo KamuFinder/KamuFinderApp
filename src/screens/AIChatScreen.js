@@ -27,6 +27,7 @@ import {
   orderBy,
   serverTimestamp,
 } from "../firebase/config";
+import { MaterialIcons } from "@expo/vector-icons";
 
 
 const BACKEND_URL = "https://kamufinder-backend.onrender.com";
@@ -164,6 +165,17 @@ useEffect(() => {
 
     return (
       <View
+       style={[
+        styles.messageRow,
+        { justifyContent: isUser ? "flex-end" : "flex-start" },
+      ]}
+    >
+      {!isUser && (
+        <View style={styles.aiIconWrapper}>
+          <MaterialIcons name="auto-awesome" size={20} color="#fff" />
+        </View>
+      )}
+      <View
         style={[
           styles.message,
           isUser ? styles.userMessage : styles.aiMessage,
@@ -171,6 +183,7 @@ useEffect(() => {
       >
         <Text style={styles.messageText}>{item.text}</Text>
       </View>
+    </View>
     );
   };
 
@@ -234,16 +247,36 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     maxWidth: "80%",
   },
+
+  messageRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginBottom: 10,
+  },
   userMessage: {
     backgroundColor: "#1f6feb",
     alignSelf: "flex-end",
+    borderBottomRightRadius:2,
   },
   aiMessage: {
     backgroundColor: "#e5e5e5",
     alignSelf: "flex-start",
+    borderBottomLeftRadius: 2,
   },
   messageText: {
     color: "#000",
+  },
+
+  aiIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F99D11",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+    marginBottom: 8,
+    elevation: 3,
   },
   inputRow: {
     flexDirection: "row",
@@ -255,7 +288,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 10,
+    borderRadius: 30,
     padding: 10,
     marginRight: 10,
   },
@@ -263,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1f6feb",
     paddingHorizontal: 16,
     justifyContent: "center",
-    borderRadius: 10,
+    borderRadius: 30,
   },
   center: {
     flex: 1,

@@ -8,7 +8,11 @@ import { useUser } from "../context/UserContext";
 import { firestore, USERS, onSnapshot,doc ,} from "../firebase/config.js";
 import useUnreadCounts from "../hooks/useUnreadCounts.js";
 
-export default function NavbarTop({ showBack = false, showProfile = false, showNotifications = false  }) {
+export default function NavbarTop({ 
+  showBack = false, 
+  showProfile = false, 
+  showNotifications = false,
+}) {
   const navigation = useNavigation();
   const fit = useSafeAreaInsets();
   const user= useUser();

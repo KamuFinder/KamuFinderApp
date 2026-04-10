@@ -280,13 +280,14 @@ if (isLoading) {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay} />
-        <View style={styles.modalContainer}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Ystävät</Text>
 
           <FlatList
             data={friendsList}
             keyExtractor={(item) => item.id}
+            style={{ maxHeight: 300, width: "100%" }}
             contentContainerStyle={{ paddingBottom: 80 }}
             renderItem={({ item }) => {
               const date = item.createdAt?.toDate
@@ -308,9 +309,11 @@ if (isLoading) {
             }}
           />
 
-          <TouchableOpacity onPress={() => setModalVisible(false)}>
+          <TouchableOpacity onPress={() => setModalVisible(false)}
+            style={styles.closeButton}>
             <Text style={styles.modalClose}>Sulje</Text>
           </TouchableOpacity>
+        </View>
         </View>
       </Modal>
 

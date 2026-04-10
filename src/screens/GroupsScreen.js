@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ActivityIndicator,
+  ScrollView,
   FlatList,
   Image,
   TouchableOpacity,
@@ -31,7 +32,7 @@ import { TextInput } from "react-native";
 import GroupAvatarPicker from "../components/GroupAvatarPicker.js";
 import { SvgUri} from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import { Options } from "../components/Options.js";
 
 const groupColors = [
   "#E3F2FD",
@@ -42,8 +43,6 @@ const groupColors = [
   "#E0F7FA",
   "#FFF9C4",
 ];
-
-
 
 const getGroupColor = (groupName) => {
   let hash = 0;
@@ -56,6 +55,7 @@ const getGroupColor = (groupName) => {
 };
 
 export default function GroupScreen() {
+  
   const navigation = useNavigation();
   const user = useUser();  // Haetaan tällä hetkellä kirjautuneen käyttäjän tiedot
   const [groups, setGroups] = useState([]);
@@ -72,6 +72,10 @@ export default function GroupScreen() {
 
   const [groupAvatarStyle, setGroupAvatarStyle] = useState("1");
   const [groupAvatarSeed, setGroupAvatarSeed] = useState("");
+
+  const [selectedTags, setSelectedTags] = useState([]);
+
+  const [isSavingGroup, setIsSavingGroup] = useState(false); 
 
   const generateGroupSeed = () => {
     return `group-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
@@ -164,13 +168,27 @@ export default function GroupScreen() {
     );
   };
 
+  // TAGIEN VALINTA
+const toggleTag = (tag) => {
+  setSelectedTags((prev) =>
+    prev.includes(tag)
+      ? prev.filter((t) => t !== tag)
+      : [...prev, tag]
+  );
+};
+
  // RYHMÄN LUONTI FIRESTOREEN
 const createGroup = async () => {
-  try {
+  if (isSavingGroup) return; // Estetään useampi klikkaus ja luodaan vahingossa monta ryhmää
+  
     if (!groupName.trim()) {
       Alert.alert("Virhe", "Anna ryhmälle nimi");
       return;
     }
+
+    try {
+      setIsSavingGroup(true); 
+    
 
     // Luo ryhmä groups collectioniin
     const groupRef = await addDoc(collection(firestore, "groups"), {
@@ -180,7 +198,10 @@ const createGroup = async () => {
       createdBy: user.uid,
       isPublic: isPublicGroup,
       avatarStyle: groupAvatarStyle,
-      avatarSeed: groupAvatarSeed 
+      avatarSeed: groupAvatarSeed,
+    
+      // Tallennetaan tagit vain julkiselle ryhmälle
+      tags: isPublicGroup ? selectedTags : []
     });
 
     const groupId = groupRef.id;
@@ -242,12 +263,17 @@ const createGroup = async () => {
     setIsPublicGroup(false); 
     setGroupAvatarSeed("");
     setGroupAvatarStyle("1");
+    setSelectedTags([]);
 
   } catch (error) { //Jos luontivaiheessa tulee joku virhe nii error handling
     console.log("Group creation error:", error);
     Alert.alert("Virhe", "Ryhmän luonti epäonnistui");
+  } finally {
+    setIsSavingGroup(false); // Varmistetaan, että tilaa resetoi myös virheen sattuessa
   }
+
 };
+
 
   return (
     <View style={[styles.container,
@@ -348,7 +374,8 @@ const createGroup = async () => {
               <TouchableOpacity
                 onPress={() =>
                   navigation.navigate("SpecificGroupChat", {
-                    groupId: item.id
+                    groupId: item.id,
+                    groupName: item.name,
                   })
                 }
               >
@@ -376,10 +403,18 @@ const createGroup = async () => {
   <View style={styles.modalOverlay}>
     <View style={styles.modalContainer}>
 
+  <ScrollView
+    contentContainerStyle={{
+      paddingBottom: 20,
+    }}
+    showsVerticalScrollIndicator={true}
+  >
+
 <TextInput
   placeholder="Ryhmän nimi"
   value={groupName}
   onChangeText={setGroupName}
+  editable={!isSavingGroup} // Estetään muokkaus, kun ryhmää luodaan
   style={{
     borderWidth: 1,
     borderColor: "#ccc",
@@ -393,6 +428,7 @@ const createGroup = async () => {
   placeholder="Ryhmän kuvaus"
   value={groupDescription}
   onChangeText={setGroupDescription}
+  editable={!isSavingGroup} // Estetään muokkaus, kun ryhmää luodaan
   style={{
     borderWidth: 1,
     borderColor: "#ccc",
@@ -404,7 +440,7 @@ const createGroup = async () => {
 
 {/* julkinen ryhmä */}
 <TouchableOpacity
-  onPress={() => setIsPublicGroup(!isPublicGroup)}
+  onPress={() => !isSavingGroup &&setIsPublicGroup(!isPublicGroup)}
   style={{
     flexDirection: "row",
     alignItems: "center",
@@ -420,6 +456,62 @@ const createGroup = async () => {
     Luo julkinen ryhmä
   </Text>
 </TouchableOpacity>
+
+{/* TAGIT (vain julkisille ryhmille) */}
+{isPublicGroup && (
+  <>
+    <Text
+      style={{
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 10,
+      }}
+    >
+      Valitse tagit
+      
+    </Text>
+    
+    <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                marginBottom: 16,
+              }}
+            >
+              {Options.studyOptions.map((item) => {
+                const selected = selectedTags.includes(item);
+
+                return (
+                  <TouchableOpacity
+                    key={item}
+                    disabled={isSavingGroup}
+                    onPress={() => toggleTag(item)}
+                    style={{
+                      paddingVertical: 8,
+                      paddingHorizontal: 14,
+                      borderRadius: 20,
+                      backgroundColor: selected ? "#f17a0a" : "#eee",
+                      margin: 4,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      opacity: isSavingGroup ? 0.6 : 1,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: selected ? "white" : "black",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {selected ? "✓ " : ""}
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+  </>
+)}
 
 <GroupAvatarPicker
       avatarSeed={groupAvatarSeed}
@@ -439,14 +531,17 @@ const createGroup = async () => {
       {friendsList.length === 0 ? (
         <Text>Sinulla ei ole vielä kavereita</Text>
       ) : (
-        <FlatList
-          data={friendsList}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => {
-            const selected = selectedFriends.includes(item.id);
+        <View style={{ 
+          width: "100%", 
+          marginBottom: 20 }}>
+
+            {friendsList.map((item) => {
+              const selected = selectedFriends.includes(item.id);
 
             return (
               <TouchableOpacity
+              key={item.id}
+                disabled={isSavingGroup}
                 onPress={() => toggleFriend(item.id)}
                 style={{
                   flexDirection: "row",
@@ -469,19 +564,36 @@ const createGroup = async () => {
                 />
               </TouchableOpacity>
             );
-          }}
-        />
+          })}
+        </View>
       )}
 
       <TouchableOpacity
         style={{
           marginTop: 20,
-          backgroundColor: "#f17a0a",
+          backgroundColor: isSavingGroup ? "#ccc" : "#f17a0a",
           padding: 12,
           borderRadius: 8,
         }}
         onPress={createGroup}
+        disabled={isSavingGroup} 
       >
+        {isSavingGroup ? (
+        <View style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}>
+          <ActivityIndicator size="small" color="white" />
+          <Text style={{
+            marginLeft: 10,
+          color: "white",
+          fontWeight: "bold"
+        }}>
+          Luodaan...
+        </Text>
+        </View>
+      ) : (
         <Text style={{
           textAlign: "center",
           color: "white",
@@ -489,10 +601,12 @@ const createGroup = async () => {
         }}>
           Luo ryhmä
         </Text>
+      )}
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => setModalVisible(false)}
+        onPress={() => !isSavingGroup &&setModalVisible(false)}
+        disabled={isSavingGroup}
         style={{ marginTop: 10 }}
       >
         <Text style={{
@@ -502,6 +616,7 @@ const createGroup = async () => {
           Sulje
         </Text>
       </TouchableOpacity>
+      </ScrollView>
     </View>
   </View>
 </Modal>

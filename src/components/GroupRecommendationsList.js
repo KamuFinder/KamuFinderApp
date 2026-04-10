@@ -27,10 +27,20 @@ export default function GroupRecommendationsList({ groups, onJoinGroup }) {
             )}
 
             <TouchableOpacity
-              style={homeStyles.actionButton}
-              onPress={() => onJoinGroup(item)}
+              style={[
+                homeStyles.actionButton,
+                item.alreadyJoined && { backgroundColor: "#999" },
+              ]}
+              onPress={() => {
+                if (!item.alreadyJoined) {
+                  onJoinGroup(item);
+                }
+              }}
+              disabled={item.alreadyJoined}
             >
-              <Text style={homeStyles.actionButtonText}>Liity ryhmään</Text>
+              <Text style={homeStyles.actionButtonText}>
+                {item.alreadyJoined ? "Jo jäsen" : "Liity ryhmään"}
+              </Text>
             </TouchableOpacity>
           </View>
         ))

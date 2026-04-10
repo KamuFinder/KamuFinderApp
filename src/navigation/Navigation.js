@@ -17,6 +17,7 @@ import Notifications from "../screens/Notifications";
 import SpecificGroupChat from "../screens/SpecificGroupChat";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import ChangePasswordScreen from "../screens/ChangePasswordScreen";
+import AIChatScreen from "../screens/AIChatScreen";
 import EditGroupScreen from "../screens/EditGroupScreen";
 
 import NavbarTop from "../components/NavbarTop";
@@ -69,6 +70,15 @@ export default function AppNavigator() {
                 name="SwipePeople"
                 component={withNavBars(SwipePeopleScreen, {
                   showBack: true,
+                })}
+              />
+              <Stack.Screen
+                 name="AIChat"
+                 component={withNavBars(AIChatScreen, {
+                   showBack: true,
+                   showProfile: false,
+                   showNotifications: false,
+                   showBottom: false,
                 })}
               />
               <Stack.Screen

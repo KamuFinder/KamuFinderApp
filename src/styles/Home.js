@@ -46,6 +46,18 @@ export default StyleSheet.create({
     marginVertical: 10,
   },
 
+  aiButton: {
+   backgroundColor: "#1f6feb",
+   padding: 14,
+   borderRadius: 10,
+   marginTop: 20,
+   alignItems: "center",
+  },
+  aiButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+
   // AI-suositukset
   actionButton: {
     backgroundColor: "#4CAF50",

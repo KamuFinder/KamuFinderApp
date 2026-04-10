@@ -14,19 +14,15 @@ from openai import OpenAI
 from ai.recommender import recommend_study_groups, recommend_hobby_groups
 from ai.similarity import jaccard_similarity
 
-print("DEPLOY TEST 123")
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 FIREBASE_SERVICE_ACCOUNT_PATH = os.getenv(
     "FIREBASE_SERVICE_ACCOUNT_PATH",
     "serviceAccountKey.json"
 )
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4")
 
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY puuttuu .env-tiedostosta")
 
 db = None
 
@@ -44,7 +40,17 @@ else:
 
 #db = firestore.client()
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+#Groq
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "llama-3.1-8b-instant")
+
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY puuttuu ympäristömuuttujista")
+
+client = OpenAI(
+    api_key=GROQ_API_KEY,
+    base_url="https://api.groq.com/openai/v1"
+)
 
 app = FastAPI()
 
@@ -120,6 +126,9 @@ def get_shared_hobbies(user_hobbies: List[str], candidate_hobbies: List[str]) ->
 
 
 def fetch_last_messages(user_id: str, chat_id: str, limit_count: int = 10) -> List[Dict[str, str]]:
+    if db is None:
+        return []
+
     messages_ref = (
         db.collection("user")
         .document(user_id)
@@ -289,19 +298,22 @@ def chat_with_ai(payload: ChatRequest):
                 "content": user_message
             })
 
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model=OPENAI_MODEL,
-            input=input_messages,
-        )
+            messages=input_messages,
+)
 
-        reply_text = response.output_text
+        reply_text = response.choices[0].message.content
 
         if not reply_text:
             raise HTTPException(status_code=500, detail="AI ei palauttanut vastausta")
 
         return {"reply": reply_text.strip()}
 
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+    

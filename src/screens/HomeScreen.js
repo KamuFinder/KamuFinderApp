@@ -11,6 +11,7 @@ import { useCallback } from "react";
 import FriendRequestButton from "../components/FriendRequestButton.js";
 import UserAvatar from "../components/UserAvatar.js";
 import Loading from "../components/Loading.js";
+import { MaterialIcons } from "@expo/vector-icons";
 
 
 export default function HomeScreen() {
@@ -149,13 +150,6 @@ export default function HomeScreen() {
 
       <Text style={{ marginTop: 12, marginBottom: 12 }}>Löydä uusia kavereita sydän-välilehdeltä!</Text>
 
-      <TouchableOpacity
-        style={styles.aiButton}
-         onPress={() => navigation.navigate("AIChat")}
-      >
-      <Text style={styles.aiButtonText}>Chattaa tekoälyn kanssa</Text>
-      </TouchableOpacity>
-
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
           
@@ -212,6 +206,22 @@ export default function HomeScreen() {
 
       </View>
 
+<View style={styles.floatingWrapper}>
+      <TouchableOpacity
+        style={styles.aiButton}
+         onPress={() => navigation.navigate("AIChat")}
+         activeOpacity={0.85}
+      >
+
+          <View style={styles.speechBubble}>
+              <Text style={styles.speechText}>Hei! Olen AI-avustaja. Miten voin auttaa?</Text>
+          </View>
+
+            <View style={styles.aiCircle}>
+                <MaterialIcons name="auto-awesome" size={28} color="#fff" />
+          </View>
+      </TouchableOpacity>
+      </View>
     </View>
     
   );

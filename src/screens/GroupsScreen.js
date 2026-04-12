@@ -33,6 +33,7 @@ import GroupAvatarPicker from "../components/GroupAvatarPicker.js";
 import { SvgUri} from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Options } from "../components/Options.js";
+import { all } from "axios";
 
 const groupColors = [
   "#E3F2FD",
@@ -189,6 +190,8 @@ const createGroup = async () => {
     try {
       setIsSavingGroup(true); 
     
+    // Lisätään Group creator automaattisesti jäseneksi
+    const allMembers = [...selectedFriends, user.uid];
 
     // Luo ryhmä groups collectioniin
     const groupRef = await addDoc(collection(firestore, "groups"), {
@@ -199,15 +202,13 @@ const createGroup = async () => {
       isPublic: isPublicGroup,
       avatarStyle: groupAvatarStyle,
       avatarSeed: groupAvatarSeed,
+      memberCount: allMembers.length,
     
       // Tallennetaan tagit vain julkiselle ryhmälle
       tags: isPublicGroup ? selectedTags : []
     });
 
     const groupId = groupRef.id;
-
-    // Lisätään Group creator automaattisesti jäseneksi
-    const allMembers = [...selectedFriends, user.uid];
 
     // Lisätään members subcollection
     for (const memberId of allMembers) {

@@ -386,7 +386,7 @@ export default function EditGroupScreen() {
               await deleteDoc (doc(firestore, "groups", groupId));
               
               Alert.alert("Ryhmä poistettu");
-              navigation.goBack();
+              navigation.navigate("GroupsScreen");
             } catch (error) {
               console.log("Virhe ryhmän poistossa:", error);
               Alert.alert("Virhe", "Ryhmän poistaminen epäonnistui.");

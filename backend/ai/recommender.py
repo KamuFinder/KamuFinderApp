@@ -19,9 +19,10 @@ def recommend_study_groups(user, groups):
         if not group_tags:
             continue
 
-        score = jaccard_similarity(user_study_interests, group_tags)
+        score = jaccard_similarity(user_study_interests, group_tags) 
 
-        shared_interests = list(set(user_study_interests).intersection(set(group_tags)))
+        shared_interests = list(
+            set(user_study_interests).intersection(set(group_tags)))
 
         if score > 0:
             results.append({

@@ -6,11 +6,12 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "../context/UserContext.js";
-import styles from "../styles/Home.js";
-import localStyles from "../styles/Swiping";
+//import styles from "../styles/Home.js";
+import styles from "../styles/Swiping.js";
 import {
   firestore,
   USERS,
@@ -30,6 +31,7 @@ import {
 } from "../../services/recommendationService";
 import UserRecommendationsList from "../components/UserRecommendationsList";
 import GroupRecommendationsList from "../components/GroupRecommendationsList";
+import Logo from "../../assets/Logo.png";
 
 export default function SwipingScreen({ navigation }) {
   const user = useUser();
@@ -389,14 +391,20 @@ finalGroups.sort(
 };
 
   return (
-    <SafeAreaView style={localStyles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
-        style={localStyles.scroll}
-        contentContainerStyle={localStyles.scrollContent}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         bounces={true}
       >
+        <View>
+          <Image source={Logo} style={{ width: 120, height: 120, alignSelf: "center", marginBottom: 20 }} />
         <Text style={styles.title}>Etsi uusia kavereita!</Text>
+        <Text style={styles.infoText}>
+          Swaippaa käyttäjiä ja liity study groupeihin, jotta löydät samanhenkisiä kavereita ja opiskeluystäviä!
+        </Text>
+          </View>
 
         <TouchableOpacity
           style={styles.actionButton}
@@ -405,19 +413,12 @@ finalGroups.sort(
           <Text style={styles.actionButtonText}>Hae suositukset</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate("SwipePeople")}
-        >
-          <Text style={styles.actionButtonText}>
-            Selaa käyttäjiä swaippaamalla
-          </Text>
-        </TouchableOpacity>
+        
 
         {loading && (
-          <View style={localStyles.loadingContainer}>
+          <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" />
-            <Text style={localStyles.loadingText}>Haetaan suosituksia...</Text>
+            <Text style={styles.loadingText}>Haetaan suosituksia...</Text>
           </View>
         )}
 
@@ -433,6 +434,16 @@ finalGroups.sort(
           groups={groupRecommendations}
           onJoinGroup={handleJoinStudyGroup}
         />
+
+        <TouchableOpacity
+          style={styles.SwipeButton}
+          onPress={() => navigation.navigate("SwipePeople")}
+        >
+          <Text style={styles.actionButtonText}>
+            Selaa käyttäjiä swaippaamalla
+          </Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );

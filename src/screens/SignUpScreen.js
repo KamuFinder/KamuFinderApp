@@ -110,6 +110,8 @@ export default function SignUpScreen() {
           email: userInfo.email,
           avatarSeed: avatarSeed,
           avatarStyle: avatarStyle,
+          failedLoginAttempts: 0,
+          lockUntil: null
         })
         setUserInfo({
           firstName: '',

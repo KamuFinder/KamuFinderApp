@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState, useRef } from "react";
+import React, {useEffect, useState, useRef } from "react";
 import { View, Text, TouchableOpacity, Alert,  } from "react-native";
 import { useUser } from "../context/UserContext.js";
 import { firestore, USERS, FRIENDREQUESTS, doc, getDoc, onSnapshot, setDoc} from "../firebase/config";
@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import styles from "../styles/Notifications.js";
 import Loading from "../components/Loading.js";
 import { ActivityIndicator } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 export default function Notifications() {
   const user = useUser();
@@ -375,260 +376,202 @@ if (initialLoading) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+    style={styles.container}
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop:20, paddingBottom: 20 }}
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.title}>Ilmoitukset</Text>
 
       {/* Uudet saapuneet pyynnöt */}
       {newFriendRequests.length > 0 && 
       <Text 
-      style={{ 
-        fontWeight: "bold", 
-        fontSize: 16,
-        marginTop:12,
-        alignSelf: "center",
-        }}
+      style={styles.subTitle}
         >
           Uudet saapuneet pyynnöt:
           </Text>}
       {newFriendRequests.map((req) => (
         <View
           key={req.id}
-          style={{width: "90%",
-          alignItems: "center",
-          alignSelf: "center",
-          marginBottom: 10,
-          marginTop: 24,
-          paddingVertical: 12,
-          borderBottomRightRadius: 16,
-          backgroundColor: req.read ? "#f0f0f0" : "#d1e7dd",
-          borderWidth: 1,
-          borderColor: "#ccc",
-          elevation: req.read ? 1 : 3,
-        }}
+          style={[styles.card, req.read ? styles.readCard : styles.unreadCard]}
         >
           <TouchableOpacity
             onPress={() => navigation.navigate("Profile", { userId: req.fromUserId })}
+          activeOpacity={0.8}
           >
-            <Text style={{ fontWeight: "bold", color: "#007bff" }}>
-              {req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}
+            <Text style={styles.cardTitle}>{req.name}</Text>
+            <Text style={styles.cardText}>
+              Lähetti sinulle kaveripyynnön
+              </Text>
+              <Text style={styles.dateText}>
+              {req.Date ? req.Date.toLocaleDateString() : ""}
+              </Text>
+              <Text style={{ fontSize: 12, color: "#555" }}>
               {req.status === "declined" ? " (Hylätty)" : ""}
             </Text>
           </TouchableOpacity>
+
           {req.isDeletedUser ? (
-            <TouchableOpacity onPress={() => handleRemoveRequest(req)}>
-              <Text style={{ color: "red" }}>Poista X</Text>
+            <TouchableOpacity
+            style={styles.deleteButton}
+             onPress={() => handleRemoveRequest(req)}>
+              <Text style={styles.deleteButtonText}>Poista X</Text>
             </TouchableOpacity>
           ) : (
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 5 }}>
-            <TouchableOpacity onPress={() => handleAccept(req) } disabled={processing === req.id}>
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.acceptButton}onPress={() => handleAccept(req) } disabled={processing === req.id}>
               
               {processing === req.id ? (
                 <ActivityIndicator size="small" color="green" />
               ) : (
-                <Text style={{ color: "green" }}>Hyväksy</Text>
+                <Text style={styles.acceptButtonText}>Hyväksy</Text>
               )}
 
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDecline(req)}>
-              <Text style={{ color: "red" }}>X</Text>
+
+            <TouchableOpacity style={styles.declineButton} onPress={() => handleDecline(req)}>
+              <Text style={styles.declineButtonText}>X</Text>
             </TouchableOpacity>
           </View>
           )}
         </View>
+        
       ))}
 
       {/* Luetut saapuneet pyynnöt */}
-      {readFriendRequests.length > 0 && 
+      {readFriendRequests.length > 0 && (
       <Text 
-        style={{ 
-        fontWeight: "bold",
-        fontSize: 16,
-        marginTop:12,
-        alignSelf: "center"
-         }}
+        style={styles.subTitle}
          >
           Luetut saapuneet pyynnöt:
-          </Text>}
+          </Text>)}
+
       {readFriendRequests.map((req) => (
         <View
           key={req.id}
-          style={{
-          width: "90%",
-          alignItems: "center",
-          alignSelf: "center",
-          marginBottom: 10,
-          marginTop: 24,
-          padding: 10,
-          paddingVertical: 12,
-          borderBottomRightRadius: 16,
-          backgroundColor: "#f0f0f0",
-          borderWidth: 1,
-          borderColor: "#ccc",
-          elevation: 1,
-        }}
+          style={[styles.card, styles.readCard]}
         >
           <TouchableOpacity
             onPress={() => navigation.navigate("Profile", { userId: req.fromUserId })}
+          activeOpacity={0.8}
           >
-            <Text style={{ fontWeight: "bold", color: "#007bff" }}>
-              {req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}
+            <Text style={styles.cardTitle}>
+              {req.name}
+            </Text>
+            <Text style={styles.cardText}> Kaveripyyntö </Text>
+            <Text style={styles.dateText}>
+              {req.Date ? req.Date.toLocaleDateString() : ""}
+
               {req.status === "declined" ? " (Hylätty)" : ""}
             </Text>
           </TouchableOpacity>
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 5 }}>
-            <TouchableOpacity onPress={() => handleAccept(req)}>
-              <Text style={{ color: "green" }}>Hyväksy</Text>
+
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(req)}>
+              <Text style={styles.acceptButtonText}>Hyväksy</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDecline(req)}>
-              <Text style={{ color: "red" }}>X</Text>
+
+            <TouchableOpacity style={styles.declineButton} onPress={() => handleDecline(req)}>
+              <Text style={styles.declineButtonText}>Hylkää</Text>
             </TouchableOpacity>
           </View>
         </View>
       ))}
 
       {/* Lähetetyt pyynnöt */}
-      <View style={styles.pendingContainer}>
       {sentFriendRequests.filter(r => r.status !== "declined").length > 0 && 
       <Text 
-      style={{ 
-        fontWeight: "bold",
-        fontSize: 16,
-        alignSelf: "center"
-         }}>Lähetetyt odottavat pyynnöt:</Text>}
+      style={styles.subTitle}>
+        Lähetetyt odottavat pyynnöt:
+      </Text>}
+
       {sentFriendRequests.filter(r => r.status !== "declined").map((req) => (
-        <Text 
-        key={req.id}
-        style={{
-          fontWeight: "bold",
-          color: "gray",
-          alignSelf: "center",
-          marginTop: 10,
-         
-        }}>{req.name} - {req.Date ? req.Date.toLocaleDateString() : ""}</Text>
-      ))}
+        <View key={req.id} style={[styles.card, styles.pendingCard]}>
+        <Text style={styles.cardTitle}>{req.name}</Text>
+        <Text style={styles.cardText}>Odottaa hyväksyntää</Text>
+        <Text style={styles.dateText}>
+         {req.Date ? req.Date.toLocaleDateString() : ""}</Text>
       </View>
+      ))}
+      
+
 
       {/* Notifications */}
-      {newNotifications.length > 0 && 
+      {newNotifications.length > 0 && (
       <Text 
-      style={{ 
-        fontWeight: "bold",
-        fontSize: 16,
-        marginTop:12,
-        alignSelf: "center"
-         }}
+      style={styles.subTitle}
          >
-         Uudet ilmoitukset:</Text>}
+         Uudet ilmoitukset:</Text>)}
+
       {newNotifications.map((notif) => {
         const isProfileIncomplete = notif.type === "profile_incomplete";
       
         return (
           <TouchableOpacity
             key={notif.id}
+            actionOpacity={0.8}
+            style={[
+              styles.card, isProfileIncomplete ? styles.highlightCard : styles.notificationCard,
+            ]}
             onPress={() => {
               if (notif.screen) {
-                navigation.navigate(notif.screen);
+                if(notif.type === "group_add") {
+                navigation.navigate(notif.screen, {
+                  groupId: notif.groupId,
+                  groupName: notif.groupName,
+                });
               }
             }}
+          }
+      >
       
-      
-          activeOpacity={0.8}
-          style={{
-            width: "90%",
-            alignItems: "center",
-            alignSelf: "center",
-            marginBottom: 10,
-            marginTop: 24,
-            padding: 10,
-            paddingVertical: 12,
-            borderBottomRightRadius: 16,
-            backgroundColor: isProfileIncomplete ? "#f0f0f0" : "#ffeeba", 
-            borderWidth: isProfileIncomplete ? 2 : 1,
-            borderColor:isProfileIncomplete ? "#6500a" : "#ccc",
-            elevation: isProfileIncomplete ? 4 : 3,
-          }}
-        >
           {isProfileIncomplete && (
-            <Text style={{
-              fontWeight: "bold",
-              fontSize: 24,
-              color: "#6500a",
-              marginBottom: 8,}}>
+            <Text style={styles.highlightTitle}>
               Täydennä profiilisi
               </Text>
           )}
               
-          <Text style={{ 
-            fontWeight: "medium",
-            textAlign: "center",
-            color: isProfileIncomplete ? "#555" : "#555",
-             }}
+          <Text style={styles.cardText}
              >
               {notif.message}
             </Text>
           
           {notif.screen && (
-            <Text style={{
-              marginTop: 8,
-              fontFamily:"roboto",
-              fontWeight: "bold",
-              color: "#fff",
-              backgroundColor: "#F99D11",
-              borderWidth: 1,
-              borderColor: "#F99D11",
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 20,
-              marginBottom: 8,
-              
-            }}>
-              Siirry profiiliin
+            <View style={styles.navigateButton}>
+            <Text style={styles.navigateButtonText}>
+             {notif.type === "group_add" ? "Avaa ryhmä" : "Siirry"}
             </Text>
+          </View>
           )}
           
-          <Text style={{ fontSize: 12, color: "#555" }}>
-            {notif.timestamp?.toDate ? notif.timestamp.toDate().toLocaleDateString() : ""}
+          <Text style={styles.dateText}>
+            {notif.timestamp?.toDate 
+            ? notif.timestamp.toDate().toLocaleDateString() : ""}
           </Text>
         </TouchableOpacity>
         );
     })}
 
-      {readNotifications.length > 0 && 
+      {readNotifications.length > 0 && (
       <Text 
-      style={{ 
-        fontWeight: "bold",
-        fontSize: 16,
-        marginTop:12,
-        alignSelf: "center"
-         }}
+      style={styles.subTitle}
          >
           Luetut ilmoitukset:
-          </Text>}
+          </Text>)}
+
       {readNotifications.map((notif) => (
         <View
           key={notif.id}
-          style={{
-            width: "90%",
-            alignItems: "center",
-            alignSelf: "center",
-            marginBottom: 10,
-            marginTop: 24,
-            padding: 10,
-            paddingVertical: 12,
-            borderBottomRightRadius: 16,
-            backgroundColor: "#f0f0f0",
-            borderWidth: 1,
-            borderColor: "#ccc",
-            elevation: 1,
-          }}
+          style={[styles.card, styles.readCard]}
         >
-          <Text>{notif.message}</Text>
-          <Text style={{ fontSize: 12, color: "#555" }}>
-            {notif.timestamp?.toDate ? notif.timestamp.toDate().toLocaleDateString() : ""}
+          <Text styles={styles.cardText}>{notif.message}</Text>
+          <Text style={styles.dateText}>
+            {notif.timestamp?.toDate 
+            ? notif.timestamp.toDate().toLocaleDateString() : ""}
           </Text>
         </View>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 

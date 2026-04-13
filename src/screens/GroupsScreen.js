@@ -33,7 +33,6 @@ import GroupAvatarPicker from "../components/GroupAvatarPicker.js";
 import { SvgUri} from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Options } from "../components/Options.js";
-import { all } from "axios";
 
 const groupColors = [
   "#E3F2FD",
@@ -252,6 +251,25 @@ const createGroup = async () => {
         }
 
       );
+
+       // Ilmoitus vain kutsutuille kavereille, ei ryhmän luojalle itselleen
+  if (memberId !== user.uid) {
+    await addDoc(
+      collection(firestore, USERS, memberId, "notifications"),
+      {
+        type: "group_add",
+        message: `Sinut lisättiin ryhmään ${groupName}`,
+        groupId: groupId,
+        groupName: groupName,
+        screen: "SpecificGroupChat",
+        read: false,
+        fromUserId: user.uid,
+        timestamp: serverTimestamp(),
+      }
+    );
+  }
+
+
     }
 
     Alert.alert("Valmis", "Ryhmä luotu!");

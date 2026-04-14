@@ -33,7 +33,6 @@ export default function HomeScreen() {
 
   const [initialLoad, setInitialLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAtBottom, setIsAtBottom] = useState(true);
   
   const [loadingMore, setLoadingMore] = useState(false)
   const [lastVisibleDoc, setLastVisibleDoc] = useState(null)

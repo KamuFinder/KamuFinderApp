@@ -1,13 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, FlatList, TextInput, 
-  KeyboardAvoidingView, Platform } from "react-native";
-import { useRoute } from "@react-navigation/native";
+  KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { useUser } from "../context/UserContext.js";
 import { firestore, collection, query, onSnapshot, orderBy,
   addDoc, serverTimestamp, PRIVATECHATS, MESSAGES, getDoc, 
   USERS, USERSPRIVATECHATS } from "../firebase/config.js";
-import { doc, updateDoc } from "firebase/firestore";
-import {  useNavigation } from '@react-navigation/native';
+import { doc, updateDoc, getDocs,  limit, startAfter} from "firebase/firestore";
 import styles from "../styles/SpecificChat.js";
 import DateDivider from "../components/dateDivider.js";
 import UserAvatar from "../components/UserAvatar.js";
@@ -31,91 +30,36 @@ export default function HomeScreen() {
   const [myAvatar, setMyAvatar] = useState(emptyAvatar);
 
   const flatListRef = useRef(null);
+
   const [initialLoad, setInitialLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
   
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [lastVisibleDoc, setLastVisibleDoc] = useState(null)
+  const [hasMore, setHasMore] = useState(true)
 
 
   useEffect(() => {
     if (!user || !chatId) return;
 
-    try{
-      const messagesRef = collection(firestore, PRIVATECHATS, chatId, MESSAGES);
-      const q = query(messagesRef, orderBy("timestamp", "asc"));
-
-      const unsubscribe = onSnapshot(q, async(snapshot) => {
-        const msgs = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setMessages(msgs);
-
-        //First time loading the messages, scroll to bottom without animation
-        if (initialLoad) {
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
-            setInitialLoad(false);
-            setIsLoading(false);
-          }, 50)
-
-        } else if (isAtBottom) {
-            requestAnimationFrame(() => {
-              flatListRef.current?.scrollToEnd({ animated: true });
-          });
-        }
-      try {
-        if (msgs.length > 0) {
-          const lastMessage = msgs[msgs.length - 1];
-          if (lastMessage && lastMessage.userId !== user.uid) {
-            const chatRef = doc(firestore, USERS, user.uid, USERSPRIVATECHATS, chatId);
-            await updateDoc(chatRef, { unReadMessages: false });
-          }
-        }
-      } catch (err) {
-        console.log("Mark as read failed:", err.message);
-      }
-    })
-
-      return unsubscribe;
-    } catch (error) {
-        console.log("No messages awailable", error.message)
-        setMessages([])
-    }
-  }, [chatId, user, initialLoad, isAtBottom]);
-
-
-
-
-
-  useEffect(() =>{
-    if (!user || !chatId) return;
-
+    
     const fetchChatInfo = async () => {
       try{
-        const chatRef = doc(firestore, PRIVATECHATS, chatId)
-        const chatSnap = await getDoc(chatRef)
+        const chatRef = doc(firestore, PRIVATECHATS, chatId);
+        const chatSnap = await getDoc(chatRef);
 
-        if(chatSnap.exists()) {
-          const data = chatSnap.data()
-
-          if(data.user1 === user.uid) {
-            setOtherUserId(data.user2)
-          } 
-          else {
-            setOtherUserId(data.user1)
-          }
+        if (chatSnap.exists()) {
+          const data = chatSnap.data();
+          setOtherUserId(data.user1 === user.uid ? data.user2 : data.user1);
         }
-      
-      
-      } catch (error) {
-        console.log("Error in getting chat info", error.message)
+        }catch (error) {
+        console.log("Error in getting chat info", error.message);
+        }
       }
-    }
+    
     fetchChatInfo()
-
-  }, [user, chatId])
-
+  }, [chatId, user,]);
 
 
   useEffect(() => {
@@ -178,32 +122,135 @@ export default function HomeScreen() {
 
 
 
+    useEffect(() => {
+    if (!user || !chatId) return;
+
+    const messagesRef = collection(firestore, PRIVATECHATS, chatId, MESSAGES)
+    const q = query(messagesRef, orderBy("timestamp", "desc"), limit(20))
+
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+        const docs = snapshot.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => {
+            const ta = a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0;
+            const tb = b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0;
+            return tb - ta; 
+          })
+
+        setMessages((prev) => {
+          const prevMap = new Map(prev.map((m) => [m.id, m]));
+          const merged = [];
+
+          for (const doc of docs) {
+            merged.push(doc)
+            prevMap.delete(doc.id)
+          }
+          for (const [, v] of prevMap) {
+            merged.push(v)
+          }
+          return merged
+        });
+
+        if (snapshot.docs.length > 0) {
+          const lastDoc = snapshot.docs[snapshot.docs.length - 1]
+          setLastVisibleDoc((prev) => prev || lastDoc)
+        }
+
+        setIsLoading(false)
+
+        try {
+          const msgs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))
+          if (msgs.length > 0) {
+            const lastMessage = msgs[0]
+            if (lastMessage && lastMessage.userId !== user.uid) {
+              const chatRef = doc(firestore, USERS, user.uid, USERSPRIVATECHATS, chatId)
+              await updateDoc(chatRef, { unReadMessages: false })
+            }
+          }
+        } catch (error) {
+          console.log("Mark as read failed:", error.message)
+        }
+      },
+      (error) => {
+        console.log("onSnapshot error:", error.message)
+        setIsLoading(false)
+      }
+    );
+
+    return () => unsubscribe()
+  }, [chatId, user]);
+
+
+  const loadMore = async () => {
+    if (!chatId || loadingMore || !hasMore || !lastVisibleDoc) return;
+    setLoadingMore(true);
+
+    try {
+      const messagesRef = collection(firestore, PRIVATECHATS, chatId, MESSAGES)
+      const moreQuery = query(
+        messagesRef,
+        orderBy("timestamp", "desc"),
+        startAfter(lastVisibleDoc),
+        limit(20)
+      );
+
+      const snap = await getDocs(moreQuery)
+      if (!snap.empty) {
+        const moreDocs = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        setMessages((prev) => {
+
+          const existingIds = new Set(prev.map((m) => m.id))
+          const filtered = moreDocs.filter((m) => !existingIds.has(m.id))
+          return [...prev, ...filtered]
+        });
+
+        setLastVisibleDoc(snap.docs[snap.docs.length - 1])
+
+        if (snap.docs.length < 20) setHasMore(false)
+      } else {
+        setHasMore(false)
+      }
+    } catch (error) {
+      console.log("Load more error:", error.message)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   const sendMessage = async () => {
     if (newMessage.trim() === "" || !otherUserId) return;
 
-    const messageRef = collection(firestore, PRIVATECHATS, chatId, MESSAGES)
-    await addDoc (messageRef, {
-      text: newMessage,
-      userId: user.uid,
-      timestamp: serverTimestamp(),
-    })
+    try{
+      const messageRef = collection(firestore, PRIVATECHATS, chatId, MESSAGES)
+      await addDoc (messageRef, {
+        text: newMessage,
+        userId: user.uid,
+        timestamp: serverTimestamp(),
+      })
 
-    const myChatRef = doc(firestore, USERS, user.uid, USERSPRIVATECHATS, chatId)
-    await updateDoc(myChatRef, {
-      latestMessage: newMessage,
-      updatedAt: serverTimestamp()
-    })
+      const myChatRef = doc(firestore, USERS, user.uid, USERSPRIVATECHATS, chatId)
+      await updateDoc(myChatRef, {
+        latestMessage: newMessage,
+        updatedAt: serverTimestamp()
+      })
 
 
-    const otherChatRef = doc(firestore, USERS, otherUserId, USERSPRIVATECHATS, chatId)
-    await updateDoc(otherChatRef, {
-      latestMessage: newMessage,
-      updatedAt: serverTimestamp(),
-      unReadMessages: true,
-    })
+      const otherChatRef = doc(firestore, USERS, otherUserId, USERSPRIVATECHATS, chatId)
+      await updateDoc(otherChatRef, {
+        latestMessage: newMessage,
+        updatedAt: serverTimestamp(),
+        unReadMessages: true,
+      })
 
-    setNewMessage("");
+      setNewMessage("");
+
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 50);
+
+    } catch (error) {
+      console.log("Send message error:", error.message)
+    }
   }
   
   if (isLoading) {
@@ -238,43 +285,32 @@ export default function HomeScreen() {
             avatarStyle={otherUserAvatar.avatarStyle}
             size={40}
           />
-      <Text style={styles.title}>{otherUserName}</Text>
+          <Text style={styles.title}>{otherUserName}</Text>
       </TouchableOpacity>
 
       <FlatList
         ref={flatListRef}
         style={{ flex: 1,  }}
         data={messages}
+        inverted= {true}
         keyExtractor={(item) => item.id}
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 10, flexGrow: 1}}
-
-        onScroll={(event) => {
-          const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-
-          const isAtBottom =
-            layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
-
-          setIsAtBottom(isAtBottom);
-        }}
-        scrollEventThrottle={16}
-
-        onMomentumScrollEnd={(event) => {
-          const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-
-          const isBottom =
-            layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
-
-          setIsAtBottom(isBottom);
-        }}
+        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 10}}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.2}
+        ListFooterComponent={
+            loadingMore ? (
+              <View style={{ padding: 10 }}>
+                <ActivityIndicator size="small" />
+              </View>
+            ) : null
+          }
 
           onContentSizeChange={() => {
             if (initialLoad) {
-              flatListRef.current?.scrollToEnd({ animated: false });
+              flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
               setInitialLoad(false);
-            } else if (isAtBottom) {
-              flatListRef.current?.scrollToEnd({ animated: true });
             }
           }}
 
@@ -296,11 +332,8 @@ export default function HomeScreen() {
           const formattedTime = `${time.getHours().toString().padStart(2, "0")}:${time.getMinutes().toString().padStart(2, "0")}`;
         
           return (
-            <>
-              {isNewDay && <DateDivider date={time} />}
-
+            <View key={item.id}>
             <View
-              key={item.id}
               style={{
                 flexDirection: isMe ? "row-reverse" : "row",
                 alignItems: "flex-end",
@@ -343,7 +376,9 @@ export default function HomeScreen() {
               <Text style={styles.messageTime}>{formattedTime}</Text>
             </View>
             </View>
-            </>
+            {isNewDay && <DateDivider date={time} />}
+
+            </View>
           );
   
         }}
@@ -355,8 +390,6 @@ export default function HomeScreen() {
             </Text>
           </View>
         }
-
-      
       />
       
       <View style={styles.inputContainer}>

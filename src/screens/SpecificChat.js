@@ -309,30 +309,32 @@ export default function HomeScreen() {
 
           onContentSizeChange={() => {
             if (initialLoad) {
-              flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+              flatListRef.current?.scrollToOffset({ offset: 0, animated: false })
               setInitialLoad(false);
             }
           }}
 
         renderItem={({ item, index }) => {
           const isMe = item.userId === user.uid;
-          const time = item.timestamp?.toDate ? item.timestamp.toDate() : new Date();
+          const time = item.timestamp?.toDate ? item.timestamp.toDate() : new Date()
 
-          const previousItem = index > 0 ? messages[index - 1] : null;
-          const previousTime = previousItem?.timestamp?.toDate
-            ? previousItem.timestamp.toDate()
+          const  nextItem = index < messages.length -1 ? messages[index +1] : null
+          const nextTime = nextItem?.timestamp?.toDate
+            ? nextItem.timestamp.toDate()
             : null;
 
           const isNewDay =
-            !previousTime ||
-            time.getDate() !== previousTime.getDate() ||
-            time.getMonth() !== previousTime.getMonth() ||
-            time.getFullYear() !== previousTime.getFullYear();
+            !nextTime ||
+            time.getDate() !== nextTime.getDate() ||
+            time.getMonth() !== nextTime.getMonth() ||
+            time.getFullYear() !== nextTime.getFullYear();
 
           const formattedTime = `${time.getHours().toString().padStart(2, "0")}:${time.getMinutes().toString().padStart(2, "0")}`;
         
           return (
             <View key={item.id}>
+            {isNewDay && <DateDivider date={time} />}
+
             <View
               style={{
                 flexDirection: isMe ? "row-reverse" : "row",
@@ -376,7 +378,6 @@ export default function HomeScreen() {
               <Text style={styles.messageTime}>{formattedTime}</Text>
             </View>
             </View>
-            {isNewDay && <DateDivider date={time} />}
 
             </View>
           );

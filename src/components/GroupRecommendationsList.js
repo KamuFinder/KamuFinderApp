@@ -1,7 +1,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import homeStyles from "../styles/Home";
+import SwipingStyles from "../styles/Swiping.js";
 import { SvgUri } from "react-native-svg";
+import { ScrollView } from "react-native-gesture-handler";
+
 
 const getGroupAvatarUrl = (seed, style, name = "Group", size = 60) => {
   if (!seed || !style) return null;
@@ -26,7 +29,13 @@ export default function GroupRecommendationsList({ groups, onJoinGroup }) {
       {!groups || groups.length === 0 ? (
         <Text>Ei ryhmäsuosituksia juuri nyt.</Text>
       ) : (
-        groups.map((item) => {
+
+        <ScrollView
+        horizontal={true}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 10,paddingRight:10 }}
+      >
+         {groups.map((item) => {
           const avatarUrl = getGroupAvatarUrl(
             item.avatarSeed, 
             item.avatarStyle, 
@@ -35,7 +44,7 @@ export default function GroupRecommendationsList({ groups, onJoinGroup }) {
           );
 
           return (
-          <View key={item.group_id} style={homeStyles.recommendationCard}>
+          <View key={item.group_id} style={SwipingStyles.card}>
             <View style={{
               flexDirection: "row",
                   alignItems: "center",
@@ -44,40 +53,73 @@ export default function GroupRecommendationsList({ groups, onJoinGroup }) {
             >
               {avatarUrl ? (
                 <View style={{
-                  width: 60,
-                      height: 60,
-                      borderRadius: 30,
-                      overflow: "hidden",
-                      backgroundColor: "#ddd",
-                      marginRight: 12,
-                      alignItems: "center",
-                      justifyContent: "center",
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
+                    overflow: "hidden",
+                    backgroundColor: "#ddd",
+                    marginRight: 12,
+                    alignItems: "center",
+                    justifyContent: "center",
                 }}
                 >
                   <SvgUri uri={avatarUrl} width="60" height="60" />
                 </View>
-              ) : null}
+              ) : (
+                    <View style={SwipingStyles.avatarPlaceholder}>
+                      <Text style={SwipingStyles.avatarLetter}>
+                        {item.name?.charAt(0)?.toUpperCase() || "G"}
+                      </Text>
+                    </View>
+                  )}
+
 
               <View style={{ flex: 1 }}>
 
-            <Text style={homeStyles.recommendationName}>{item.name}</Text>
+            <Text style={SwipingStyles.groupName}>{item.name}</Text>
 
-            {!!item.description && <Text>{item.description}</Text>}
+            {!!item.description && (
+              <Text style={SwipingStyles.description}>
+                {item.description}
+              </Text>
+            )}
               </View>
             </View>
 
-            <Text>Jäseniä: {item.memberCount || 0}</Text>
-            <Text>Match score: {Math.round((item.score || 0) * 100)}%</Text>
-            <Text>Yhteisiä kiinnostuksia: {item.shared_count || 0}</Text>
+            <View style={SwipingStyles.badgeRow}>
+              <View style={SwipingStyles.infoBadge}>
+                <Text style={{fontStyle: "italic"}}>
+                  Jäseniä: {item.memberCount || 0}
+                  </Text>
+              </View>
+
+              <View style={SwipingStyles.matchBadge}>
+                  <Text style={{fontWeight: "bold"}}>
+                    Match score: {Math.round((item.score || 0) * 100)}%
+                    </Text>
+              </View>
+
+              <View style={SwipingStyles.infoBadge}>
+                 <Text style={{fontWeight: "bold"}}>
+                  Yhteisiä kiinnostuksia: {item.shared_count || 0}
+                  </Text>
+              </View>
+            </View>
 
             {item.shared_interests?.length > 0 && (
-              <Text>{item.shared_interests.join(", ")}</Text>
+              <View style={SwipingStyles.tagsContainer}>
+                {item.shared_interests.slice(0, 3).map((interest, index) => (
+                  <View key={index} style={SwipingStyles.tag}>
+                    <Text style={SwipingStyles.tagText}>{interest}</Text>
+                  </View>
+                ))}
+              </View>
             )}
 
             <TouchableOpacity
               style={[
-                homeStyles.actionButton,
-                item.alreadyJoined && { backgroundColor: "#999" },
+                SwipingStyles.joinButton,
+                item.alreadyJoined && SwipingStyles.joinedButton,
               ]}
               onPress={() => {
                 if (!item.alreadyJoined) {
@@ -86,13 +128,14 @@ export default function GroupRecommendationsList({ groups, onJoinGroup }) {
               }}
               disabled={item.alreadyJoined}
             >
-              <Text style={homeStyles.actionButtonText}>
+              <Text style={SwipingStyles.joinButtonText}>
                 {item.alreadyJoined ? "Jo jäsen" : "Liity ryhmään"}
               </Text>
             </TouchableOpacity>
           </View>
           );
-})
+})}
+      </ScrollView>
       )}
     </View>
   );

@@ -30,7 +30,7 @@ import {
   serverTimestamp,
 } from "../firebase/config.js";
 
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 
 export default function EditGroupScreen() {
   const route = useRoute();
@@ -297,6 +297,21 @@ export default function EditGroupScreen() {
           avatarStyle: avatarStyle || groupData?.avatarStyle || "1",
         },
         { merge: true }
+      );
+
+      // 3. Luo ilmoitus käyttäjälle
+      await addDoc(
+        collection(firestore, USERS, friendId, "notifications"),
+        {
+          type: "group_add",
+          message: `Sinut lisättiin ryhmään ${currentGroupName}`,
+          groupId: groupId,
+          groupName: currentGroupName,
+          screen: "SpecificGroupChat",
+          fromUserId: user.uid,
+          read: false,
+          timestamp: serverTimestamp(),
+        }
       );
     }
 

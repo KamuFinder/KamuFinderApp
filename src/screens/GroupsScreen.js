@@ -486,49 +486,100 @@ const createGroup = async () => {
         marginBottom: 10,
       }}
     >
-      Valitse tagit
-      
+      Valitse opiskelu tagit
     </Text>
     
     <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        marginBottom: 16,
+      }}
+    >
+      {Options.studyOptions.map((item) => {
+        const selected = selectedTags.includes(item);
+
+        return (
+          <TouchableOpacity
+            key={item}
+            disabled={isSavingGroup}
+            onPress={() => toggleTag(item)}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 14,
+              borderRadius: 20,
+              backgroundColor: selected ? "#f17a0a" : "#eee",
+              margin: 4,
+              flexDirection: "row",
+              alignItems: "center",
+              opacity: isSavingGroup ? 0.6 : 1,
+            }}
+          >
+            <Text
               style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                marginBottom: 16,
+                color: selected ? "white" : "black",
+                fontWeight: "500",
               }}
             >
-              {Options.studyOptions.map((item) => {
-                const selected = selectedTags.includes(item);
+              {selected ? "✓ " : ""}
+              {item}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
 
-                return (
-                  <TouchableOpacity
-                    key={item}
-                    disabled={isSavingGroup}
-                    onPress={() => toggleTag(item)}
-                    style={{
-                      paddingVertical: 8,
-                      paddingHorizontal: 14,
-                      borderRadius: 20,
-                      backgroundColor: selected ? "#f17a0a" : "#eee",
-                      margin: 4,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      opacity: isSavingGroup ? 0.6 : 1,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: selected ? "white" : "black",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {selected ? "✓ " : ""}
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+    
+    {/* HARRASTUS TAGIT */}
+    <Text
+      style={{
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 10,
+      }}
+    >
+      Valitse harrastus tagit
+    </Text>
+
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        marginBottom: 16,
+      }}
+    >
+      {Options.hobbyOptions.map((item) => {
+        const selected = selectedTags.includes(item);
+
+        return (
+          <TouchableOpacity
+            key={item}
+            disabled={isSavingGroup}
+            onPress={() => toggleTag(item)}
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 14,
+              borderRadius: 20,
+              backgroundColor: selected ? "#f17a0a" : "#eee",
+              margin: 4,
+              flexDirection: "row",
+              alignItems: "center",
+              opacity: isSavingGroup ? 0.6 : 1,
+            }}
+          >
+            <Text
+              style={{
+                color: selected ? "white" : "black",
+                fontWeight: "500",
+              }}
+            >
+              {selected ? "✓ " : ""}
+              {item}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   </>
 )}
 

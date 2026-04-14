@@ -36,3 +36,14 @@ yarn-error.*
 *.tsbuildinfo
 .env
 android/*
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+# Firebase local emulator
+firebase-debug.*.log
+
+# Functions build
+functions/lib/
+functions/node_modules/

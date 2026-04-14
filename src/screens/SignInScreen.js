@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from '../firebase/config.js';
 import styles from "../styles/SignIn_And_Up.js";
 import { Ionicons } from "@expo/vector-icons";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 
 export default function SignInScreen({ setLogged }) {
@@ -15,60 +16,109 @@ export default function SignInScreen({ setLogged }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSignIn = () => {
-    const auth = getAuth();
+  const functions = getFunctions(undefined, "europe-west1")
+  const loginUser = httpsCallable(functions, "loginUser")
+  const incrementFailedLogin = httpsCallable(functions, "incrementFailedLogin")
+  const resetFailedLogin = httpsCallable(functions, "resetFailedLogin")
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredentials) => {
-     
-      })
-      .catch((error) => {
-        Alert.alert("Virhe", "Sähköposti tai salasana on väärin");
-        console.log(error);
-      });
+
+  const handleSignIn = async() => {
+    const auth = getAuth();
+    const cleanEmail = email.trim().toLowerCase();
+
+    try{
+      const result = await loginUser({ email: cleanEmail })
+
+      if (result.data.locked) {
+        Alert.alert("Tili lukittu", "Yritä myöhemmin")
+        return
+      }
+
+      await signInWithEmailAndPassword(auth, cleanEmail, password)
+
+      await resetFailedLogin( { email: cleanEmail })
+
+    } catch (error){
+      console.log("FULL ERROR:", error)
+      console.log(error.code)
+
+      if (error.code === "functions/permission-denied") {
+        Alert.alert("Tili lukittu", "Liian monta yritystä. Yritä myöhemmin uudelleen.");
+        return;
+      }
+
+      if (error.code === "auth/wrong-password" ||
+          error.code === "auth/user-not-found" ||
+          error.code === "auth/invalid-credential"
+      ) {
+        try{
+          await incrementFailedLogin({ email: cleanEmail})
+        } catch (err) {
+          if (err.code === "functions/permission-denied"){
+            Alert.alert("Tili lukittu", "Liian monta yritystä. Yritä myöhemmin uudelleen.")
+            return;
+          }
+        }
+        Alert.alert("Virhe", "Sähköposti tai salasana väärin")
+        return
+      }
+
+
+      if (error.code === "auth/user-not-found" ||
+         error.code === "functions/invalid-argument" ||
+         error.code === "functions/not-found"
+      ) {
+        Alert.alert("Virhe", "Sähköposti tai salasana väärin");
+        return
+      }
+
+
+      Alert.alert("Virhe", "Jotain meni pieleen")
+
+    }
   };
 
   const handleForgotPassword = async () => {
-  const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim();
 
-  if (!trimmedEmail) {
-    Alert.alert("Virhe", "Syötä sähköpostiosoite ensin");
-    return;
-  }
-
-  Alert.alert(
-    "Palauta salasana",
-    `Lähetetäänkö salasanan palautuslinkki osoitteeseen:\n${trimmedEmail}?`,
-    [
-      {
-        text: "Peruuta",
-        style: "cancel",
-      },
-      {
-        text: "Lähetä",
-        onPress: async () => {
-
-  try {
-    const auth = getAuth();
-
-    auth.languageCode = "fi";
-
-    await sendPasswordResetEmail(auth, trimmedEmail);
+    if (!trimmedEmail) {
+      Alert.alert("Virhe", "Syötä sähköpostiosoite ensin");
+      return;
+    }
 
     Alert.alert(
-      "Sähköposti lähetetty",
-      "Salasanan palautuslinkki on lähetetty sähköpostiisi"
-    );
-  } catch (error) {
-    console.log("Virhe salasanan resetoinnissa:", error);
+      "Palauta salasana",
+      `Lähetetäänkö salasanan palautuslinkki osoitteeseen:\n${trimmedEmail}?`,
+      [
+        {
+          text: "Peruuta",
+          style: "cancel",
+        },
+        {
+          text: "Lähetä",
+          onPress: async () => {
 
-    if (error.code === "auth/invalid-email") {
-      Alert.alert("Virhe", "Sähköpostiosoite ei ole oikeassa muodossa");
-    } else {
-      Alert.alert("Virhe", "Palautussähköpostin lähetys epäonnistui");
-    }
-  }
-},
+            try {
+              const auth = getAuth();
+
+              auth.languageCode = "fi";
+
+              await sendPasswordResetEmail(auth, trimmedEmail);
+
+              Alert.alert(
+                "Sähköposti lähetetty",
+                "Salasanan palautuslinkki on lähetetty sähköpostiisi"
+              );
+            } catch (error) {
+              console.log("Virhe salasanan resetoinnissa:", error);
+
+              if (error.code === "auth/invalid-email") {
+                Alert.alert("Virhe", "Sähköpostiosoite ei ole oikeassa muodossa");
+              } else {
+                Alert.alert("Virhe", "Palautussähköpostin lähetys epäonnistui");
+              }
+            }
+          },
       },
       ]
     );

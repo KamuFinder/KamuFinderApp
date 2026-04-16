@@ -31,8 +31,11 @@ import {
 } from "../firebase/config.js";
 
 import { collection, getDocs, addDoc } from "firebase/firestore";
+import { Options } from "../components/Options.js";
 
 export default function EditGroupScreen() {
+ 
+  const [tagsModalVisible, setTagsModalVisible] = useState(false);
   const route = useRoute();
   const navigation = useNavigation();
   const user = useUser();
@@ -44,6 +47,8 @@ export default function EditGroupScreen() {
   const [description, setDescription] = useState("");
   const [avatarSeed, setAvatarSeed] = useState("");
   const [avatarStyle, setAvatarStyle] = useState("1");
+  const [selectedTags, setSelectedTags] = useState([]);
+
 
   const [members, setMembers] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
@@ -62,6 +67,7 @@ export default function EditGroupScreen() {
         Alert.alert("Virhe", "Ryhmää ei löytynyt.");
         navigation.goBack();
         return;
+        
       }
 
       const data = groupSnap.data();
@@ -73,10 +79,20 @@ export default function EditGroupScreen() {
       setAvatarStyle(
         data.avatarStyle || "1"
       );
+      setSelectedTags(data.tags || []); 
     } catch (error) {
       console.log("Virhe ryhmän tietojen haussa:", error);
       Alert.alert("Virhe", "Ryhmän tietojen haku epäonnistui.");
     }
+    
+  };
+
+  const toggleTag = (tag) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag)
+        ? prev.filter((t) => t !== tag)
+        : [...prev, tag]
+    );
   };
 
   const fetchMembers = async () => {
@@ -221,6 +237,7 @@ export default function EditGroupScreen() {
         desc: description.trim(),
         avatarSeed: avatarSeed || "",
         avatarStyle: avatarStyle || "1",
+        tags: selectedTags, 
       });
 
        for (const member of members) {
@@ -239,6 +256,7 @@ export default function EditGroupScreen() {
           description: description.trim(),
           avatarSeed: avatarSeed || "",
           avatarStyle: avatarStyle || "1",
+          tags: selectedTags,
         },
         { merge: true }
       );
@@ -487,6 +505,35 @@ export default function EditGroupScreen() {
               multiline
             />
           </View>
+          <View style={styles.section}>
+  <Text style={styles.label}>Tägit</Text>
+
+  <TouchableOpacity
+    style={styles.primaryButton}
+    onPress={() => setTagsModalVisible(true)}
+  >
+    <Text style={styles.primaryButtonText}>
+      Muokkaa tägejä
+    </Text>
+  </TouchableOpacity>
+
+  <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 10 }}>
+    {selectedTags.map((tag) => (
+      <View
+        key={tag}
+        style={{
+          backgroundColor: "#f17a0a",
+          paddingVertical: 6,
+          paddingHorizontal: 10,
+          borderRadius: 20,
+          margin: 4,
+        }}
+      >
+        <Text style={{ color: "white" }}>{tag}</Text>
+      </View>
+    ))}
+  </View>
+</View>
 
           <TouchableOpacity
             style={styles.primaryButton}
@@ -636,6 +683,89 @@ export default function EditGroupScreen() {
             >
               <Text style={styles.secondaryButtonText}>Sulje</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={tagsModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setTagsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView>
+
+              <Text style={styles.modalTitle}>Muokkaa tägejä</Text>
+
+              <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+                Opiskelu
+              </Text>
+
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {Options.studyOptions.map((item) => {
+                  const selected = selectedTags.includes(item);
+
+                  return (
+                    <TouchableOpacity
+                      key={item}
+                      onPress={() => toggleTag(item)}
+                      style={{
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 20,
+                        backgroundColor: selected ? "#f17a0a" : "#eee",
+                        margin: 4,
+                      }}
+                    >
+                      <Text style={{ color: selected ? "white" : "black" }}>
+                        {selected ? "✓ " : ""}
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+                Harrastukset
+              </Text>
+
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {Options.hobbyOptions.map((item) => {
+                  const selected = selectedTags.includes(item);
+
+                  return (
+                    <TouchableOpacity
+                      key={item}
+                      onPress={() => toggleTag(item)}
+                      style={{
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 20,
+                        backgroundColor: selected ? "#f17a0a" : "#eee",
+                        margin: 4,
+                      }}
+                    >
+                      <Text style={{ color: selected ? "white" : "black" }}>
+                        {selected ? "✓ " : ""}
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => setTagsModalVisible(false)}
+              >
+                <Text style={styles.primaryButtonText}>
+                  Valmis
+                </Text>
+              </TouchableOpacity>
+
+            </ScrollView>
           </View>
         </View>
       </Modal>

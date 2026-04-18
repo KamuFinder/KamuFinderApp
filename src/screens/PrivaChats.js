@@ -61,7 +61,7 @@ export default function PrivaChats() {
     }, [user])
 
 
-            useEffect(() => {
+    useEffect(() => {
             const fetchChatUsers = async () => {
             if (!allChats.length) {
                 setChatUsers({});
@@ -154,21 +154,23 @@ export default function PrivaChats() {
             >
 
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <UserAvatar
-                    avatarSeed={avatarInfo?.avatarSeed}
-                    avatarStyle={avatarInfo?.avatarStyle}
-                    size={50}
-                />
-                
-                
-                    <View style={styles.messageContainer}>
-                        <Text style={styles.messageHeader}>{item.otherUserName}</Text>
-                        <Text style={styles.messageTime}>{formattedTime}</Text>
-                    </View>
+                    <UserAvatar
+                        avatarSeed={avatarInfo?.avatarSeed}
+                        avatarStyle={avatarInfo?.avatarStyle}
+                        size={50}
+                    />
+                    
+                        <View style={styles.messageContainer}>
+                            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                <Text style={styles.messageHeader}>{item.otherUserName}</Text>
+                                <Text style={styles.messageTime}>{formattedTime}</Text>
+                            </View>
 
-                    <Text style={styles.message} numberOfLines={1}>
-                        {item.latestMessage || ""}
-                    </Text>
+                            <Text style={styles.message} numberOfLines={1}>
+                                {item.latestMessage || ""}
+                            </Text>
+                        </View>
+                        
                 </View>
                 
             </TouchableOpacity>

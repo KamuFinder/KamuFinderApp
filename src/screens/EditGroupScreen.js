@@ -58,6 +58,9 @@ export default function EditGroupScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [bannedUsers, setBannedUsers] = useState([]);
+  const [bannedModalVisible, setBannedModalVisible] = useState(false);
+
   const fetchGroupData = async () => {
     try {
       const groupRef = doc(firestore, "groups", groupId);
@@ -160,9 +163,15 @@ export default function EditGroupScreen() {
 
       const existingMemberIds = new Set(members.map((member) => member.id));
 
+      const blacklistSnap = await getDocs(collection(firestore, "groups", groupId, "blacklist"))
+
+      const bannedIds = new Set(blacklistSnap.docs.map(doc => doc.id))
+
       const friendsData = await Promise.all(
         friendsSnap.docs.map(async (friendDoc) => {
           const friendId = friendDoc.id;
+
+          if (bannedIds.has(friendId)) return null
 
           try {
             const userRef = doc(firestore, USERS, friendId);
@@ -282,6 +291,18 @@ export default function EditGroupScreen() {
         const currentDescription = description.trim() || groupData?.desc || "";
 
       for (const friendId of selectedFriends) {
+
+
+        //Can not add banned member 
+          const blacklistRef = doc(firestore, "groups", groupId, "blacklist", friendId)
+          const blacklistSnap = await getDoc(blacklistRef)
+
+          if (blacklistSnap.exists()) {
+            console.log("User is banned, skipping:", friendId)
+            continue; 
+          }
+
+
         // 1. Lisää jäsen ryhmän members-subcollectioniin
         const memberRef = doc(firestore, "groups", groupId, "members", friendId);
 
@@ -456,6 +477,148 @@ export default function EditGroupScreen() {
         );
         };
 
+
+
+  const handleSetAdmin = async (member) => {
+    if (!isAdmin) return
+
+    try{
+      const isPublic = groupData?.isPublic ?? true
+
+      const memberRef = doc(firestore, "groups", groupId, "members", member.id)
+      const userGroupRef = doc(firestore, "user", member.id, "user-groups", groupId)
+
+      if (!isPublic) {
+        const currentAdmin = members.find((m) => m.role === "admin")
+        if(currentAdmin?.id === member.id) return
+
+        if(currentAdmin){
+          await updateDoc(doc(firestore, "groups", groupId, "members", currentAdmin.id),
+          {role: "member"})
+
+          await updateDoc(doc(firestore, "user", currentAdmin.id, "user-groups", groupId),
+          {role: "member"})
+
+        }
+        await updateDoc(memberRef, {role: "admin"})
+        await updateDoc(userGroupRef, { role: "admin" })
+        Alert.alert("Admin vaihdettu")
+
+        if (currentAdmin?.id === user?.uid) {
+          navigation.goBack()
+        }
+
+      }
+      else {
+        if (member.id === user?.uid && groupType === "public") {
+          Alert.alert("Et voi poistaa omia admin-oikeuksia tästä näkymästä.");
+          return;
+        }
+        const newRole = member.role === "admin" ? "member" : "admin"
+        await updateDoc(memberRef, { role: newRole})
+        await updateDoc(userGroupRef, {role: newRole})
+
+        Alert.alert(
+          newRole === "admin"
+            ? "käyttäjä on nyt admin"
+            : "Admin oikeudet poistettu"
+        )
+      }
+
+      await fetchMembers()
+
+
+    }
+    catch (error){
+      console.log("Error changing the admin rights:", error);
+      Alert.alert("Virhe", "Roolin päivittäminen epäonnistui")
+      
+    }
+  } 
+
+
+  const handleBanMember = (member) => {
+    if(!isAdmin) return
+
+    if (!groupData?.isPublic) {
+    Alert.alert("Vain julkisissa ryhmissä voi bännätä.");
+    return;
+    }
+
+    Alert.alert(
+      "Bännää käyttäjä",
+      `Haluatko varmasti bännätä ${member.name}?`,
+      [
+        { text: "Peruuta", style: "cancel" },
+        {
+          text: "Bännää",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await setDoc(
+                doc(firestore, "groups", groupId, "blacklist", member.id),
+                {
+                  firstName: member.name.split(" ")[0] || "",
+                  lastName: member.name.split(" ")[1] || "",
+                  bannedAt: serverTimestamp(),
+                  bannedBy: user.uid,
+                }
+              );
+
+              await deleteDoc(
+                doc(firestore, "groups", groupId, "members", member.id)
+              );
+
+              await deleteDoc(
+                doc(firestore, "user", member.id, "user-groups", groupId)
+              );
+
+              setMembers((prev) => prev.filter((m) => m.id !== member.id));
+
+              Alert.alert("Käyttäjä bännätty");
+            } catch (error) {
+              console.log("Ban error:", error);
+              Alert.alert("Virhe", "Bännäys epäonnistui");
+            }
+          },
+        },
+      ]
+    );
+  }
+  const fetchBannedUsers = async () => {
+      try {
+        const snap = await getDocs(
+          collection(firestore, "groups", groupId, "blacklist")
+        );
+
+        const data = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setBannedUsers(data);
+      } catch (error) {
+        console.log("Blacklist fetch error:", error)
+      }
+    };
+
+  const handleUnban = async (bannedUser) => {
+    try {
+      await deleteDoc(
+        doc(firestore, "groups", groupId, "blacklist", bannedUser.id)
+      );
+
+      setBannedUsers((prev) =>
+        prev.filter((u) => u.id !== bannedUser.id)
+      );
+
+      Alert.alert("Bänni poistettu");
+    } catch (error) {
+      console.log("Unban error:", error);
+    }
+  };
+
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -569,12 +732,36 @@ export default function EditGroupScreen() {
             </View>
 
             {isAdmin && member.id !== user?.uid && (
+              <View style={{ flexDirection: "row"}}>
+
+
+                {isAdmin && groupData?.isPublic && member.id !== user?.uid && (
+                  <TouchableOpacity
+                    onPress={() => handleBanMember(member)}
+                    style={{ marginRight: 10 }}
+                  >
+                    <Text style={{ color: "red" }}>Bännää</Text>
+                  </TouchableOpacity>
+                )}
+
+                    
+                <TouchableOpacity
+                  onPress={() => handleSetAdmin(member)}
+                  style={{ marginRight: 10 }}
+                >
+                  <Text style={{ color: "#f17a0a" }}>
+                    {member.role === "admin" ? "Poista admin" : "Tee admin"}
+                  </Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity
                     onPress={() => handleRemoveMember(member)}
                     style={styles.removeMemberButton}
                 >
                     <Text style={styles.removeMemberButtonText}>Poista</Text>
                 </TouchableOpacity>
+
+              </View>
                 )}
 
           </View>
@@ -586,6 +773,16 @@ export default function EditGroupScreen() {
         onPress={() => setMembersModalVisible(true)}
       >
         <Text style={styles.primaryButtonText}>Lisää jäseniä</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        onPress={() => {
+          fetchBannedUsers();
+          setBannedModalVisible(true);
+        }}
+      >
+        <Text>Näytä bännätyt</Text>
       </TouchableOpacity>
 
       {!isAdmin && (
@@ -769,6 +966,39 @@ export default function EditGroupScreen() {
           </View>
         </View>
       </Modal>
+      <Modal visible={bannedModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Bännätyt käyttäjät</Text>
+
+            <FlatList
+              data={bannedUsers}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.memberRow}>
+                  <Text>
+                    {item.firstName} {item.lastName}
+                  </Text>
+
+                  <TouchableOpacity
+                    onPress={() => handleUnban(item)}
+                  >
+                    <Text style={{ color: "#f17a0a" }}>Poista bänni</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+
+            <TouchableOpacity
+              onPress={() => setBannedModalVisible(false)}
+              style={styles.primaryButton}
+            >
+              <Text style={styles.primaryButtonText}>Sulje</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </ScrollView>
   );
 }

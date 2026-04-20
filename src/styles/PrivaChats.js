@@ -3,7 +3,6 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
     container: {
         flex: 1,   
-        alignItems: "center",
         padding: 20,
         backgroundColor: "#fff",
     },
@@ -32,10 +31,8 @@ export default StyleSheet.create({
     },
 
     messageContainer: {
-        width: "100%",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        gap: 24,
+        flex: 1,
+        marginLeft: 12,
     },
 
     messageHeader: {
@@ -56,6 +53,8 @@ export default StyleSheet.create({
     message: {
         marginTop: 5,
         color: "#555",
+        paddingHorizontal: 10,
+
     },
     bottomHomeButton: {
         position: "absolute",

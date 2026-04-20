@@ -13,6 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView,useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { getFunctions, httpsCallable } from "firebase/functions";
+
 
 import styles from "../styles/SignIn_And_Up.js";
 
@@ -20,6 +22,10 @@ import styles from "../styles/SignIn_And_Up.js";
 export default function SignUpScreen() {
 
     const insets = useSafeAreaInsets();
+
+    const functions = getFunctions(undefined, "europe-west1")
+    const createUserProfile = httpsCallable(functions, "createUserProfile")
+    
 
     const navigation = useNavigation()
     const [userInfo, setUserInfo] = useState({
@@ -86,32 +92,20 @@ export default function SignUpScreen() {
       }
       
       try {
-        const nickQuery = query(
-          collection(firestore, USERS),
-          where('nickName', '==', userInfo.nickName)
-        );
-
-        const nickSnapshot = await getDocs(nickQuery);
-
-        if (!nickSnapshot.empty) {
-          Alert.alert("Virhe", "Nimimerkki on jo käytössä");
-          return;
-        }
-
         const userCredential = await createUserWithEmailAndPassword(auth, userInfo.email, userInfo.password)
         
+        await userCredential.user.getIdToken(true)
+
         const avatarSeed = generateAvatarSeed();
         const avatarStyle = "fun-emoji"
         
-        await setDoc(doc(firestore, USERS, userCredential.user.uid), {
+        await createUserProfile({
           firstName: userInfo.firstName,
           lastName: userInfo.lastName,
           nickName: userInfo.nickName,
-          email: userInfo.email,
-          avatarSeed: avatarSeed,
-          avatarStyle: avatarStyle,
-          failedLoginAttempts: 0,
-          lockUntil: null
+          email: userInfo.email.toLowerCase(),
+          avatarSeed,
+          avatarStyle,
         })
         setUserInfo({
           firstName: '',
@@ -123,14 +117,15 @@ export default function SignUpScreen() {
         })
         
         
-      } catch(error) {
-            if (error.code === 'auth/email-already-in-use') {
-              Alert.alert("Virhe", "Sähköposti on jo käytössä")
-            }
-            else {
-              console.log(error)
-              Alert.alert("Virhe", error.message)
-            }
+      }catch (error) {
+    console.log(error);
+    if (error.code === 'auth/email-already-in-use') {
+      Alert.alert("Virhe", "Sähköposti on jo käytössä");
+    } else if (error.code === 'already-exists') {
+      Alert.alert("Virhe", "Nimimerkki on jo käytössä");
+    } else {
+      Alert.alert("Virhe", error.message || String(error));
+    }
     }
   }
 

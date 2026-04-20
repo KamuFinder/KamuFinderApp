@@ -12,6 +12,7 @@ import FriendRequestButton from "../components/FriendRequestButton.js";
 import UserAvatar from "../components/UserAvatar.js";
 import Loading from "../components/Loading.js";
 import { MaterialIcons } from "@expo/vector-icons";
+import { filterUsers } from "../utils/filterUsers";
 
 
 export default function HomeScreen() {
@@ -104,8 +105,13 @@ export default function HomeScreen() {
 
 
   // Handles the search query input, filters the list of users, and updates the filtered results
-  const handleSearch =  (query) => {
-    setSearchQuery(query)
+  //const handleSearch =  (query) => {
+    //setSearchQuery(query)
+
+    const handleSearch = (query) => {
+      setSearchQuery(query);
+      setFilteredUsers(filterUsers(listOfUsers, query));
+    };
 
     // if the input is "" then no search yet
     if (query.trim() === "") {

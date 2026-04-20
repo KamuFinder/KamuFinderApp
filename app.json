@@ -1,5 +1,4 @@
-
-  {
+{
   "expo": {
     "name": "KamuFinder",
     "slug": "KamuFinder",
@@ -26,6 +25,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

@@ -24,7 +24,7 @@ export default function SignInScreen({ setLogged }) {
 
   const handleSignIn = async() => {
     const auth = getAuth();
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = email?.toLowerCase()
 
     try{
       const result = await loginUser({ email: cleanEmail })

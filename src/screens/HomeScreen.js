@@ -104,11 +104,14 @@ export default function HomeScreen() {
   );
 
 
-    // Handles the search query input, filters the list of users, and updates the filtered results
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    setFilteredUsers(filterUsers(listOfUsers, query));
-  };
+
+  // Handles the search query input, filters the list of users, and updates the filtered results
+    const handleSearch = (query) => {
+      setSearchQuery(query);
+      setFilteredUsers(filterUsers(listOfUsers, query));
+    };
+
+ 
 
 
   if (isLoading) {

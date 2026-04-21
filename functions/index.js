@@ -134,3 +134,24 @@ const data = request.data || {};
 
   return { success: true };
 });
+
+export const validateSignUp = onCall(async (request) => {
+  const {email, nickName } = request.data
+
+  if(!email){
+    throw new functions.https.HttpsError("invalid-argument", "Email required")
+  }  
+  const emailSnap = await db.collection("user").where("email", "==", email).get()
+  if (!emailSnap.empty) {
+    throw new functions.https.HttpsError("already-exists", "Email already in use")
+  }
+
+  if (nickName){
+    const nickSnap = await db.collection("user").where("nickName", "==", nickName).get()
+    if(!nickSnap.empty) {
+      throw new functions.https.HttpsError("already-exists", "NickName already in use")
+    }
+  }
+  return { success: true }
+
+})

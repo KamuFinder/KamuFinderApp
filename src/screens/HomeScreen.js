@@ -104,38 +104,10 @@ export default function HomeScreen() {
   );
 
 
-  // Handles the search query input, filters the list of users, and updates the filtered results
-  //const handleSearch =  (query) => {
-    //setSearchQuery(query)
-
-    const handleSearch = (query) => {
-      setSearchQuery(query);
-      setFilteredUsers(filterUsers(listOfUsers, query));
-    };
-
-    // if the input is "" then no search yet
-    if (query.trim() === "") {
-      setFilteredUsers([]);
-      return;
-    }
-    const formattedQuery = query.toLowerCase()
-
-    let results = [];
-
-    if (formattedQuery.length === 1) {
-      results = listOfUsers.filter(
-        (user) =>
-          user.firstName?.toLowerCase().startsWith(formattedQuery) ||
-          user.lastName?.toLowerCase().startsWith(formattedQuery)
-      );
-    } else {
-      results = listOfUsers.filter(
-        (user) =>
-          user.firstName?.toLowerCase().includes(formattedQuery) ||
-          user.lastName?.toLowerCase().includes(formattedQuery)
-      );
-    }
-      setFilteredUsers(results)
+    // Handles the search query input, filters the list of users, and updates the filtered results
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setFilteredUsers(filterUsers(listOfUsers, query));
   };
 
 

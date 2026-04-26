@@ -6,25 +6,21 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "../context/UserContext.js";
-import styles from "../styles/Home.js";
-import localStyles from "../styles/Swiping";
+//import styles from "../styles/Home.js";
+import styles from "../styles/Swiping.js";
 import {
   firestore,
   USERS,
   FRIENDREQUESTS,
-  SUB_GROUPS,
-  PUBLIC_GROUPS,
   doc,
   getDoc,
   collection,
   getDocs,
   addDoc,
-  setDoc,
-  updateDoc,
-  increment,
   serverTimestamp,
   onSnapshot,
   runTransaction,
@@ -35,6 +31,7 @@ import {
 } from "../../services/recommendationService";
 import UserRecommendationsList from "../components/UserRecommendationsList";
 import GroupRecommendationsList from "../components/GroupRecommendationsList";
+import Logo from "../../assets/Logo.png";
 
 export default function SwipingScreen({ navigation }) {
   const user = useUser();
@@ -134,21 +131,24 @@ export default function SwipingScreen({ navigation }) {
 
       const currentUserData = currentUserSnap.data();
 
-      const groupsSnapshot = await getDocs(collection(firestore, PUBLIC_GROUPS));
+      const groupsSnapshot = await getDocs(collection(firestore, "groups"));
 
       const groups = await Promise.all(
-  groupsSnapshot.docs.map(async (groupDoc) => {
-    const data = groupDoc.data();
+      groupsSnapshot.docs
+      .filter((groupDoc) => groupDoc.data()?.isPublic === true)
+      .map(async (groupDoc) => {
+        const data = groupDoc.data();
 
-    const userSubGroupRef = doc(
-      firestore,
-      USERS,
-      user.uid,
-      SUB_GROUPS,
-      groupDoc.id
-    );
+        const userGroupRef = doc(
+          firestore,
+          "user",
+          user.uid,
+          "user-groups",
+          groupDoc.id
+        );
 
-    const membershipSnap = await getDoc(userSubGroupRef);
+    const membershipSnap = await getDoc(userGroupRef);
+
 
     return {
       group_id: groupDoc.id,
@@ -157,12 +157,14 @@ export default function SwipingScreen({ navigation }) {
       tags: Array.isArray(data.tags) ? data.tags : [],
       memberCount: data.memberCount || 0,
       alreadyJoined: membershipSnap.exists(),
+      avatarSeed: data.avatarSeed || "",
+      avatarStyle: data.avatarStyle || "1",
     };
   })
 );
 
-      console.log("USER study_interests:", currentUserData.study_interests);
-      console.log("GROUPS FROM FIRESTORE:", groups);
+      //console.log("USER study_interests:", currentUserData.study_interests);
+      //console.log("GROUPS FROM FIRESTORE:", groups);
 
       const recommendations = await fetchStudyGroupRecommendations(
         user.uid,
@@ -174,7 +176,40 @@ export default function SwipingScreen({ navigation }) {
 
       console.log("BACKEND RESPONSE (study groups):", recommendations);
 
-      setGroupRecommendations(recommendations || []);
+      const recommendationList = Array.isArray(recommendations)
+      ? recommendations
+      : Array.isArray(recommendations?.recommendations)
+      ? recommendations.recommendations
+      : [];
+
+      // Tehdään nopea hakutaulu backendin suosituksista group_id:n perusteella
+      const recommendationMap = new Map(
+        recommendationList.map((rec) => [rec.group_id, rec])
+      );
+
+      // Rakennetaan lopullinen lista AINA kaikista julkisista ryhmistä
+      const finalGroups = groups.map((group) => {
+        const matchedRecommendation = recommendationMap.get(group.group_id);
+
+  return {
+    ...group,
+    score: matchedRecommendation?.score || 0,
+    shared_count: matchedRecommendation?.shared_count || 0,
+    shared_interests: matchedRecommendation?.shared_interests || [],
+    memberCount: group.memberCount || 0,
+  };
+});
+
+// Järjestetään niin että parhaat matchit tulevat ensin
+finalGroups.sort(
+  (a, b) =>
+    (b.shared_count || 0) - (a.shared_count || 0) ||
+    (b.score || 0) - (a.score || 0) ||
+    (b.memberCount || 0) - (a.memberCount || 0)
+);
+
+
+      setGroupRecommendations(finalGroups);
     } catch (error) {
       console.log("VIRHE STUDY GROUP HAUSSA:");
       console.log("error:", error);
@@ -264,51 +299,87 @@ export default function SwipingScreen({ navigation }) {
     }
 
     const currentUserData = currentUserSnap.data();
+     const groupRef = doc(firestore, "groups", group.group_id);
 
-    const userSubGroupRef = doc(
+    const userGroupRef = doc(
       firestore,
-      USERS,
+      "user",
       user.uid,
-      SUB_GROUPS,
+      "user-groups",
       group.group_id
     );
 
-    const groupRef = doc(firestore, PUBLIC_GROUPS, group.group_id);
+    const memberRef = doc(
+      firestore,
+      "groups",
+      group.group_id,
+      "members",
+      user.uid
+    );
+
 
     const result = await runTransaction(firestore, async (transaction) => {
-      const membershipSnap = await transaction.get(userSubGroupRef);
       const groupSnap = await transaction.get(groupRef);
+      const userGroupSnap = await transaction.get(userGroupRef);
+      const memberSnap = await transaction.get(memberRef);
+     
 
       if (!groupSnap.exists()) {
         throw new Error("Ryhmää ei löytynyt");
       }
 
-      if (membershipSnap.exists()) {
-        return { alreadyJoined: true };
+      if (
+        userGroupSnap.exists() ||
+        memberSnap.exists()  
+      ) {
+        
+          return { alreadyJoined: true };
       }
 
+      const groupData = groupSnap.data();
       const currentMemberCount = groupSnap.data()?.memberCount || 0;
 
-      transaction.set(userSubGroupRef, {
-        userId: user.uid,
-        firstName: currentUserData?.firstName || "",
+      transaction.set(memberRef, {
         joinedAt: serverTimestamp(),
         role: "member",
-        groupId: group.group_id,
-        groupName: group.name,
+      });
+
+      transaction.set(userGroupRef, {
+        groupName: groupData.groupName || group.name ||"",
+        description: groupData.desc ||"",
+        joined: serverTimestamp(),
+        role: "member",
+        avatarSeed: groupData.avatarSeed || "",
+        avatarStyle: groupData.avatarStyle || "1",
       });
 
       transaction.update(groupRef, {
         memberCount: currentMemberCount + 1,
       });
 
-      return { alreadyJoined: false };
+      return { 
+        alreadyJoined: false,
+      updatedMemberCount: currentMemberCount + 1,
+      };
     });
 
     if (result.alreadyJoined) {
       Alert.alert("Info", "Olet jo tämän ryhmän jäsen");
       return;
     }
+
+     // päivitetään UI heti ilman että pitää odottaa uutta fetchiä
+      setGroupRecommendations((prev) =>
+        prev.map((item) =>
+          item.group_id === group.group_id
+            ? {
+                ...item,
+                alreadyJoined: true,
+                memberCount: result.updatedMemberCount,
+              }
+            : item
+        )
+      );
 
     Alert.alert("Onnistui", `Liityit ryhmään ${group.name}`);
 
@@ -320,14 +391,20 @@ export default function SwipingScreen({ navigation }) {
 };
 
   return (
-    <SafeAreaView style={localStyles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
-        style={localStyles.scroll}
-        contentContainerStyle={localStyles.scrollContent}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         bounces={true}
       >
+        <View>
+          <Image source={Logo} style={{ width: 120, height: 120, alignSelf: "center", marginBottom: 20 }} />
         <Text style={styles.title}>Etsi uusia kavereita!</Text>
+        <Text style={styles.infoText}>
+          Swaippaa käyttäjiä ja liity study groupeihin, jotta löydät samanhenkisiä kavereita ja opiskeluystäviä!
+        </Text>
+          </View>
 
         <TouchableOpacity
           style={styles.actionButton}
@@ -336,19 +413,12 @@ export default function SwipingScreen({ navigation }) {
           <Text style={styles.actionButtonText}>Hae suositukset</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate("SwipePeople")}
-        >
-          <Text style={styles.actionButtonText}>
-            Selaa käyttäjiä swaippaamalla
-          </Text>
-        </TouchableOpacity>
+        
 
         {loading && (
-          <View style={localStyles.loadingContainer}>
+          <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" />
-            <Text style={localStyles.loadingText}>Haetaan suosituksia...</Text>
+            <Text style={styles.loadingText}>Haetaan suosituksia...</Text>
           </View>
         )}
 
@@ -364,6 +434,16 @@ export default function SwipingScreen({ navigation }) {
           groups={groupRecommendations}
           onJoinGroup={handleJoinStudyGroup}
         />
+
+        <TouchableOpacity
+          style={styles.SwipeButton}
+          onPress={() => navigation.navigate("SwipePeople")}
+        >
+          <Text style={styles.actionButtonText}>
+            Selaa käyttäjiä swaippaamalla
+          </Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );

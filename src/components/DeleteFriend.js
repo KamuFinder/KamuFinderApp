@@ -65,8 +65,8 @@ export default function DeleteFriend({friendId, onRemoved}) {
         }
     }
     return (
-        <TouchableOpacity onPress={handleDeleteFriend} disabled={isDeleting} style={{ padding: 10, backgroundColor: "#ff4d4d", borderRadius: 5 }}>
-            <Ionicons name="trash" size={24} color={isDeleting ? '#0b0a0a' : '#fff'} />
+        <TouchableOpacity onPress={handleDeleteFriend} disabled={isDeleting} style={{ padding: 10, backgroundColor: "#ff4d4d", borderRadius: 12 }}>
+            <Ionicons name="trash" size={20} color={isDeleting ? '#0b0a0a' : '#fff'} />
         </TouchableOpacity>
     )
 }

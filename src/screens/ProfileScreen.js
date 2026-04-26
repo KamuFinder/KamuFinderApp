@@ -11,6 +11,7 @@ import Divider from "../components/Divider.js";
 import FriendRequestButton from "../components/FriendRequestButton.js";
 import Loading from "../components/Loading.js";
 import DeleteFriend from "../components/DeleteFriend.js";
+import DeleteUser from "../components/DeleteUser.js";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -34,6 +35,9 @@ export default function ProfileScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+
   // Params for checking if it's own profile or not
   const  route = useRoute()
   const profileUserId = route.params?.userId || user?.uid;
@@ -201,6 +205,21 @@ if (isLoading) {
   return <Loading text="Ladataan profiilia..." />;
 }
 
+if (isDeletingUser) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Loading text="Poistetaan tiliä..." />
+    </View>
+  );
+}
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -280,13 +299,14 @@ if (isLoading) {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay} />
-        <View style={styles.modalContainer}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Ystävät</Text>
 
           <FlatList
             data={friendsList}
             keyExtractor={(item) => item.id}
+            style={{ maxHeight: 300, width: "100%" }}
             contentContainerStyle={{ paddingBottom: 80 }}
             renderItem={({ item }) => {
               const date = item.createdAt?.toDate
@@ -308,9 +328,11 @@ if (isLoading) {
             }}
           />
 
-          <TouchableOpacity onPress={() => setModalVisible(false)}>
+          <TouchableOpacity onPress={() => setModalVisible(false)}
+            style={styles.closeButton}>
             <Text style={styles.modalClose}>Sulje</Text>
           </TouchableOpacity>
+        </View>
         </View>
       </Modal>
 
@@ -343,20 +365,10 @@ if (isLoading) {
         <Text style={styles.signOut}>Kirjaudu ulos</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-          style={{marginTop: 64, justifyContent: "center",
-          alignItems: "center",
-          paddingVertical: 10,
-          paddingHorizontal: 15,
-          borderRadius: 20,
-          backgroundColor: "red",}}
-          onPress={() => {
-            setMenuVisible(false);
-            navigation.navigate("ChangePassword");
-          }}
-        >
-          <Text style={styles.dropdownItemText}>Poista tili</Text>
-        </TouchableOpacity>
+      <DeleteUser 
+        onStart={() => setIsDeletingUser(true)}
+        onEnd={() => setIsDeletingUser(false)}
+      />
 
           </View>
         </TouchableOpacity>

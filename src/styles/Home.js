@@ -46,6 +46,18 @@ export default StyleSheet.create({
     marginVertical: 10,
   },
 
+  aiButton: {
+   backgroundColor: "#1f6feb",
+   padding: 14,
+   borderRadius: 10,
+   marginTop: 20,
+   alignItems: "center",
+  },
+  aiButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+
   // AI-suositukset
   actionButton: {
     backgroundColor: "#4CAF50",
@@ -139,5 +151,56 @@ recommendationName: {
     flexDirection: "row",         
     justifyContent: "space-between", 
     alignItems: "center",
-  }
+  },
+
+   floatingWrapper: {
+    position: "absolute",
+    right: 20,
+    bottom: 100,
+    zIndex: 999,
+    elevation: 20,
+  },
+
+  aiButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  speechBubble: {
+    backgroundColor: "#fff",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderBottomRightRadius: 2,
+    borderBottomLeftRadius: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    marginRight: 0,
+    maxWidth: 180,
+    shadowColor: "#000",
+    elevation: 4,
+    bottom: 80,
+  },
+
+  speechText: {
+    fontSize: 14,
+    color: "#555",
+    fontStyle: "italic",
+  },
+
+  aiCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#F99D11",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 6,
+    bottom:30,
+  },
+
+  aiIcon: {
+    fontSize: 30,
+    
+
+  },
 });

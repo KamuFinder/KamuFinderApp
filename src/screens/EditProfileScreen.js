@@ -12,6 +12,7 @@ import AvatarPicker from "../components/AvatarPicker.js";
 import ChangeEmail from "../components/ChangeEmail.js";
 import ChangePassword from "../components/ChangePassword.js";
 import Divider from "../components/Divider.js";
+import { Options } from "../components/Options.js";
 
 export default function EditProfileScreen() {
 
@@ -21,27 +22,7 @@ export default function EditProfileScreen() {
         const [studyModalVisible, setStudyModalVisible] = useState(false);
         const [loading, setLoading] = useState(false);
         const [originalNickName, setOriginalNickName] = useState("");
-
-        const hobbyOptions = 
-        [
-            "sali",
-            "pelaaminen",
-            "puutarhanhoito",
-            "eläimet",
-            "siivoaminen",
-            "musiikki",
-        ];
-
-        const studyOptions =
-        [
-            "AI",
-            "eläintenhoito",
-            "lääketiede",
-            "maanpuolustus",
-            "markkinointi",
-            "brändäys",
-        ];
-
+        
 
         const [userInfo, setUserInfo] = useState({
             firstName: "",
@@ -124,6 +105,10 @@ export default function EditProfileScreen() {
                 });
 
                 setOriginalNickName(trimmedNickName); // Päivitetään alkuperäinen nickname tallennuksen jälkeen vertailua varten  
+                
+                setHobbyModalVisible(false);
+                setStudyModalVisible(false);
+                
                 alert("Muutokset tallennettu");
             } catch (error) {
                 console.log("Virhe profiilin päivittämisessä:", error.message);
@@ -291,8 +276,14 @@ export default function EditProfileScreen() {
                 padding: 20,
             }}>
                 <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 20 }}>Valitse harrastukset</Text>
-                  <ScrollView showsVerticalScrollIndicator={false}>
-              {hobbyOptions.map((hobby) => {
+                  
+                <View style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    marginBottom: 16,
+                }}
+                >
+              {Options.hobbyOptions.map((hobby) => {
                 const selected = userInfo.hobby_interests.includes(hobby);
 
                 return (
@@ -304,13 +295,17 @@ export default function EditProfileScreen() {
                       paddingHorizontal: 15,
                       borderRadius: 12,
                       marginBottom: 10,
-                      backgroundColor: selected ? "#F99D11" : "#f1f1f1",
+                      backgroundColor: selected ? "#fc885a" : "#f1f1f1",
+                      margin: 4,
+                      flexDirection: "row",
+                      alignItems: "center",
+
                     }}
                   >
                     <Text
                       style={{
                         color: selected ? "#fff" : "#333",
-                        fontSize: 16,
+                        fontSize: 10,
                         fontWeight: "500",
                       }}
                     >
@@ -319,22 +314,25 @@ export default function EditProfileScreen() {
                   </TouchableOpacity>
                 );
               })}
-            </ScrollView>
+              </View>
 
-            <TouchableOpacity
-              onPress={() => setHobbyModalVisible(false)}
-              style={{
-                marginTop: 15,
-                backgroundColor: "#333",
-                paddingVertical: 14,
-                borderRadius: 14,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
-                Valmis
-              </Text>
-            </TouchableOpacity>
+              <View style={{ }}>
+
+          <TouchableOpacity
+                        onPress={() => setHobbyModalVisible(false)}
+                        style={{
+                          marginTop: 15,
+                          borderRadius: 16,
+                          backgroundColor: "#F99D11",
+                          paddingVertical: 14,
+                          paddingHorizontal: 30,
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={{ color: "#fff",fontWeight: "bold" }}>Sulje</Text>
+                      </TouchableOpacity>
+                      
+            </View>
           </View>
         </View>
         </Modal>
@@ -357,8 +355,13 @@ export default function EditProfileScreen() {
                 padding: 20,
             }}>
                 <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 20 }}>Valitse koulutus</Text>
-                  <ScrollView showsVerticalScrollIndicator={false}>
-              {studyOptions.map((study) => {
+                 <View style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    marginBottom: 16,
+                 }}
+                  >
+              {Options.studyOptions.map((study) => {
                 const selected = userInfo.study_interests.includes(study);
 
                 return (
@@ -370,13 +373,13 @@ export default function EditProfileScreen() {
                       paddingHorizontal: 15,
                       borderRadius: 12,
                       marginBottom: 10,
-                      backgroundColor: selected ? "#F99D11" : "#f1f1f1",
+                      backgroundColor: selected ? "#fc885a" : "#f1f1f1",
                     }}
                   >
                     <Text
                       style={{
                         color: selected ? "#fff" : "#333",
-                        fontSize: 16,
+                        fontSize: 10,
                         fontWeight: "500",
                       }}
                     >
@@ -385,23 +388,25 @@ export default function EditProfileScreen() {
                   </TouchableOpacity>
                 );
               })}
-            </ScrollView>
+            </View>
 
-            <TouchableOpacity
-              onPress={() => setStudyModalVisible(false)}
-              style={{
-                marginTop: 15,
-                backgroundColor: "#333",
-                paddingVertical: 14,
-                borderRadius: 14,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
-                Valmis
-              </Text>
-            </TouchableOpacity>
+            <View style={{ }}>
+
+             <TouchableOpacity
+                        onPress={() => setStudyModalVisible(false)}
+                        style={{
+                          marginTop: 15,
+                          borderRadius: 16,
+                          backgroundColor: "#F99D11",
+                          paddingVertical: 14,
+                          paddingHorizontal: 30,
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={{ color: "#fff",fontWeight: "bold" }}>Sulje</Text>
+                      </TouchableOpacity>
           </View>
+        </View>
         </View>
         </Modal>
     </SafeAreaView>

@@ -11,6 +11,8 @@ import { useCallback } from "react";
 import FriendRequestButton from "../components/FriendRequestButton.js";
 import UserAvatar from "../components/UserAvatar.js";
 import Loading from "../components/Loading.js";
+import { MaterialIcons } from "@expo/vector-icons";
+import { filterUsers } from "../utils/filterUsers";
 
 
 export default function HomeScreen() {
@@ -102,34 +104,14 @@ export default function HomeScreen() {
   );
 
 
+
   // Handles the search query input, filters the list of users, and updates the filtered results
-  const handleSearch =  (query) => {
-    setSearchQuery(query)
+    const handleSearch = (query) => {
+      setSearchQuery(query);
+      setFilteredUsers(filterUsers(listOfUsers, query));
+    };
 
-    // if the input is "" then no search yet
-    if (query.trim() === "") {
-      setFilteredUsers([]);
-      return;
-    }
-    const formattedQuery = query.toLowerCase()
-
-    let results = [];
-
-    if (formattedQuery.length === 1) {
-      results = listOfUsers.filter(
-        (user) =>
-          user.firstName?.toLowerCase().startsWith(formattedQuery) ||
-          user.lastName?.toLowerCase().startsWith(formattedQuery)
-      );
-    } else {
-      results = listOfUsers.filter(
-        (user) =>
-          user.firstName?.toLowerCase().includes(formattedQuery) ||
-          user.lastName?.toLowerCase().includes(formattedQuery)
-      );
-    }
-      setFilteredUsers(results)
-  };
+ 
 
 
   if (isLoading) {
@@ -205,6 +187,22 @@ export default function HomeScreen() {
 
       </View>
 
+<View style={styles.floatingWrapper}>
+      <TouchableOpacity
+        style={styles.aiButton}
+         onPress={() => navigation.navigate("AIChat")}
+         activeOpacity={0.85}
+      >
+
+          <View style={styles.speechBubble}>
+              <Text style={styles.speechText}>Hei! Olen AI-avustaja. Miten voin auttaa?</Text>
+          </View>
+
+            <View style={styles.aiCircle}>
+                <MaterialIcons name="auto-awesome" size={28} color="#fff" />
+          </View>
+      </TouchableOpacity>
+      </View>
     </View>
     
   );

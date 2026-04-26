@@ -86,12 +86,19 @@ export default function SignUpScreen() {
 
     }
 
+    const validateSignUp = httpsCallable(functions,"validateSignUp")
+
     const handleSignUp = async () => {
       if(!validateInputs()){
         return
       }
       
       try {
+        await validateSignUp({
+          email: userInfo.email.toLowerCase(),
+          nickName: userInfo.nickName
+        })
+
         const userCredential = await createUserWithEmailAndPassword(auth, userInfo.email, userInfo.password)
         
         await userCredential.user.getIdToken(true)

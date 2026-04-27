@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "kamufinder"
-  }
+    "kfw1": "kamufinderwest"
+  },
+  "targets": {},
+  "etags": {}
 }

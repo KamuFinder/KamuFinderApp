@@ -21,13 +21,23 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.mrreaa.KamuFinder",
+      "googleServicesFile": "./android/app/google-services.json"
+      
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
-    ]
+      "expo-font",
+        "expo-notifications"
+
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "22123561-338c-4209-a2b4-49d74ec9265e"
+      }
+    }
   }
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "668491536145",
+    "project_id": "kamufinderwest",
+    "storage_bucket": "kamufinderwest.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:668491536145:android:47f72c2a386a2de5f59eb0",
+        "android_client_info": {
+          "package_name": "com.mrreaa.KamuFinder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqgMQmUtT0s7Qwscz_dfT3s-qC6Wi81XI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

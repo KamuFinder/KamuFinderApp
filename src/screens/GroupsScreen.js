@@ -400,7 +400,7 @@ const createGroup = async () => {
               >
                 <View style={styles.iconMessage}>
                   <FontAwesome6
-                    name="message"
+                    name="bars"
                     size={24}
                     color={"#f17a0a"}
                   />

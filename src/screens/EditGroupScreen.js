@@ -672,7 +672,7 @@ export default function EditGroupScreen() {
   <Text style={styles.label}>Tägit</Text>
 
   <TouchableOpacity
-    style={styles.primaryButton}
+    style={styles.tagButton}
     onPress={() => setTagsModalVisible(true)}
   >
     <Text style={styles.primaryButtonText}>
@@ -685,14 +685,14 @@ export default function EditGroupScreen() {
       <View
         key={tag}
         style={{
-          backgroundColor: "#f17a0a",
+          backgroundColor: "#FFF0E2",
           paddingVertical: 6,
           paddingHorizontal: 10,
           borderRadius: 20,
           margin: 4,
         }}
       >
-        <Text style={{ color: "white" }}>{tag}</Text>
+        <Text style={{ color: "#f17a0a" }}>{tag}</Text>
       </View>
     ))}
   </View>
@@ -732,33 +732,35 @@ export default function EditGroupScreen() {
             </View>
 
             {isAdmin && member.id !== user?.uid && (
-              <View style={{ flexDirection: "row"}}>
+              <View style={styles.memberActions}>
 
 
                 {isAdmin && groupData?.isPublic && member.id !== user?.uid && (
                   <TouchableOpacity
                     onPress={() => handleBanMember(member)}
-                    style={{ marginRight: 10 }}
+                    style={[styles.iconActionButton, styles.banActionButton]}
                   >
-                    <Text style={{ color: "red" }}>Bännää</Text>
+                     <Ionicons name="ban-outline" size={18} color="#D62828" />
                   </TouchableOpacity>
                 )}
 
                     
                 <TouchableOpacity
                   onPress={() => handleSetAdmin(member)}
-                  style={{ marginRight: 10 }}
+                  style={[styles.iconActionButton, styles.adminActionButton]}
                 >
-                  <Text style={{ color: "#f17a0a" }}>
-                    {member.role === "admin" ? "Poista admin" : "Tee admin"}
-                  </Text>
+                  <Ionicons
+                    name={member.role === "admin" ? "shield-outline" : "shield-checkmark-outline"}
+                    size={18}
+                    color="#f17a0a"
+                  />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     onPress={() => handleRemoveMember(member)}
-                    style={styles.removeMemberButton}
+                    style={[styles.iconActionButton, styles.removeActionButton]}
                 >
-                    <Text style={styles.removeMemberButtonText}>Poista</Text>
+                    <Ionicons name="trash-outline" size={18} color="#8A1C1C" />
                 </TouchableOpacity>
 
               </View>
@@ -769,21 +771,24 @@ export default function EditGroupScreen() {
       </View>
 
       <TouchableOpacity
-        style={styles.primaryButton}
+        style={styles.tagButton}
         onPress={() => setMembersModalVisible(true)}
       >
         <Text style={styles.primaryButtonText}>Lisää jäseniä</Text>
       </TouchableOpacity>
 
+      {isAdmin &&  groupData?.isPublic && (
       <TouchableOpacity
-        style={styles.secondaryButton}
+        style={styles.bannedListButton}
         onPress={() => {
           fetchBannedUsers();
           setBannedModalVisible(true);
         }}
       >
-        <Text>Näytä bännätyt</Text>
+        <Ionicons name="ban-outline" size={18} color="#f17a0a" />
+        <Text style={styles.bannedListButtonText}>Näytä bännätyt käyttäjät</Text>
       </TouchableOpacity>
+      )}
 
       {!isAdmin && (
         <TouchableOpacity
@@ -911,7 +916,7 @@ export default function EditGroupScreen() {
                         paddingVertical: 8,
                         paddingHorizontal: 14,
                         borderRadius: 20,
-                        backgroundColor: selected ? "#f17a0a" : "#eee",
+                        backgroundColor: selected ? "#fc885a" : "#eee",
                         margin: 4,
                       }}
                     >
@@ -940,7 +945,7 @@ export default function EditGroupScreen() {
                         paddingVertical: 8,
                         paddingHorizontal: 14,
                         borderRadius: 20,
-                        backgroundColor: selected ? "#f17a0a" : "#eee",
+                        backgroundColor: selected ? "#fc885a" : "#eee",
                         margin: 4,
                       }}
                     >

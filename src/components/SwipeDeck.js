@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Dimensions } from "react-native";
+import { View, Dimensions,Image } from "react-native";
 import RecommendationCard from "./RecommendationsCard";
 
 const { height } = Dimensions.get("window");
@@ -16,7 +16,7 @@ export default function SwipeDeck({
     <View
       style={{
         width: "100%",
-        height: height * 0.65,
+        height: "100%",
         alignItems: "center",
         justifyContent: "center",
         position: "relative",

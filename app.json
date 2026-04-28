@@ -23,7 +23,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.mrreaa.KamuFinder",
-      "googleServicesFile": "./android/app/google-services.json"
+      "googleServicesFile": "./google-services.json"
       
     },
     "web": {
@@ -34,8 +34,6 @@
        [
         "expo-notifications",
         {
-          "icon": "./assets/logo.png",
-          "color": "#ffffff"
         }
       ]
 

@@ -392,7 +392,7 @@ export default function SpecificGroupChat() {
       <Text
         style={{
           textAlign: "flex-start",
-          fontSize: 32,
+          fontSize: 24,
           paddingHorizontal: 10,
           paddingTop: 20,
           fontWeight: "bold",
@@ -404,16 +404,27 @@ export default function SpecificGroupChat() {
       </Text>
       </View>
 
-        <TouchableOpacity
-        onPress={() => setMenuVisible(true)}
-        style={{
-          marginLeft: 20,
-          padding: 8,}}
-      >
-        <Ionicons name="ellipsis-vertical" size={24} color="black" />
-      </TouchableOpacity>
+       
       </View>
 
+<View style={{
+          flexDirection: "row",
+          justifyContent: "flex-start",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 20,
+          paddingHorizontal: 40
+        }}
+      >
+    <TouchableOpacity
+            onPress={() => setMenuVisible(true)}
+          >
+            <Ionicons name="settings" size={20} color="black" />
+          </TouchableOpacity>
+          <Text style={{ color: "#444", fontSize: 14, }}>
+              Muokkaa ryhmää
+            </Text>
+          </View>
        <View
         style={{
           flexDirection: "row",
@@ -430,7 +441,7 @@ export default function SpecificGroupChat() {
         </TouchableOpacity>
 
         <Text style={{ color: "#444", fontSize: 14 }}>
-           {members.length}
+           {members.length} jäsentä
         </Text>
 
       </View>
@@ -620,8 +631,8 @@ export default function SpecificGroupChat() {
               <View
                 style={{
                   position: "absolute",
-                  top: 95,
-                  right: 20,
+                  top: 160,
+                  left: 80,
                   backgroundColor: "white",
                   borderRadius: 12,
                   paddingVertical: 8,

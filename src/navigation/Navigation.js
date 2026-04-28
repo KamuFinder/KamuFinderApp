@@ -64,7 +64,10 @@ export default function AppNavigator() {
               />
               <Stack.Screen
                 name="Swiping"
-                component={withNavBars(Swiping)}
+                component={withNavBars(Swiping, {
+                  showBack: true,
+                  showProfile: true,
+                })}
               />
               <Stack.Screen
                 name="SwipePeople"

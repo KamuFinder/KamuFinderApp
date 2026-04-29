@@ -50,23 +50,81 @@ export default StyleSheet.create({
     textAlignVertical: "top",
   },
   primaryButton: {
-    backgroundColor: "#f17a0a",
+    backgroundColor: "green",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
     marginBottom: 16,
+    marginTop: 32,
   },
   primaryButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
-  secondaryButton: {
-    backgroundColor: "#eee",
-    paddingVertical: 12,
+tagButton: {
+    backgroundColor: "#F99D11",
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 4,
+    marginBottom: 16,
+    marginTop: 8,
+  },
+ memberActions: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+},
+
+iconActionButton: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+banActionButton: {
+  backgroundColor: "#FFE5E5",
+},
+
+adminActionButton: {
+  backgroundColor: "#FFF0E2",
+},
+
+removeActionButton: {
+  backgroundColor: "#F8D7DA",
+},
+
+bannedListButton: {
+  marginTop: 10,
+  marginBottom: 16,
+  borderWidth: 1,
+  borderColor: "#F0C9A4",
+  backgroundColor: "#FFF8F0",
+  borderRadius: 14,
+  paddingVertical: 12,
+  paddingHorizontal: 14,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+},
+
+bannedListButtonText: {
+  color: "#f17a0a",
+  fontSize: 15,
+  fontWeight: "700",
+},
+
+secondaryButton: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    backgroundColor: "#f9f9f9",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 16,
   },
   secondaryButtonText: {
     color: "#111",

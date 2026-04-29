@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, Pressable, Image } from "react-native";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -9,8 +9,9 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useNavigation } from "@react-navigation/native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import styles from "../styles/RecommendationCard";
+import styles from "../styles/RecommendationsCard";
 
 const SWIPE_THRESHOLD = 120;
 const OFFSCREEN = 500;
@@ -22,6 +23,8 @@ export default function RecommendationCard({
   onSwipeRight,
   onSwipeLeft,
 }) {
+
+  const navigation = useNavigation();
   const translateX = useSharedValue(0);
 
   const handleRight = () => {
@@ -113,32 +116,71 @@ export default function RecommendationCard({
   const isFriend = !!user?.isFriend;
   const canSendRequest = !!user?.canSendRequest;
 
-  const content = (
-    <Animated.View style={[styles.card, animatedStyle]}>
-      {user?.profileImage ? (
-        <Image source={{ uri: user.profileImage }} style={styles.image} />
-      ) : (
-        <View style={styles.image} />
+  const displayName =
+  user?.nickName || user?.firstName || "Tuntematon";
+
+const fullName =
+  user?.firstName && user?.lastName
+    ? `${user.firstName} ${user.lastName}`
+    : user?.firstName || "";
+
+const avatarUrl =
+  user?.profileImage ||
+  `https://api.dicebear.com/7.x/${user?.avatarStyle || "adventurer"}/png?seed=${
+    user?.avatarSeed || user?.user_id
+  }`;
+
+const content = (
+  <Animated.View style={[styles.card, animatedStyle]}>
+    <Pressable
+    style={styles.pressableContent}
+    disabled={!isTop}
+    onPress={() => navigation.navigate("Profile", { 
+      userId: user.user_id,
+    user: user,
+    })}
+  >
+    <Animated.Text style={[styles.likeText, likeStyle]}>LIKE</Animated.Text>
+    <Animated.Text style={[styles.skipText, skipStyle]}>SKIP</Animated.Text>
+
+    <View style={styles.imageWrapper}>
+      <Image source={{ uri: avatarUrl }} style={styles.image} />
+    </View>
+
+    <View style={styles.content}>
+      <Text style={styles.name}>{displayName}</Text>
+
+      {!!fullName && fullName !== displayName && (
+        <Text style={styles.fullName}>{fullName}</Text>
       )}
 
-      <Animated.Text style={[styles.likeText, likeStyle]}>
-        LIKE
-      </Animated.Text>
+      <Text style={styles.city}>📍 {user?.city || "Ei kaupunkia"}</Text>
 
-      <Animated.Text style={[styles.skipText, skipStyle]}>
-        SKIP
-      </Animated.Text>
-
-      <View style={styles.content}>
-        <Text style={styles.name}>
-          {user?.firstName || "Tuntematon"}
+      {!!user?.bio && (
+        <Text style={styles.bio} numberOfLines={4}>
+          {user.bio}
         </Text>
+      )}
 
-        <Text style={styles.city}>
-          {user?.city || "Ei tiedossa"}
-        </Text>
+      {user?.hobby_interests?.length > 0 && (
+        <View style={styles.tagsContainer}>
+          {user.hobby_interests.slice(0, 2).map((hobby) => (
+            <View key={hobby} style={styles.tag}>
+              <Text style={styles.tagText} numberOfLines={1}>{hobby}</Text>
+            </View>
+          ))}
 
-        <Text style={styles.metaText}>
+          {user.hobby_interests.length > 2 && (
+          <View style={styles.moreTag}>
+            <Text style={styles.moreTagText}>
+              +{user.hobby_interests.length - 2}
+            </Text>
+        </View>
+    )}
+        </View>
+      )}
+
+        {/*<Text style={styles.metaText}>
           Match: {Math.round((user?.score || 0) * 100)}%
         </Text>
 
@@ -150,9 +192,9 @@ export default function RecommendationCard({
           <Text style={styles.hobbies}>
             {user.shared_hobbies.join(", ")}
           </Text>
-        )}
+        )}*/}
 
-        {isTop && canSendRequest && (
+        {/*{isTop && canSendRequest && (
           <TouchableOpacity
             style={styles.button}
             onPress={() => onSwipeRight(user)}
@@ -160,7 +202,7 @@ export default function RecommendationCard({
           >
             <Text style={styles.buttonText}>Lisää kaveriksi</Text>
           </TouchableOpacity>
-        )}
+        )}*/}
 
         {isFriend ? (
           <Text style={styles.info}>Jo kavereita</Text>
@@ -170,6 +212,7 @@ export default function RecommendationCard({
           <Text style={styles.info}>Hyväksytty</Text>
         ) : null}
       </View>
+    </Pressable>
     </Animated.View>
   );
 

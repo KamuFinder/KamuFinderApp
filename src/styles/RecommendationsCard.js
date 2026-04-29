@@ -5,29 +5,41 @@ const { width, height } = Dimensions.get("window");
 export default StyleSheet.create({
   card: {
     position: "absolute",
-    width: width * 0.82,
-    height: height * 0.5,
+    width: "90%",
+    height: "98%",
     backgroundColor: "#fff",
     borderRadius: 20,
-    overflow: "hidden",
+    padding: 16,
+    elevation: 5,
+    alignItems: "center",
+  },
 
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
+  pressableContent: {
+  flex: 1,
+  width: "100%",
+  alignItems: "center",
+},
+
+  imageWrapper: {
+   width: 150,
+    height: 150,
+    borderRadius: 75,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ddd",
+    marginBottom: 12,
+    marginTop: 20,
   },
 
   image: {
     width: "100%",
-    height: "42%",
-    backgroundColor: "#eaeaea",
+    height: "100%",
+    borderRadius: 75,
   },
 
   content: {
-    flex: 1,
-    padding: 16,
-    justifyContent: "flex-start",
+    width: "100%",
+    alignItems: "center",
   },
 
   name: {
@@ -35,6 +47,14 @@ export default StyleSheet.create({
     fontWeight: "700",
     marginBottom: 4,
     color: "#111",
+    textAlign: "center",
+  },
+
+  fullName: {
+    fontSize: 15,
+    color: "#777",
+    marginTop: 3,
+    textAlign: "center",
   },
 
   hobbies: {
@@ -43,10 +63,64 @@ export default StyleSheet.create({
     fontSize: 14,
   },
 
+   city: {
+    fontSize: 16,
+    color: "#555",
+    marginTop: 10,
+  },
+
+  bio: {
+    fontSize: 15,
+    color: "#444",
+    textAlign: "center",
+    lineHeight: 21,
+    marginTop: 16,
+    paddingHorizontal: 8,
+  },
+
+  tagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 18,
+    height: 60,
+    overflow: "hidden",
+  },
+
+  tag: {
+    backgroundColor: "#FFE8D6",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 999,
+    maxHeight:"45%",
+  },
+
+  tagText: {
+    color: "#D96C06",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+
+  moreTag: {
+  backgroundColor: "#F28C28",
+  paddingHorizontal: 10,
+  paddingVertical: 6,
+  borderRadius: 999,
+},
+
+moreTagText: {
+  color: "#FFFFFF",
+  fontSize: 12,
+  fontWeight: "700",
+},
+
   button: {
+    width: "60%",
     marginTop: 14,
     backgroundColor: "#007AFF",
     paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 10,
     alignItems: "center",
   },

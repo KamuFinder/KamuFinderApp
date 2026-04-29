@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "../styles/SwipePeople";
@@ -18,20 +19,20 @@ import {
   getDoc,
   collection,
   getDocs,
-  addDoc,
+  setDoc,
   serverTimestamp,
   onSnapshot,
 } from "../firebase/config";
-import { fetchUserRecommendations } from "../../services/recommendationService";
+//import { fetchUserRecommendations } from "../../services/recommendationService";
 
 export default function SwipePeopleScreen() {
   const user = useUser();
 
   const [userRecommendations, setUserRecommendations] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [friendsList, setFriendsList] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
+  const [swipedUserIds, setSwipedUserIds] = useState([]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -47,7 +48,7 @@ export default function SwipePeopleScreen() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -68,13 +69,13 @@ export default function SwipePeopleScreen() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (user?.uid) {
       fetchPeopleRecommendations();
     }
-  }, [user]);
+  }, [user?.uid]);
 
   const fetchPeopleRecommendations = async () => {
     try {
@@ -90,20 +91,25 @@ export default function SwipePeopleScreen() {
         return;
       }
 
-      const currentUserData = currentUserSnap.data();
       const usersSnapshot = await getDocs(collection(firestore, USERS));
 
       const candidates = usersSnapshot.docs
         .map((userDoc) => {
           const data = userDoc.data();
 
+          const avatarStyle = data.avatarStyle || "adventurer";
+          const avatarSeed = data.avatarSeed || userDoc.id;
+
           return {
             user_id: userDoc.id,
             firstName: data.firstName || "",
+            lastName: data.lastName || "",
+            nickName: data.nickName || "",
             city: data.city || "",
-            age: data.age || null,
-            bio: data.bio || "",
-            profileImage: data.profileImage || "",
+            bio: data.profile_text || "",
+            avatarSeed: data.avatarSeed || "",
+            avatarStyle,
+            profileImage:`https://api.dicebear.com/7.x/${avatarStyle}/png?seed=${avatarSeed}`,
             hobby_interests: Array.isArray(data.hobby_interests)
               ? data.hobby_interests
               : [],
@@ -111,16 +117,16 @@ export default function SwipePeopleScreen() {
         })
         .filter((candidate) => candidate.user_id !== user.uid);
 
-      const recommendations = await fetchUserRecommendations(
+      {/*const recommendations = await fetchUserRecommendations(
         user.uid,
         Array.isArray(currentUserData.hobby_interests)
           ? currentUserData.hobby_interests
           : [],
         candidates
-      );
+      );*/}
 
-      setUserRecommendations(recommendations || []);
-      setCurrentIndex(0);
+      setUserRecommendations(candidates);
+      setSwipedUserIds([]);
     } catch (error) {
       console.log("Virhe käyttäjäsuositusten haussa:", error);
       Alert.alert("Virhe", "Käyttäjäsuosituksia ei voitu hakea");
@@ -133,7 +139,7 @@ export default function SwipePeopleScreen() {
     try {
       if (!user?.uid || !targetUser?.user_id) return;
 
-      const currentUserRequestsRef = collection(
+      {/*const currentUserRequestsRef = collection(
         firestore,
         USERS,
         user.uid,
@@ -145,7 +151,7 @@ export default function SwipePeopleScreen() {
         USERS,
         targetUser.user_id,
         FRIENDREQUESTS
-      );
+      );*/}
 
       const requestData = {
         fromUserId: user.uid,
@@ -154,8 +160,17 @@ export default function SwipePeopleScreen() {
         timestamp: serverTimestamp(),
       };
 
-      await addDoc(currentUserRequestsRef, requestData);
-      await addDoc(targetUserRequestsRef, requestData);
+       await setDoc(
+        doc(firestore, USERS, user.uid, FRIENDREQUESTS, targetUser.user_id),
+        requestData,
+        { merge: true }
+      );
+
+      await setDoc(
+        doc(firestore, USERS, targetUser.user_id, FRIENDREQUESTS, user.uid),
+        requestData,
+        { merge: true }
+      );
     } catch (error) {
       console.error("Error sending friend request:", error);
       Alert.alert("Virhe", "Kaveripyynnön lähetys epäonnistui.");
@@ -163,13 +178,11 @@ export default function SwipePeopleScreen() {
     }
   };
 
-  const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => prev + 1);
-  }, []);
+  
 
   const getRelationshipState = useCallback(
     (targetUser) => {
-      if (!targetUser) {
+      if (!targetUser || !user?.uid) {
         return {
           isFriend: false,
           requestStatus: null,
@@ -179,12 +192,16 @@ export default function SwipePeopleScreen() {
         };
       }
 
-      const isFriend = friendsList.some((f) => f.id === targetUser.user_id);
+      const isFriend = friendsList.some((friend) => {
+        return friend.id === targetUser.user_id || friend.user_id === targetUser.user_id;
+      });
 
       const userRequest = allFriendRequests.find(
-        (r) =>
-          (r.fromUserId === user.uid && r.toUserId === targetUser.user_id) ||
-          (r.toUserId === user.uid && r.fromUserId === targetUser.user_id)
+        (request) =>
+          (request.fromUserId === user.uid && 
+            request.toUserId === targetUser.user_id) ||
+          (request.toUserId === user.uid && 
+            request.fromUserId === targetUser.user_id)
       );
 
       const requestStatus = userRequest?.status || null;
@@ -200,7 +217,7 @@ export default function SwipePeopleScreen() {
         canSendRequest,
       };
     },
-    [allFriendRequests, friendsList, user]
+    [allFriendRequests, friendsList, user?.uid]
   );
 
   const enrichedRecommendations = useMemo(() => {
@@ -214,31 +231,53 @@ export default function SwipePeopleScreen() {
     });
   }, [userRecommendations, getRelationshipState]);
 
-  const currentUserItem = enrichedRecommendations[currentIndex];
+   const visibleRecommendations = useMemo(() => {
+    return enrichedRecommendations.filter(
+      (recommendedUser) =>
+        recommendedUser.canSendRequest &&
+        !swipedUserIds.includes(recommendedUser.user_id)
+    );
+  }, [enrichedRecommendations, swipedUserIds]);
+
+  const currentUserItem = visibleRecommendations[0];
+  const remainingCount = visibleRecommendations.length;
+  const hasNoMoreCards = visibleRecommendations.length === 0;
+
+  const hideUser = useCallback((targetUser) => {
+    if (!targetUser?.user_id) return;
+
+    setSwipedUserIds((prev) => {
+      if (prev.includes(targetUser.user_id)) {
+        return prev;
+      }
+
+      return [...prev, targetUser.user_id];
+    });
+  }, []);
+
 
   const handleLikeAndNext = useCallback(
     async (targetUser) => {
       try {
         if (!targetUser) return;
 
+        hideUser(targetUser);
+
         if (targetUser.canSendRequest) {
           await handleFriendRequest(targetUser);
         }
-
-        handleNext();
       } catch (error) {
         console.log("Virhe tykkäyksessä:", error);
       }
     },
-    [handleNext]
+    [hideUser, user?.uid]
   );
 
   const handleSkip = useCallback(() => {
-    handleNext();
-  }, [handleNext]);
-
-  const remainingCount = enrichedRecommendations.length - currentIndex;
-  const hasNoMoreCards = currentIndex >= enrichedRecommendations.length;
+    if (currentUserItem) {
+      hideUser(currentUserItem);
+    }
+  }, [currentUserItem, hideUser]);
 
   if (loading) {
     return (
@@ -265,14 +304,14 @@ export default function SwipePeopleScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right" ]}>
       <Text style={styles.title}>Swaippaa käyttäjiä</Text>
       <Text style={styles.subtitle}>Jäljellä {remainingCount} käyttäjää</Text>
 
       <View style={styles.deckWrapper}>
         <SwipeDeck
-          users={enrichedRecommendations}
-          currentIndex={currentIndex}
+          users={visibleRecommendations}
+          currentIndex={0}
           onSwipeRight={handleLikeAndNext}
           onSwipeLeft={handleSkip}
         />
@@ -281,14 +320,14 @@ export default function SwipePeopleScreen() {
       {currentUserItem && (
         <View style={styles.actionsRow}>
           <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-            <Text style={styles.actionText}>Ohita</Text>
+            <Text style={styles.skipButtonText}>Ohita</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.likeButton}
             onPress={() => handleLikeAndNext(currentUserItem)}
           >
-            <Text style={styles.actionText}>
+            <Text style={styles.likeButtonText}>
               {currentUserItem.canSendRequest ? "Tykkää" : "Seuraava"}
             </Text>
           </TouchableOpacity>

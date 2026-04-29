@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, TextInput, Alert,
  } from "react-native";
 
 import { CommonActions, useNavigation } from '@react-navigation/native';
-import { auth, createUserWithEmailAndPassword, firestore, USERS, setDoc, doc, where, query, collection} from '../firebase/config.js'
+import { auth, createUserWithEmailAndPassword, firestore, USERS, setDoc, doc, where, query, collection, app} from '../firebase/config.js'
 import isEmail from 'validator/lib/isEmail';
 import isEmpty from 'validator/lib/isEmpty';
 import isStrongPassword from 'validator/lib/isStrongPassword';
@@ -23,7 +23,8 @@ export default function SignUpScreen() {
 
     const insets = useSafeAreaInsets();
 
-    const functions = getFunctions(undefined, "europe-west1")
+    const functions = getFunctions(app, "europe-west1")
+    
     const createUserProfile = httpsCallable(functions, "createUserProfile")
     
 
@@ -84,7 +85,10 @@ export default function SignUpScreen() {
         return true
       }
 
+
     }
+
+    const validateSignUp = httpsCallable(functions,"validateSignUp")
 
     const handleSignUp = async () => {
       if(!validateInputs()){
@@ -92,6 +96,11 @@ export default function SignUpScreen() {
       }
       
       try {
+        await validateSignUp({
+          email: userInfo.email.toLowerCase(),
+          nickName: userInfo.nickName
+        })
+
         const userCredential = await createUserWithEmailAndPassword(auth, userInfo.email, userInfo.password)
         
         await userCredential.user.getIdToken(true)
@@ -107,6 +116,7 @@ export default function SignUpScreen() {
           avatarSeed,
           avatarStyle,
         })
+
         setUserInfo({
           firstName: '',
           lastName: '',

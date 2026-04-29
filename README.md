@@ -1,4 +1,4 @@
-#Getting started
+## Getting started
 1. make .env file to root and ad your firebase APIs there
 
 2. In functions folder do these steps in terminal:

@@ -3,6 +3,11 @@ import admin from "firebase-admin";
 
 import { onCall } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2";
+import fetch from "node-fetch";
+import { onMessagePublished } from "firebase-functions/v2/pubsub";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
+
+
 
 setGlobalOptions({ region: "europe-west1" });
 
@@ -93,7 +98,7 @@ export const resetFailedLogin = onCall(async (request) => {
 
 
 export const createUserProfile = onCall(async (request) => {
-const data = request.data || {};
+  const data = request.data || {};
   const authContext = request.auth
 
   if (!authContext || !authContext.uid) {
@@ -135,7 +140,12 @@ const data = request.data || {};
   return { success: true };
 });
 
+
+
+
+
 export const validateSignUp = onCall(async (request) => {
+
   const {email, nickName } = request.data
 
   if(!email){
@@ -155,3 +165,65 @@ export const validateSignUp = onCall(async (request) => {
   return { success: true }
 
 })
+
+
+export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/messages/{messageId}",
+
+  async (event) => {
+    console.log("Received Pub/Sub event:");
+
+     const data = event.data?.data();
+    if (!data) return;
+
+    const text = data.text;
+    const senderId = data.userId;
+    const chatId = event.params.chatId;
+    const sederDoc = await db.collection("user").doc(senderId).get()
+    const senderName = sederDoc.data()?.firstName || "Tuntematon käyttäjä"
+
+    console.log("text:", text, "senderId:", senderId, "chatId:", chatId);
+
+    if (!text || !chatId || !senderId) {
+      console.log("Invalid message data") 
+      return
+    }
+
+    try {
+      const chatDoc = await db.collection("privateChats").doc(chatId).get();
+      if (!chatDoc.exists) return;
+
+      const chatData = chatDoc.data();
+      const recipientId =
+        senderId === chatData.user1 ? chatData.user2 : chatData.user1;
+
+      const recipientDoc = await db.collection("user").doc(recipientId).get();
+      if (!recipientDoc.exists) return;
+
+      const token = recipientDoc.data().expoPushToken;
+      if (!token) return;
+
+      const notification = {
+        to: token,
+        title: `Uusi viesti: ${senderName}`,
+        body: text || "Sait uuden viestin",
+        sound: "default",
+        data: { chatId }
+      };
+
+      const res = await fetch("https://api.expo.dev/v2/push/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(notification)
+      });
+
+      const responseData  = await res.json();
+      console.log("Expo Push API response:", responseData );
+
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  }
+);

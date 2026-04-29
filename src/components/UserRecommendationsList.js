@@ -58,7 +58,7 @@ export default function UserRecommendationsList({
                     {item.firstName || "Tuntematon"}
                   </Text>
 
-                  <Text styles={SwipingStyles.cityText}>Kaupunki: {item.city || "Ei tiedossa"}</Text>
+                  <Text style={SwipingStyles.cityText}>Kaupunki: {item.city || "Ei tiedossa"}</Text>
                   </View>
                   </View>
             
@@ -81,10 +81,6 @@ export default function UserRecommendationsList({
                 ))}
               </View>
             )}
-
-            <Text style={SwipingStyles.debugText}>
-              Debug status: {requestStatus || "ei pyyntöä"}
-            </Text>
 
             {canSendRequest && (
               <TouchableOpacity

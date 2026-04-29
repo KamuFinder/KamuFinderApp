@@ -16,8 +16,6 @@ import { SafeAreaView,useSafeAreaInsets } from "react-native-safe-area-context";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 
-
-
 import styles from "../styles/SignIn_And_Up.js";
 
 
@@ -92,7 +90,6 @@ export default function SignUpScreen() {
 
     const validateSignUp = httpsCallable(functions,"validateSignUp")
 
- 
     const handleSignUp = async () => {
       if(!validateInputs()){
         return

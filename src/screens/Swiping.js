@@ -41,6 +41,7 @@ export default function SwipingScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [friendsList, setFriendsList] = useState([]);
   const [allFriendRequests, setAllFriendRequests] = useState([]);
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -281,6 +282,7 @@ finalGroups.sort(
         fetchGroupRecommendations(),
         fetchPeopleRecommendations(),
       ]);
+      setHasFetched(true);
     } finally {
       setLoading(false);
     }
@@ -316,6 +318,21 @@ finalGroups.sort(
       "members",
       user.uid
     );
+
+    const blacklistRef = doc(
+      firestore,
+      "groups",
+      group.group_id,
+      "blacklist",
+      user.uid
+    );
+
+    const blacklistSnap = await getDoc(blacklistRef);
+
+    if (blacklistSnap.exists()) {
+      Alert.alert("Et voi liittyä", "Sinut on estetty tästä ryhmästä.");
+      return;
+    }
 
 
     const result = await runTransaction(firestore, async (transaction) => {
@@ -410,7 +427,7 @@ finalGroups.sort(
           style={styles.actionButton}
           onPress={fetchAllRecommendations}
         >
-          <Text style={styles.actionButtonText}>Hae suositukset</Text>
+          <Text style={styles.actionButtonText}>Näytä suositukset</Text>
         </TouchableOpacity>
 
         
@@ -433,14 +450,19 @@ finalGroups.sort(
         <GroupRecommendationsList
           groups={groupRecommendations}
           onJoinGroup={handleJoinStudyGroup}
+          hasFetched={hasFetched}
         />
 
         <TouchableOpacity
-          style={styles.SwipeButton}
+          style={{alignItems: "center", marginTop: 30, marginBottom: 40}}
           onPress={() => navigation.navigate("SwipePeople")}
         >
-          <Text style={styles.actionButtonText}>
-            Selaa käyttäjiä swaippaamalla
+          <Text style={{
+            color: "#f95a11",
+            fontSize: 18,
+            fontWeight: "600",
+          }}>
+            Tai selaa käyttäjiä swaippaamalla 👉
           </Text>
         </TouchableOpacity>
 

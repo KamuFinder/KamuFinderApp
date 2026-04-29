@@ -110,7 +110,7 @@ export default function HomeScreen() {
       setFilteredUsers(filterUsers(listOfUsers, query));
     };
 
-  
+ 
 
 
   if (isLoading) {

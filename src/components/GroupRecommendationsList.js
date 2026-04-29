@@ -19,14 +19,16 @@ const getGroupAvatarUrl = (seed, style, name = "Group", size = 60) => {
   return `https://classyprofile.com/api/avatar?${params.toString()}`;
 };
 
-export default function GroupRecommendationsList({ groups, onJoinGroup }) {
+export default function GroupRecommendationsList({ groups, onJoinGroup, hasFetched }) {
   return (
     <View style={homeStyles.recommendationsContainer}>
+      {hasFetched && (
       <Text style={homeStyles.recommendationsTitle}>
         Suositellut study groupit
       </Text>
+      )}
 
-      {!groups || groups.length === 0 ? (
+      {!hasFetched ? null :!groups || groups.length === 0 ? (
         <Text>Ei ryhmäsuosituksia juuri nyt.</Text>
       ) : (
 

@@ -275,8 +275,8 @@ if (isDeletingUser) {
 
         {isOwnProfile && (
           <TouchableOpacity onPress={() => setModalVisible(true)}>
-            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16 }}>
-              <FontAwesome5 name="user-friends" size={24} color="#de58c8"/>
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, marginBottom: 16 }}>
+              <FontAwesome5 name="crown" size={20} color="#000000"/>
               <Text style={{paddingHorizontal: 10}}>{friendsCount}</Text>
             </View>
           </TouchableOpacity>

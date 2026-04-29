@@ -22,7 +22,6 @@ import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'
 export const API_BASE_URL = "https://kamufinder-backend.onrender.com";
 
 
-
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_API_KEY,

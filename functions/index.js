@@ -178,6 +178,8 @@ export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/
     const text = data.text;
     const senderId = data.userId;
     const chatId = event.params.chatId;
+    const sederDoc = await db.collection("user").doc(senderId).get()
+    const senderName = sederDoc.data()?.firstName || "Tuntematon käyttäjä"
 
     console.log("text:", text, "senderId:", senderId, "chatId:", chatId);
 
@@ -202,7 +204,7 @@ export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/
 
       const notification = {
         to: token,
-        title: "Uusi viesti",
+        title: `Uusi viesti: ${senderName}`,
         body: text || "Sait uuden viestin",
         sound: "default",
         data: { chatId }

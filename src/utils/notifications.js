@@ -46,7 +46,6 @@ export async function registerForPushNotificationsAsync() {
         alert('Ei lupaa push-ilmoituksille!');
         return;
     }
-    console.log("Device:", Device.isDevice);
 
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
 
@@ -55,12 +54,8 @@ export async function registerForPushNotificationsAsync() {
     return;
     }
 
-    console.log("PROJECT ID:", projectId);
-
-    console.log("CALLING getExpoPushTokenAsync NOW");
     try {
         token = await Notifications.getExpoPushTokenAsync({ projectId });
-        console.log("TOKEN RESULT:", token);
         } catch (e) {
         console.log("TOKEN ERROR:", e);
         }

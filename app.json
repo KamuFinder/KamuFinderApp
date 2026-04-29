@@ -23,7 +23,12 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.mrreaa.KamuFinder",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+
+      "notification": {
+        "icon": "./assets/notification-icon.png",
+        "color": "#3A8DFF"
+      }
       
     },
     "web": {

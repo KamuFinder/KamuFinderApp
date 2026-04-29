@@ -26,17 +26,13 @@ export function useUser() {
 
 function PushTokenHandler() {
   const user = useUser()
-  console.log("PushTokenHandler mounted, user:", user)
 
   useEffect(() => {
-    console.log("useEffect fired, user:", user)
     if (!user?.uid) return   
 
     const setup = async () => {
       const token = await registerForPushNotificationsAsync()
       if (!token) return
-      console.log("Push token: ", token)
-      console.log("Updating push token for user: ", user.uid)
 
       try{
         await setDoc(doc(firestore, USERS, user.uid), {

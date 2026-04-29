@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import AppNavigator from "./src/navigation/Navigation.js";
 import { AuthProvider } from "./src/context/UserContext.js";
 import * as Notifications from 'expo-notifications';
+import Toast from 'react-native-toast-message';
 
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppNavigator />
+      <Toast />
     </AuthProvider>
   );
 }

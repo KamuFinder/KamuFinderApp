@@ -122,7 +122,6 @@ export default function GroupScreen() {
         };
       });
 
-      console.log("User groups:", groupsData); //tämä heittää nyt logii kaikki tiedot mitä saa 
 
       setGroups(groupsData);
       setLoading(false);

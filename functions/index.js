@@ -227,3 +227,174 @@ export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/
     }
   }
 );
+
+export const sendGeneralNotification = onDocumentCreated("user/{userId}/notifications/{notificationId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;  
+
+    const userId = event.params.userId;
+
+    try{
+      const userDoc = await db.collection("user").doc(userId).get();
+      if (!userDoc.exists) return;
+
+      const token = userDoc.data().expoPushToken;
+      if (!token) return;
+
+      let title = "Uusi ilmoitus";
+
+      if (data.type === "friend_accept") {
+        title = "Kaveripyyntö hyväksytty";
+      } else if (data.type === "group_add") {
+        title = "Sinut lisättiin ryhmään";
+      }
+
+      const notification = {
+        to: token,
+        title: title,
+        body: data.message || "Sait uuden ilmoituksen",
+        sound: "default",
+        data: data.data || {}
+      };
+
+
+      const res = await fetch("https://api.expo.dev/v2/push/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(notification)
+      });
+
+      const responseData  = await res.json();
+      console.log("Expo Push API response:", responseData );
+
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  }
+);
+
+
+export const sendFriendRequestNotification = onDocumentCreated("user/{userId}/friendRequests/{requestId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const userId = event.params.userId;
+    if (data.fromUserId === userId) return;
+
+    try{
+
+      const userDoc = await db.collection("user").doc(userId).get();
+      if (!userDoc.exists) return;
+
+
+      const token = userDoc.data()?.expoPushToken;
+      if (!token) return;
+
+      let body = "Sait uuden kaveripyynnön";
+
+      if(data.fromUserId){
+        const fromUserDoc = await db.collection("user").doc(data.fromUserId).get();
+        if (fromUserDoc.exists) {
+          const fromUser = fromUserDoc.data();
+          const name = `${fromUser.firstName || ""} ${fromUser.lastName || ""}`.trim();
+          if(name) {
+            body = `Sait kaveripyynnön käyttäjältä ${name}`;
+        }
+      }
+      }
+      const notification = {
+        to: token,
+        title: "Uusi kaveripyyntö",
+        body,
+        sound: "default",
+      };
+
+      await fetch("https://api.expo.dev/v2/push/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(notification),
+      });
+
+    }catch (error) {
+        console.error("Error sending friend request notification:", error); 
+    }
+
+  }
+);
+
+
+
+export const sendGroupMessageNotification = onDocumentCreated("groups/{groupId}/messages/{messageId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const { text, senderId, senderName } = data;
+    const groupId = event.params.groupId;
+
+    if (!text || !senderId) return;
+
+    try {
+      const groupDoc = await db.collection("groups").doc(groupId).get();
+      if (!groupDoc.exists) return;
+
+      const groupData = groupDoc.data();
+      const groupName = groupData.groupName || "Ryhmä";
+
+      const membersSnap = await db
+        .collection("groups")
+        .doc(groupId)
+        .collection("members")
+        .get();
+
+      const notifications = [];
+
+      for (const member of membersSnap.docs) {
+        const userId = member.id;
+
+        if (userId === senderId) continue;
+
+        const userDoc = await db.collection("user").doc(userId).get();
+        if (!userDoc.exists) continue;
+
+        const token = userDoc.data()?.expoPushToken;
+        if (!token) continue;
+
+        notifications.push({
+          to: token,
+          title: `Ryhmä: ${groupName}`,
+          body: `${senderName || "Joku"}: ${text}`,
+          sound: "default",
+          data: {
+            groupId,
+            screen: "SpecificGroupChat",
+          },
+        });
+      }
+
+      await Promise.all(
+        notifications.map((notif) =>
+          fetch("https://api.expo.dev/v2/push/send", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(notif),
+          })
+        )
+      );
+
+      console.log("Group notifications sent:", notifications.length);
+    } catch (error) {
+      console.error("Error sending group notifications:", error);
+    }
+  }
+);

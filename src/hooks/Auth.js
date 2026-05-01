@@ -11,7 +11,7 @@ export function useAuth() {
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
 
-      if (firebaseUser) {
+      if (firebaseUser && firebaseUser.emailVerified) {
         setUser(firebaseUser)
       } else {
         setUser(null)

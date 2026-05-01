@@ -170,9 +170,7 @@ export const validateSignUp = onCall(async (request) => {
 export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/messages/{messageId}",
 
   async (event) => {
-    console.log("Received Pub/Sub event:");
-
-     const data = event.data?.data();
+    const data = event.data?.data();
     if (!data) return;
 
     const text = data.text;
@@ -199,6 +197,20 @@ export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/
       const recipientDoc = await db.collection("user").doc(recipientId).get();
       if (!recipientDoc.exists) return;
 
+
+      const recipientData = recipientDoc.data();
+
+      console.log("Recipient activeChatId:", recipientData?.activeChatId, "Current chatId:", chatId);
+
+      const isInSameChat = recipientData?.activeChatId === chatId;
+
+      if (isInSameChat) {
+        console.log("User is in same chat → skip push");
+        return;
+      }
+
+
+
       const token = recipientDoc.data().expoPushToken;
       if (!token) return;
 
@@ -207,7 +219,7 @@ export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/
         title: `Uusi viesti: ${senderName}`,
         body: text || "Sait uuden viestin",
         sound: "default",
-        data: { chatId }
+        data: { type: "chat", chatId }
       };
 
       const res = await fetch("https://api.expo.dev/v2/push/send", {
@@ -255,7 +267,7 @@ export const sendGeneralNotification = onDocumentCreated("user/{userId}/notifica
         title: title,
         body: data.message || "Sait uuden ilmoituksen",
         sound: "default",
-        data: data.data || {}
+        data: { type: "notification", screen: "Notifications" }
       };
 
 
@@ -312,6 +324,7 @@ export const sendFriendRequestNotification = onDocumentCreated("user/{userId}/fr
         title: "Uusi kaveripyyntö",
         body,
         sound: "default",
+        data: { type: "friend_request", fromUserId: data.fromUserId }
       };
 
       await fetch("https://api.expo.dev/v2/push/send", {
@@ -348,11 +361,7 @@ export const sendGroupMessageNotification = onDocumentCreated("groups/{groupId}/
       const groupData = groupDoc.data();
       const groupName = groupData.groupName || "Ryhmä";
 
-      const membersSnap = await db
-        .collection("groups")
-        .doc(groupId)
-        .collection("members")
-        .get();
+      const membersSnap = await db.collection("groups").doc(groupId).collection("members").get();
 
       const notifications = [];
 
@@ -364,6 +373,14 @@ export const sendGroupMessageNotification = onDocumentCreated("groups/{groupId}/
         const userDoc = await db.collection("user").doc(userId).get();
         if (!userDoc.exists) continue;
 
+
+        const userData = userDoc.data();
+
+        if (userData?.activeChatId === groupId) {
+          console.log(`User ${userId} is active in group chat → skip push`);
+          continue;
+        }
+
         const token = userDoc.data()?.expoPushToken;
         if (!token) continue;
 
@@ -373,8 +390,8 @@ export const sendGroupMessageNotification = onDocumentCreated("groups/{groupId}/
           body: `${senderName || "Joku"}: ${text}`,
           sound: "default",
           data: {
+            type: "group_chat",
             groupId,
-            screen: "SpecificGroupChat",
           },
         });
       }

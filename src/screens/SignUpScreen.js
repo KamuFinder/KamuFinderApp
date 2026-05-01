@@ -14,6 +14,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { SafeAreaView,useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { sendEmailVerification } from "firebase/auth";
 
 
 import styles from "../styles/SignIn_And_Up.js";
@@ -102,6 +103,7 @@ export default function SignUpScreen() {
         })
 
         const userCredential = await createUserWithEmailAndPassword(auth, userInfo.email, userInfo.password)
+        await sendEmailVerification(userCredential.user)
         
         await userCredential.user.getIdToken(true)
 
@@ -125,7 +127,21 @@ export default function SignUpScreen() {
           password: '',
           confirmedPassword: ''
         })
-        
+
+        Alert.alert(
+          "Vahvista sähköposti",
+          "Lähetimme sinulle vahvistuslinkin. Vahvista sähköpostisi ennen kirjautumista.",
+          [
+            {
+              text: "OK",
+              onPress: async () => {
+                await auth.signOut()
+                navigation.replace("SignIn")
+              }
+            }
+          ]
+        )
+                
         
       }catch (error) {
     console.log(error);

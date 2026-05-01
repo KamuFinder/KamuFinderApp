@@ -23,6 +23,7 @@ import {
   doc,
   getDoc,
   USERS,
+  updateDoc
 } from "../firebase/config.js";
 import DateDivider from "../components/dateDivider.js";
 import UserAvatar from "../components/UserAvatar.js";
@@ -73,6 +74,27 @@ export default function SpecificGroupChat() {
   return `https://classyprofile.com/api/avatar?${params.toString()}`;
 };
   
+
+
+//For notifications in chat (when user in chat, no need for this chats notificatios)
+useEffect(() => {
+  if (!groupId || !user?.uid) return;
+
+  const userRef = doc(firestore, USERS, user.uid);
+
+  // User in chat
+  updateDoc(userRef, {
+    activeChatId: groupId,
+  });
+
+  // User leaves chat
+  return () => {
+    updateDoc(userRef, {
+      activeChatId: null,
+    });
+  };
+}, [groupId, user?.uid]);
+
   
   // Haetaan nykyisen käyttäjän tiedot
   useEffect(() => {

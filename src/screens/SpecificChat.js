@@ -12,7 +12,7 @@ import DateDivider from "../components/dateDivider.js";
 import UserAvatar from "../components/UserAvatar.js";
 import Loading from "../components/Loading.js";
 
-export default function HomeScreen() {
+export default function SpecificChat() {
   const user = useUser()
   const navigation = useNavigation()
   const route = useRoute();
@@ -37,6 +37,27 @@ export default function HomeScreen() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [lastVisibleDoc, setLastVisibleDoc] = useState(null)
   const [hasMore, setHasMore] = useState(true)
+
+useEffect(() => {
+  if (!user?.uid || !chatId) return;
+
+  const userRef = doc(firestore, USERS, user.uid);
+
+  const setActive = async () => {
+    await updateDoc(userRef, { activeChatId: chatId });
+  };
+
+  const clearActive = async () => {
+    await updateDoc(userRef, { activeChatId: null });
+  };
+
+  setActive();
+
+  return () => {
+    clearActive();
+  };
+}, [chatId, user?.uid]);
+
 
 
   useEffect(() => {

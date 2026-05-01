@@ -36,6 +36,18 @@ export default function SignInScreen({ setLogged }) {
 
       await signInWithEmailAndPassword(auth, cleanEmail, password)
 
+      const user = auth.currentUser
+
+      if (!user.emailVerified) {
+        Alert.alert(
+          "Sähköposti ei vahvistettu",
+          "Tarkista sähköpostisi ja vahvista tili ennen kirjautumista."
+        )
+
+        await auth.signOut()
+        return
+      }
+
       await resetFailedLogin( { email: cleanEmail })
 
     } catch (error){

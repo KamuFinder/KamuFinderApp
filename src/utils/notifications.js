@@ -2,9 +2,6 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants'
-import Toast from 'react-native-toast-message';
-import { useEffect } from 'react';
-
 
 
 Notifications.setNotificationHandler({
@@ -16,6 +13,8 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+
 
 export async function registerForPushNotificationsAsync() {
 
@@ -66,22 +65,5 @@ export async function registerForPushNotificationsAsync() {
         }
 
     return token?.data;
-}   
 
-
-// In app notifications for new messages, etc.
-useEffect(() => {
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-        const title = notification.request.content.title || "Uusi ilmoitus";
-        const body = notification.request.content.body || "Sinulla on uusi ilmoitus.";
-
-        Toast.show({
-            type: 'info',
-            text1: title,
-            text2: body,    
-            position: 'top',
-            visibilityTime: 4000,
-        });
-    })
-    return () => subscription.remove();
-}, []); 
+}

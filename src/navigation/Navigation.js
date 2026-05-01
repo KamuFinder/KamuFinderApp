@@ -23,6 +23,9 @@ import EditGroupScreen from "../screens/EditGroupScreen";
 import NavbarTop from "../components/NavbarTop";
 import NavbarBottom from "../components/NavbarBottom";
 
+import { navigationRef } from "./navigationService.js";
+import { runPendingNavigation } from "./navigationService";
+
 import { useUser } from "../context/UserContext";
 
 const Stack = createNativeStackNavigator();
@@ -51,7 +54,10 @@ export default function AppNavigator() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}
+        onReady={() => {
+          runPendingNavigation();
+        }}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {user ? (
             <>

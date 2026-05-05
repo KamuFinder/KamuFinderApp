@@ -170,9 +170,7 @@ export const validateSignUp = onCall(async (request) => {
 export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/messages/{messageId}",
 
   async (event) => {
-    console.log("Received Pub/Sub event:");
-
-     const data = event.data?.data();
+    const data = event.data?.data();
     if (!data) return;
 
     const text = data.text;
@@ -199,6 +197,20 @@ export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/
       const recipientDoc = await db.collection("user").doc(recipientId).get();
       if (!recipientDoc.exists) return;
 
+
+      const recipientData = recipientDoc.data();
+
+      console.log("Recipient activeChatId:", recipientData?.activeChatId, "Current chatId:", chatId);
+
+      const isInSameChat = recipientData?.activeChatId === chatId;
+
+      if (isInSameChat) {
+        console.log("User is in same chat → skip push");
+        return;
+      }
+
+
+
       const token = recipientDoc.data().expoPushToken;
       if (!token) return;
 
@@ -207,7 +219,7 @@ export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/
         title: `Uusi viesti: ${senderName}`,
         body: text || "Sait uuden viestin",
         sound: "default",
-        data: { chatId }
+        data: { type: "chat", chatId }
       };
 
       const res = await fetch("https://api.expo.dev/v2/push/send", {
@@ -224,6 +236,182 @@ export const sendMessageNotification = onDocumentCreated("privateChats/{chatId}/
 
     } catch (error) {
       console.error("Error sending notification:", error);
+    }
+  }
+);
+
+export const sendGeneralNotification = onDocumentCreated("user/{userId}/notifications/{notificationId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;  
+
+    const userId = event.params.userId;
+
+    try{
+      const userDoc = await db.collection("user").doc(userId).get();
+      if (!userDoc.exists) return;
+
+      const token = userDoc.data().expoPushToken;
+      if (!token) return;
+
+      let title = "Uusi ilmoitus";
+
+      if (data.type === "friend_accept") {
+        title = "Kaveripyyntö hyväksytty";
+      } else if (data.type === "group_add") {
+        title = "Sinut lisättiin ryhmään";
+      }
+
+      const notification = {
+        to: token,
+        title: title,
+        body: data.message || "Sait uuden ilmoituksen",
+        sound: "default",
+        data: { type: "notification", screen: "Notifications" }
+      };
+
+
+      const res = await fetch("https://api.expo.dev/v2/push/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(notification)
+      });
+
+      const responseData  = await res.json();
+      console.log("Expo Push API response:", responseData );
+
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  }
+);
+
+
+export const sendFriendRequestNotification = onDocumentCreated("user/{userId}/friendRequests/{requestId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const userId = event.params.userId;
+    if (data.fromUserId === userId) return;
+
+    try{
+
+      const userDoc = await db.collection("user").doc(userId).get();
+      if (!userDoc.exists) return;
+
+
+      const token = userDoc.data()?.expoPushToken;
+      if (!token) return;
+
+      let body = "Sait uuden kaveripyynnön";
+
+      if(data.fromUserId){
+        const fromUserDoc = await db.collection("user").doc(data.fromUserId).get();
+        if (fromUserDoc.exists) {
+          const fromUser = fromUserDoc.data();
+          const name = `${fromUser.firstName || ""} ${fromUser.lastName || ""}`.trim();
+          if(name) {
+            body = `Sait kaveripyynnön käyttäjältä ${name}`;
+        }
+      }
+      }
+      const notification = {
+        to: token,
+        title: "Uusi kaveripyyntö",
+        body,
+        sound: "default",
+        data: { type: "friend_request", fromUserId: data.fromUserId }
+      };
+
+      await fetch("https://api.expo.dev/v2/push/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(notification),
+      });
+
+    }catch (error) {
+        console.error("Error sending friend request notification:", error); 
+    }
+
+  }
+);
+
+
+
+export const sendGroupMessageNotification = onDocumentCreated("groups/{groupId}/messages/{messageId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const { text, senderId, senderName } = data;
+    const groupId = event.params.groupId;
+
+    if (!text || !senderId) return;
+
+    try {
+      const groupDoc = await db.collection("groups").doc(groupId).get();
+      if (!groupDoc.exists) return;
+
+      const groupData = groupDoc.data();
+      const groupName = groupData.groupName || "Ryhmä";
+
+      const membersSnap = await db.collection("groups").doc(groupId).collection("members").get();
+
+      const notifications = [];
+
+      for (const member of membersSnap.docs) {
+        const userId = member.id;
+
+        if (userId === senderId) continue;
+
+        const userDoc = await db.collection("user").doc(userId).get();
+        if (!userDoc.exists) continue;
+
+
+        const userData = userDoc.data();
+
+        if (userData?.activeChatId === groupId) {
+          console.log(`User ${userId} is active in group chat → skip push`);
+          continue;
+        }
+
+        const token = userDoc.data()?.expoPushToken;
+        if (!token) continue;
+
+        notifications.push({
+          to: token,
+          title: `Ryhmä: ${groupName}`,
+          body: `${senderName || "Joku"}: ${text}`,
+          sound: "default",
+          data: {
+            type: "group_chat",
+            groupId,
+          },
+        });
+      }
+
+      await Promise.all(
+        notifications.map((notif) =>
+          fetch("https://api.expo.dev/v2/push/send", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(notif),
+          })
+        )
+      );
+
+      console.log("Group notifications sent:", notifications.length);
+    } catch (error) {
+      console.error("Error sending group notifications:", error);
     }
   }
 );

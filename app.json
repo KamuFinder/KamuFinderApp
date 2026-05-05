@@ -24,29 +24,26 @@
       },
       "package": "com.mrreaa.KamuFinder",
       "googleServicesFile": "./google-services.json",
-
       "notification": {
         "icon": "./assets/notification-icon.png",
         "color": "#3A8DFF"
       }
-      
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font",
-       [
+      [
         "expo-notifications",
-        {
-        }
+        {}
       ]
-
     ],
     "extra": {
       "eas": {
-        "projectId": "22123561-338c-4209-a2b4-49d74ec9265e"
+        "projectId": ""
       }
-    }
+    },
+   
   }
 }

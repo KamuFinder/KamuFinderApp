@@ -6,12 +6,15 @@ import Constants from 'expo-constants'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
+    shouldShowAlert: false,
+    shouldShowBanner: false,
+    shouldShowList: false,
+    shouldPlaySound: false,
     shouldSetBadge: false,
   }),
 });
+
+
 
 export async function registerForPushNotificationsAsync() {
 
@@ -62,4 +65,5 @@ export async function registerForPushNotificationsAsync() {
         }
 
     return token?.data;
-}   
+
+}
